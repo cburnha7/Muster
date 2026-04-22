@@ -9,8 +9,6 @@ import {
   RefreshControl,
   Modal,
   Image,
-  Platform,
-  Linking,
 } from 'react-native';
 import {
   useFocusEffect,
@@ -28,14 +26,14 @@ import { CancelEventModal } from '../../components/events/CancelEventModal';
 import { StepOutModal } from '../../components/bookings/StepOutModal';
 
 import {
-  HeroSection,
+  EntityHeader,
   QuickStatsRow,
   PersonRow,
   DetailCard,
   FixedBottomCTA,
 } from '../../components/detail';
 import { GetDirectionsButton } from '../../components/ui/GetDirectionsButton';
-import { getSportColor } from '../../constants/sportColors';
+import { formatSportType } from '../../utils/formatters';
 
 import { eventService } from '../../services/api/EventService';
 import { conversationService } from '../../services/api/ConversationService';
@@ -61,7 +59,6 @@ import {
 } from '../../types';
 import type { Match } from '../../types/league';
 import { API_BASE_URL } from '../../services/api/config';
-import { ContextualReturnButton } from '../../components/navigation/ContextualReturnButton';
 import {
   ProfileSelectorModal,
   ProfileOption,
@@ -864,7 +861,6 @@ export function EventDetailsScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.bgScreen }}>
-      <ContextualReturnButton />
       <ScrollView
         style={{ flex: 1 }}
         contentContainerStyle={{ paddingBottom: 120 }}
@@ -877,52 +873,22 @@ export function EventDetailsScreen() {
         }
         showsVerticalScrollIndicator={false}
       >
-        {/* HeroSection */}
-        <HeroSection
-          title={event.title}
-          sportColor={getSportColor(event.sportType)}
-          badges={[
+        {/* EntityHeader */}
+        <EntityHeader
+          name={event.title}
+          coverUrl={(event as any).imageUrl}
+          chips={[
+            { label: formatSportType(event.sportType) },
             { label: formatEventType(event.eventType) },
             ...(event.status === EventStatus.CANCELLED
-              ? [
-                  {
-                    label: 'Cancelled',
-                    bgColor: colors.errorLight,
-                    textColor: colors.error,
-                  },
-                ]
+              ? [{ label: 'Cancelled' }]
               : []),
-            ...(isLive
-              ? [
-                  {
-                    label: 'Live',
-                    bgColor: colors.successLight,
-                    textColor: colors.pine,
-                  },
-                ]
-              : []),
+            ...(isLive ? [{ label: 'Live' }] : []),
           ]}
-          headline={formatDateHero(event.startTime)}
-          {...(locationString ? { subline: locationString } : {})}
-          {...(locationString && (locationLat || locationAddress)
-            ? {
-                onSublinePress: () => {
-                  const dest =
-                    locationLat && locationLng
-                      ? `${locationLat},${locationLng}`
-                      : encodeURIComponent(locationAddress || '');
-                  const url =
-                    Platform.OS === 'ios'
-                      ? `maps:?daddr=${dest}`
-                      : `google.navigation:q=${dest}`;
-                  Linking.openURL(url).catch(() => {
-                    Linking.openURL(
-                      `https://www.google.com/maps/dir/?api=1&destination=${dest}`
-                    );
-                  });
-                },
-              }
-            : {})}
+          subtitle={formatDateHero(event.startTime)}
+          subtitle2={locationString || undefined}
+          showEdit={isOrganizer && !!isUpcoming}
+          onEdit={handleEditEvent}
         />
 
         {/* QuickStatsRow — Duration / Players / Price */}

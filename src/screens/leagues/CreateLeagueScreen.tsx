@@ -91,6 +91,7 @@ function CreateLeagueInner() {
           ? parseInt(state.playoffTeamCount)
           : undefined,
         eliminationFormat: state.playoffFormat || undefined,
+        ...(state.coverImageUrl ? { coverImageUrl: state.coverImageUrl } : {}),
       };
 
       const newLeague = await leagueService.createLeague(data, user.id);

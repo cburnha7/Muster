@@ -295,6 +295,7 @@ export interface CreateLeagueData {
   seasonLength?: number;
   genderRestriction?: string;
   invitedRosterIds?: string[];
+  coverImageUrl?: string;
 }
 
 export async function createLeague(
@@ -331,6 +332,7 @@ export async function createLeague(
     seasonLength,
     genderRestriction,
     invitedRosterIds,
+    coverImageUrl,
   } = data;
 
   const organizerId = authenticatedUserId || _clientOrganizerId;
@@ -416,6 +418,7 @@ export async function createLeague(
       ...(seasonLength !== undefined &&
         seasonLength !== null && { seasonLength }),
       ...(genderRestriction && { genderRestriction }),
+      ...(coverImageUrl !== undefined ? { coverImageUrl } : {}),
       autoGenerateMatchups: false,
     },
     include: {
@@ -519,6 +522,7 @@ export interface UpdateLeagueData {
   playoffTeamCount?: number;
   eliminationFormat?: string;
   gameFrequency?: string;
+  coverImageUrl?: string;
 }
 
 export async function updateLeague(id: string, data: UpdateLeagueData) {
@@ -550,6 +554,7 @@ export async function updateLeague(id: string, data: UpdateLeagueData) {
     playoffTeamCount,
     eliminationFormat,
     gameFrequency,
+    coverImageUrl,
   } = data;
 
   const existingLeague = await prisma.league.findUnique({ where: { id } });
@@ -600,6 +605,7 @@ export async function updateLeague(id: string, data: UpdateLeagueData) {
       ...(playoffTeamCount !== undefined && { playoffTeamCount }),
       ...(eliminationFormat !== undefined && { eliminationFormat }),
       ...(gameFrequency !== undefined && { gameFrequency }),
+      ...(coverImageUrl !== undefined && { coverImageUrl }),
     },
     include: {
       organizer: {

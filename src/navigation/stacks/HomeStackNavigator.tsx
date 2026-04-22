@@ -49,7 +49,7 @@ export function HomeStackNavigator(): JSX.Element {
       <Stack.Screen
         name="EventDetails"
         component={EventDetailsScreen}
-        options={{ ...detailHeader, headerTitle: '' }}
+        options={{ headerShown: false }}
       />
       <Stack.Screen
         name="EditEvent"
@@ -59,7 +59,7 @@ export function HomeStackNavigator(): JSX.Element {
       <Stack.Screen
         name="FacilityDetails"
         component={FacilityDetailsScreen}
-        options={{ ...detailHeader, headerTitle: '' }}
+        options={{ headerShown: false }}
       />
       <Stack.Screen
         name="SearchResults"

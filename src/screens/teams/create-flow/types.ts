@@ -21,6 +21,7 @@ export interface RosterWizardState {
   visibility: 'private' | 'public' | null;
   invitedItems: RosterInviteItem[];
   minPlayerRating: string;
+  coverImageUrl: string | null;
   isSubmitting: boolean;
   showSuccess: boolean;
   createdRosterId: string | null;
@@ -39,8 +40,15 @@ export type RosterWizardAction =
   | { type: 'SUBMIT_FAIL' };
 
 const DEFAULT_MAX: Record<string, number> = {
-  basketball: 10, soccer: 22, tennis: 4, pickleball: 4,
-  volleyball: 12, softball: 18, baseball: 18, flag_football: 14, kickball: 16,
+  basketball: 10,
+  soccer: 22,
+  tennis: 4,
+  pickleball: 4,
+  volleyball: 12,
+  softball: 18,
+  baseball: 18,
+  flag_football: 14,
+  kickball: 16,
 };
 
 export function getDefaultMaxPlayers(sport: string): number {
@@ -60,6 +68,7 @@ export function createInitialRosterState(): RosterWizardState {
     visibility: null,
     invitedItems: [],
     minPlayerRating: '',
+    coverImageUrl: null,
     isSubmitting: false,
     showSuccess: false,
     createdRosterId: null,

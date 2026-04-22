@@ -5,15 +5,13 @@ import {
   TextInput,
   StyleSheet,
   TouchableOpacity,
-  View,
 } from 'react-native';
-import * as ImagePicker from 'expo-image-picker';
-import * as DocumentPicker from 'expo-document-picker';
 import { Ionicons } from '@expo/vector-icons';
 import { SportIconGrid } from '../../../components/wizard/SportIconGrid';
 import { useCreateFacility } from './CreateFacilityContext';
 import { SportType } from '../../../types';
 import { ImageService } from '../../../services/ImageService';
+import { PhotoUpload } from '../../../components/ui/PhotoUpload';
 import { fonts, useTheme } from '../../../theme';
 
 export function Step1NameSports() {
@@ -48,29 +46,9 @@ export function Step1NameSports() {
     }
   };
 
-  const handlePickMap = async () => {
-    const result = await DocumentPicker.getDocumentAsync({
-      type: ['image/jpeg', 'image/png', 'application/pdf'],
-    });
-    if (result.canceled || !result.assets || result.assets.length === 0) return;
-    const asset = result.assets[0];
-    dispatch({
-      type: 'SET_PENDING_MAP',
-      file: {
-        uri: asset.uri,
-        name: asset.name,
-        type: asset.mimeType || 'image/jpeg',
-      },
-    });
-  };
-
   return (
     <ScrollView
-      style={[
-        styles.container,
-        { backgroundColor: colors.white },
-        { backgroundColor: colors.bgScreen },
-      ]}
+      style={[styles.container, { backgroundColor: colors.bgScreen }]}
       contentContainerStyle={styles.content}
       keyboardShouldPersistTaps="handled"
       showsVerticalScrollIndicator={false}
@@ -105,15 +83,22 @@ export function Step1NameSports() {
         multiSelect
       />
 
-      {/* Optional photos picker */}
+      {/* Cover photo — this becomes the header background on the detail screen */}
+      <PhotoUpload
+        value={state.coverImageUrl}
+        onChange={url =>
+          dispatch({ type: 'SET_FIELD', field: 'coverImageUrl', value: url })
+        }
+        context="grounds"
+        shape="cover"
+        label="Cover photo"
+      />
+
+      {/* Additional photos */}
       <Text
-        style={[
-          styles.fieldLabel,
-          { color: colors.inkSoft },
-          { marginTop: 20 },
-        ]}
+        style={[styles.fieldLabel, { color: colors.inkSoft }, { marginTop: 4 }]}
       >
-        Photos (optional)
+        Additional photos (optional)
       </Text>
       <TouchableOpacity
         style={[styles.pickerBtn, { borderColor: colors.cobalt }]}
@@ -128,28 +113,16 @@ export function Step1NameSports() {
         </Text>
       </TouchableOpacity>
 
-      {/* Optional map picker */}
-      <Text
-        style={[
-          styles.fieldLabel,
-          { color: colors.inkSoft },
-          { marginTop: 16 },
-        ]}
-      >
-        Facility map (optional)
-      </Text>
-      <TouchableOpacity
-        style={[styles.pickerBtn, { borderColor: colors.cobalt }]}
-        onPress={handlePickMap}
-        activeOpacity={0.7}
-      >
-        <Ionicons name="map-outline" size={18} color={colors.cobalt} />
-        <Text style={[styles.pickerBtnText, { color: colors.cobalt }]}>
-          {state.pendingMapFile
-            ? state.pendingMapFile.name
-            : 'Add map (JPEG, PNG, or PDF)'}
-        </Text>
-      </TouchableOpacity>
+      {/* Field map */}
+      <PhotoUpload
+        value={state.fieldMapUrl}
+        onChange={url =>
+          dispatch({ type: 'SET_FIELD', field: 'fieldMapUrl', value: url })
+        }
+        context="grounds"
+        shape="map"
+        label="Field map (optional)"
+      />
     </ScrollView>
   );
 }

@@ -450,6 +450,8 @@ export interface CreateFacilityData {
   cancellationPolicyHours?: number;
   requiresInsurance?: boolean;
   requiresBookingConfirmation?: boolean;
+  coverImageUrl?: string;
+  facilityMapUrl?: string;
 }
 
 export async function createFacility(
@@ -485,6 +487,8 @@ export async function createFacility(
     cancellationPolicyHours,
     requiresInsurance = false,
     requiresBookingConfirmation = false,
+    coverImageUrl,
+    facilityMapUrl,
   } = data;
 
   // Validate required fields
@@ -595,6 +599,8 @@ export async function createFacility(
       ...(cancellationPolicyHours !== undefined && {
         cancellationPolicyHours,
       }),
+      ...(coverImageUrl !== undefined ? { coverImageUrl } : {}),
+      ...(facilityMapUrl !== undefined ? { facilityMapUrl } : {}),
     },
   });
 

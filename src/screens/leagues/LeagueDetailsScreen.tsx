@@ -34,12 +34,11 @@ import { RootState } from '../../store/store';
 import { selectUserTeams } from '../../store/slices/teamsSlice';
 import { loggingService } from '../../services/LoggingService';
 import {
-  HeroSection,
+  EntityHeader,
   PersonRow,
   DetailCard,
   FixedBottomCTA,
 } from '../../components/detail';
-import { getSportColor } from '../../constants/sportColors';
 import { formatSportType } from '../../utils/formatters';
 
 // Import tab components
@@ -841,24 +840,25 @@ export function LeagueDetailsScreen(): React.ReactElement {
           </View>
         )}
 
-        {/* HeroSection — always visible above the tab bar */}
-        <HeroSection
-          title={league.name}
-          sportColor={getSportColor(league.sportType)}
-          badges={[
+        {/* EntityHeader — always visible above the tab bar */}
+        <EntityHeader
+          name={league.name}
+          coverUrl={(league as any).coverImageUrl}
+          chips={[
             { label: sportLabel },
             { label: skillLabel },
             { label: formatLabel },
             { label: statusLabel },
           ].filter(b => b.label && b.label !== '—' && b.label !== '')}
-          {...(league.description
-            ? {
-                headline:
-                  league.description.slice(0, 80) +
-                  (league.description.length > 80 ? '…' : ''),
-              }
-            : {})}
-          {...(seasonSummaryLine ? { subline: seasonSummaryLine } : {})}
+          subtitle={
+            league.description
+              ? league.description.slice(0, 80) +
+                (league.description.length > 80 ? '…' : '')
+              : undefined
+          }
+          subtitle2={seasonSummaryLine}
+          showEdit={isOperator}
+          onEdit={() => setEditMode(true)}
         />
 
         {/* League Channel Chat button */}

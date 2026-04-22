@@ -4,7 +4,6 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  Image,
   TouchableOpacity,
   Platform,
   Modal,
@@ -13,7 +12,6 @@ import {
   useWindowDimensions,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useDispatch, useSelector } from 'react-redux';
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
@@ -23,11 +21,7 @@ import { CancellationPolicyDisplay } from '../../components/facilities/Cancellat
 import { facilityService } from '../../services/api/FacilityService';
 import { OwnerScheduleTab } from '../../components/facilities/OwnerScheduleTab';
 import { UserReservationsTab } from '../../components/facilities/UserReservationsTab';
-import { ContextualReturnButton } from '../../components/navigation/ContextualReturnButton';
-import { EntityHeader } from '../../components/ui/EntityHeader';
-import { API_BASE_URL } from '../../services/api/config';
-import TokenStorage from '../../services/auth/TokenStorage';
-import * as ImagePicker from 'expo-image-picker';
+import { EntityHeader } from '../../components/detail';
 import {
   setSelectedFacility,
   selectSelectedFacility,
@@ -37,7 +31,6 @@ import { FacilityPhoto, FacilityWithVerification } from '../../types';
 import { selectUser } from '../../store/slices/authSlice';
 import { FixedBottomCTA } from '../../components/detail';
 import { GetDirectionsButton } from '../../components/ui/GetDirectionsButton';
-import { getSportColor } from '../../constants/sportColors';
 import { getSportLabel, getSportEmoji } from '../../constants/sports';
 import { getSurfaceName } from '../../utils/getSurfaceName';
 import { formatSportType } from '../../utils/formatters';
@@ -113,7 +106,6 @@ function TabBar({
 
 export function FacilityDetailsScreen({ route }: FacilityDetailsScreenProps) {
   const { colors } = useTheme();
-  const insets = useSafeAreaInsets();
   const { facilityId, ...restParams } = (route.params as any) ?? {};
   const navigation = useNavigation();
   const dispatch = useDispatch();
@@ -207,43 +199,6 @@ export function FacilityDetailsScreen({ route }: FacilityDetailsScreenProps) {
     pagerRef.current?.scrollTo({ x: index * screenWidth, animated: true });
   };
 
-  const handleCoverImagePress = async () => {
-    if (!selectedFacility) return;
-    try {
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ['images'] as ImagePicker.MediaType[],
-        allowsEditing: true,
-        aspect: [8, 3],
-        quality: 0.85,
-      });
-      if (result.canceled || !result.assets[0]) return;
-      const asset = result.assets[0];
-      const formData = new FormData();
-      formData.append('image', {
-        uri: asset.uri,
-        name: asset.fileName || 'cover.jpg',
-        type: asset.mimeType || 'image/jpeg',
-      } as any);
-      const token = await TokenStorage.getAccessToken();
-      const res = await fetch(
-        `${API_BASE_URL}/facilities/${selectedFacility.id}/cover`,
-        {
-          method: 'POST',
-          headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) },
-          body: formData,
-        }
-      );
-      if (res.ok) {
-        const data = await res.json();
-        setCoverImageUrl(data.coverImageUrl);
-      } else {
-        Alert.alert('Error', 'Failed to upload cover image');
-      }
-    } catch {
-      Alert.alert('Error', 'Failed to upload cover image');
-    }
-  };
-
   const handlePagerScroll = (e: any) => {
     const offsetX = e.nativeEvent.contentOffset.x;
     const index = Math.round(offsetX / screenWidth);
@@ -323,25 +278,19 @@ export function FacilityDetailsScreen({ route }: FacilityDetailsScreenProps) {
   ];
 
   return (
-    <View
-      style={[
-        s.container,
-        { backgroundColor: colors.bgScreen, paddingTop: insets.top },
-      ]}
-    >
-      <ContextualReturnButton />
+    <View style={[s.container, { backgroundColor: colors.bgScreen }]}>
       <EntityHeader
-        title={facility.name}
-        coverImageUrl={coverImageUrl}
-        tintColor={getSportColor(facility.sportTypes?.[0] ?? 'other')}
-        tags={[
+        name={facility.name}
+        coverUrl={coverImageUrl}
+        chips={[
           ...(facility.sportTypes || []).map((s: string) => ({
             label: formatSportType(s),
           })),
           { label: 'Grounds' },
         ]}
         subtitle={`${facility.city}, ${facility.state}`}
-        onCameraPress={isOwner ? handleCoverImagePress : undefined}
+        showEdit={isOwner}
+        onEdit={handleEdit}
       />
       <TabBar tabs={tabs} activeIndex={activeTab} onPress={handleTabPress} />
 
@@ -415,6 +364,66 @@ export function FacilityDetailsScreen({ route }: FacilityDetailsScreenProps) {
                   </View>
                 </View>
               </>
+            ) : null}
+
+            {/* Field map — tap to open fullscreen */}
+            {facilityMapUrl ? (
+              <TouchableOpacity
+                onPress={() => setShowFullMap(true)}
+                activeOpacity={0.8}
+                style={{ marginHorizontal: 16, marginTop: 16 }}
+              >
+                <OptimizedImage
+                  source={{ uri: facilityMapUrl }}
+                  style={{ width: '100%', height: 200, borderRadius: 12 }}
+                  resizeMode="cover"
+                  fallback={
+                    <View
+                      style={{
+                        width: '100%',
+                        height: 200,
+                        borderRadius: 12,
+                        backgroundColor: colors.surface,
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                      }}
+                    >
+                      <Ionicons
+                        name="map-outline"
+                        size={48}
+                        color={colors.inkSoft}
+                      />
+                    </View>
+                  }
+                />
+                <View
+                  style={{
+                    position: 'absolute',
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
+                    backgroundColor: 'rgba(0,0,0,0.55)',
+                    padding: 10,
+                    borderBottomLeftRadius: 12,
+                    borderBottomRightRadius: 12,
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 6,
+                  }}
+                >
+                  <Ionicons name="expand-outline" size={16} color="#FFFFFF" />
+                  <Text
+                    style={{
+                      color: '#FFFFFF',
+                      fontFamily: fonts.label,
+                      fontSize: 12,
+                    }}
+                  >
+                    View Field Map
+                  </Text>
+                </View>
+              </TouchableOpacity>
             ) : null}
           </ScrollView>
         </View>

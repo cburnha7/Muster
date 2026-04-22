@@ -33,7 +33,7 @@ export function TeamsStackNavigator(): JSX.Element {
       <Stack.Screen
         name="TeamDetails"
         component={TeamDetailsScreen}
-        options={{ ...detailHeader, headerTitle: '' }}
+        options={{ headerShown: false }}
       />
       <Stack.Screen
         name="CreateTeam"
@@ -48,7 +48,7 @@ export function TeamsStackNavigator(): JSX.Element {
       <Stack.Screen
         name="EventDetails"
         component={EventDetailsScreen}
-        options={{ ...detailHeader, headerTitle: '' }}
+        options={{ headerShown: false }}
       />
       <Stack.Screen
         name="ScheduleReview"

@@ -180,23 +180,27 @@ app.use(
 
 app.use(express.json({ limit: '1mb' }));
 
-// Global rate limiter — 100 requests per minute per IP
+// Global rate limiter — 300 requests per minute per IP
+// SPAs fire many parallel requests on page load; 100 was too tight and caused 429 cascades
 const globalLimiter = rateLimit({
   windowMs: 60 * 1000,
-  max: 100,
+  max: 300,
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: 'Too many requests, please try again later' },
 });
 app.use('/api', globalLimiter);
 
-// Stricter rate limiter for write endpoints
+// Stricter rate limiter for write (mutation) endpoints only
 const writeLimiter = rateLimit({
   windowMs: 60 * 1000,
   max: 30,
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: 'Too many requests, please try again later' },
+  // Only count POST/PUT/PATCH/DELETE — not GETs
+  skip: req =>
+    req.method === 'GET' || req.method === 'HEAD' || req.method === 'OPTIONS',
 });
 // Apply to high-value write paths
 app.use('/api/events', writeLimiter);

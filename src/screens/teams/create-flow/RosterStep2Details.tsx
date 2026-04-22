@@ -1,6 +1,7 @@
 import React from 'react';
 import { ScrollView, View, Text, TextInput, StyleSheet } from 'react-native';
 import { FormSelect, SelectOption } from '../../../components/forms/FormSelect';
+import { PhotoUpload } from '../../../components/ui/PhotoUpload';
 import { useCreateRoster } from './CreateRosterContext';
 import { fonts, useTheme } from '../../../theme';
 
@@ -18,15 +19,39 @@ export function RosterStep2Details() {
 
   return (
     <ScrollView
-      style={[styles.container, { backgroundColor: colors.white }, { backgroundColor: colors.bgScreen }]}
+      style={[
+        styles.container,
+        { backgroundColor: colors.white },
+        { backgroundColor: colors.bgScreen },
+      ]}
       contentContainerStyle={styles.content}
       showsVerticalScrollIndicator={false}
     >
-      <Text style={[styles.heading, { color: colors.ink }]}>How's it set up?</Text>
+      <Text style={[styles.heading, { color: colors.ink }]}>
+        How's it set up?
+      </Text>
+
+      {/* Cover photo — becomes the header background on the roster detail screen */}
+      <PhotoUpload
+        value={state.coverImageUrl}
+        onChange={url =>
+          dispatch({ type: 'SET_FIELD', field: 'coverImageUrl', value: url })
+        }
+        context="rosters"
+        shape="cover"
+        label="Cover photo"
+      />
 
       <Text style={[styles.label, { color: colors.ink }]}>Roster Name</Text>
       <TextInput
-        style={[styles.input, { backgroundColor: colors.surface, borderColor: colors.border, color: colors.ink }]}
+        style={[
+          styles.input,
+          {
+            backgroundColor: colors.surface,
+            borderColor: colors.border,
+            color: colors.ink,
+          },
+        ]}
         placeholder="e.g. Sunday Ballers"
         placeholderTextColor={colors.inkSoft}
         value={state.name}
@@ -48,7 +73,14 @@ export function RosterStep2Details() {
       <View style={styles.row}>
         <View style={styles.half}>
           <TextInput
-            style={[styles.input, { backgroundColor: colors.surface, borderColor: colors.border, color: colors.ink }]}
+            style={[
+              styles.input,
+              {
+                backgroundColor: colors.surface,
+                borderColor: colors.border,
+                color: colors.ink,
+              },
+            ]}
             placeholder="Min Age"
             placeholderTextColor={colors.inkSoft}
             keyboardType="numeric"
@@ -58,7 +90,14 @@ export function RosterStep2Details() {
         </View>
         <View style={styles.half}>
           <TextInput
-            style={[styles.input, { backgroundColor: colors.surface, borderColor: colors.border, color: colors.ink }]}
+            style={[
+              styles.input,
+              {
+                backgroundColor: colors.surface,
+                borderColor: colors.border,
+                color: colors.ink,
+              },
+            ]}
             placeholder="Max Age"
             placeholderTextColor={colors.inkSoft}
             keyboardType="numeric"
@@ -70,7 +109,14 @@ export function RosterStep2Details() {
 
       <Text style={[styles.label, { color: colors.ink }]}>Max Players</Text>
       <TextInput
-        style={[styles.input, { backgroundColor: colors.surface, borderColor: colors.border, color: colors.ink }]}
+        style={[
+          styles.input,
+          {
+            backgroundColor: colors.surface,
+            borderColor: colors.border,
+            color: colors.ink,
+          },
+        ]}
         placeholder="e.g. 10"
         placeholderTextColor={colors.inkSoft}
         keyboardType="numeric"
@@ -82,7 +128,15 @@ export function RosterStep2Details() {
       <View style={styles.priceRow}>
         <Text style={[styles.dollar, { color: colors.ink }]}>$</Text>
         <TextInput
-          style={[styles.input, { backgroundColor: colors.surface, borderColor: colors.border, color: colors.ink }, styles.priceInput]}
+          style={[
+            styles.input,
+            {
+              backgroundColor: colors.surface,
+              borderColor: colors.border,
+              color: colors.ink,
+            },
+            styles.priceInput,
+          ]}
           placeholder="0"
           placeholderTextColor={colors.inkSoft}
           keyboardType="decimal-pad"

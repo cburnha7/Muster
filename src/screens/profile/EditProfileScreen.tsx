@@ -5,7 +5,6 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  Image,
   Alert,
   Platform,
   KeyboardAvoidingView,
@@ -13,8 +12,6 @@ import {
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useDispatch } from 'react-redux';
-import * as ImagePicker from 'expo-image-picker';
-import { ImageService } from '../../services/ImageService';
 import { userService } from '../../services/api/UserService';
 import { useAuth } from '../../context/AuthContext';
 import { API_BASE_URL } from '../../services/api/config';
@@ -26,6 +23,7 @@ import { FormButton } from '../../components/forms/FormButton';
 import { FormSelect, SelectOption } from '../../components/forms/FormSelect';
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
 import { ErrorDisplay } from '../../components/ui/ErrorDisplay';
+import { PhotoUpload } from '../../components/ui/PhotoUpload';
 import { loggingService } from '../../services/LoggingService';
 import { validateEmail, validatePhoneNumber } from '../../utils/validation';
 import { colors, fonts, useTheme } from '../../theme';
@@ -62,7 +60,6 @@ export function EditProfileScreen(): JSX.Element {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [uploadingImage, setUploadingImage] = useState(false);
 
   // Form fields
   const [firstName, setFirstName] = useState('');
@@ -89,21 +86,7 @@ export function EditProfileScreen(): JSX.Element {
 
   useEffect(() => {
     loadProfile();
-    requestImagePermissions();
   }, []);
-
-  const requestImagePermissions = async () => {
-    if (Platform.OS !== 'web') {
-      const { status } =
-        await ImagePicker.requestMediaLibraryPermissionsAsync();
-      if (status !== 'granted') {
-        Alert.alert(
-          'Permission Required',
-          'Sorry, we need camera roll permissions to upload profile images.'
-        );
-      }
-    }
-  };
 
   const loadProfile = async () => {
     try {
@@ -212,59 +195,6 @@ export function EditProfileScreen(): JSX.Element {
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
-  };
-
-  const handlePickImage = async () => {
-    try {
-      setUploadingImage(true);
-
-      // Delete old image from R2 if it exists and is an R2 URL
-      if (profileImage && profileImage.includes('media.muster.app')) {
-        await ImageService.deleteImage(profileImage);
-      }
-
-      const result = await ImageService.pickAndUpload('profiles', {
-        aspect: [1, 1],
-        quality: 0.8,
-      });
-
-      if (!result) {
-        setUploadingImage(false);
-        return; // user cancelled
-      }
-
-      // Save the public URL to the user's profile
-      await userService.updateProfile({ profileImage: result.publicUrl });
-      setProfileImage(result.publicUrl);
-      Alert.alert('Success', 'Profile image updated successfully');
-    } catch (err: any) {
-      Alert.alert('Error', err.message || 'Failed to upload image');
-    } finally {
-      setUploadingImage(false);
-    }
-  };
-
-  const handleRemoveImage = async () => {
-    Alert.alert(
-      'Remove Profile Image',
-      'Are you sure you want to remove your profile image?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Remove',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await userService.deleteProfileImage();
-              setProfileImage(undefined);
-              Alert.alert('Success', 'Profile image removed');
-            } catch (err: any) {
-              Alert.alert('Error', 'Failed to remove image: ' + err.message);
-            }
-          },
-        },
-      ]
-    );
   };
 
   const toggleSport = (sport: string) => {
@@ -391,52 +321,20 @@ export function EditProfileScreen(): JSX.Element {
       >
         <View style={styles.content}>
           {/* Profile Image Section */}
-          <View style={styles.imageSection}>
-            <View style={styles.imageContainer}>
-              {profileImage ? (
-                <Image
-                  source={{ uri: profileImage }}
-                  style={styles.profileImage}
-                />
-              ) : (
-                <View style={styles.profileImagePlaceholder}>
-                  <Text style={styles.profileImagePlaceholderText}>
-                    {firstName?.[0]?.toUpperCase() || 'U'}
-                    {lastName?.[0]?.toUpperCase() || ''}
-                  </Text>
-                </View>
-              )}
-              {uploadingImage && (
-                <View style={styles.uploadingOverlay}>
-                  <LoadingSpinner />
-                </View>
-              )}
-            </View>
-            <View style={styles.imageButtons}>
-              <TouchableOpacity
-                style={styles.imageButton}
-                onPress={handlePickImage}
-                disabled={uploadingImage}
-                activeOpacity={0.75}
-              >
-                <Text style={styles.imageButtonText}>Change Photo</Text>
-              </TouchableOpacity>
-              {profileImage && (
-                <TouchableOpacity
-                  style={[styles.imageButton, styles.removeButton]}
-                  onPress={handleRemoveImage}
-                  disabled={uploadingImage}
-                  activeOpacity={0.75}
-                >
-                  <Text
-                    style={[styles.imageButtonText, styles.removeButtonText]}
-                  >
-                    Remove
-                  </Text>
-                </TouchableOpacity>
-              )}
-            </View>
-          </View>
+          <PhotoUpload
+            value={profileImage ?? null}
+            onChange={async url => {
+              setProfileImage(url ?? undefined);
+              if (url) {
+                await userService.updateProfile({ profileImage: url });
+              } else {
+                await userService.deleteProfileImage();
+              }
+            }}
+            context="profiles"
+            shape="avatar"
+            label="Profile Photo"
+          />
 
           {/* Form Fields */}
           <View style={styles.formSection}>

@@ -20,6 +20,7 @@ export interface CreateTeamData {
   isPublic?: boolean;
   genderRestriction?: string;
   imageUrl?: string;
+  coverImageUrl?: string;
   initialMemberIds?: string[];
 }
 
@@ -31,6 +32,7 @@ export interface UpdateTeamData {
   skillLevel?: string;
   maxMembers?: number;
   isPublic?: boolean;
+  coverImageUrl?: string;
 }
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
@@ -183,6 +185,7 @@ export async function updateTeam(id: string, data: UpdateTeamData) {
     skillLevel,
     maxMembers,
     isPublic,
+    coverImageUrl,
   } = data;
 
   const existing = await prisma.team.findUnique({ where: { id } });
@@ -200,6 +203,7 @@ export async function updateTeam(id: string, data: UpdateTeamData) {
       ...(skillLevel !== undefined && { skillLevel }),
       ...(maxMembers !== undefined && { maxMembers }),
       ...(isPublic !== undefined && { isPrivate: !isPublic }),
+      ...(coverImageUrl !== undefined && { coverImageUrl }),
     },
     include: {
       members: {
@@ -366,6 +370,7 @@ export async function createTeam(data: CreateTeamData, creatorId: string) {
       ? { genderRestriction: rest.genderRestriction }
       : {}),
     ...(rest.imageUrl ? { imageUrl: rest.imageUrl } : {}),
+    ...(rest.coverImageUrl ? { coverImageUrl: rest.coverImageUrl } : {}),
   };
 
   // Create the team

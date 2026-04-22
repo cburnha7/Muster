@@ -67,6 +67,7 @@ function CreateTeamInner() {
         isPublic: state.visibility === 'public',
         genderRestriction: state.gender ? state.gender : undefined,
         initialMemberIds: playerIds,
+        ...(state.coverImageUrl ? { coverImageUrl: state.coverImageUrl } : {}),
       } as any);
       reduxDispatch(addTeam(newTeam));
       reduxDispatch(joinTeam(newTeam));

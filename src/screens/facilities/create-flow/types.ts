@@ -54,6 +54,8 @@ export interface FacilityWizardState {
   // Pending media (collected in Step 1, uploaded after facility creation)
   pendingPhotos: MediaFile[];
   pendingMapFile: MediaFile | null;
+  coverImageUrl: string | null;
+  fieldMapUrl: string | null;
   // Submission
   isSubmitting: boolean;
   showSuccess: boolean;
@@ -108,6 +110,8 @@ export function createInitialFacilityState(): FacilityWizardState {
     waiverFileUri: '',
     pendingPhotos: [],
     pendingMapFile: null,
+    coverImageUrl: null,
+    fieldMapUrl: null,
     isSubmitting: false,
     showSuccess: false,
     createdFacilityId: null,

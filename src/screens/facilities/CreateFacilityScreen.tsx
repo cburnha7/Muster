@@ -99,6 +99,8 @@ function CreateFacilityInner() {
       requiresBookingConfirmation: state.requiresBookingConfirmation,
       waiverRequired: state.waiverRequired,
       waiverText: state.waiverRequired ? state.waiverFileName : '',
+      ...(state.coverImageUrl ? { coverImageUrl: state.coverImageUrl } : {}),
+      ...(state.fieldMapUrl ? { facilityMapUrl: state.fieldMapUrl } : {}),
     };
 
     const newFacility = await facilityService.createFacility(

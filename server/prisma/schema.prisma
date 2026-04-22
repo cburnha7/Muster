@@ -302,8 +302,9 @@ model Team {
   maxMembers  Int
   isPrivate   Boolean  @default(false)
   genderRestriction String? // "male", "female", or null (open to all)
-  imageUrl    String?
-  leagueId    String?
+  imageUrl       String?
+  coverImageUrl  String?
+  leagueId       String?
   
   // Roster balance and join fee fields
   balance            Float   @default(0) // Current roster balance in USD
@@ -387,7 +388,8 @@ model League {
   lockedFromDeletion Boolean @default(false)
 
   // Metadata
-  imageUrl  String?
+  imageUrl      String?
+  coverImageUrl String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

@@ -8,6 +8,7 @@ import {
   StyleSheet,
 } from 'react-native';
 import { FormSelect, SelectOption } from '../../../components/forms/FormSelect';
+import { PhotoUpload } from '../../../components/ui/PhotoUpload';
 import { useCreateLeague } from './CreateLeagueContext';
 import { ALL_DAYS } from './types';
 import { fonts, useTheme } from '../../../theme';
@@ -55,6 +56,17 @@ export function Step2Config() {
       <Text style={[styles.heading, { color: colors.ink }]}>
         How's it set up?
       </Text>
+
+      {/* Cover photo — becomes the header background on the league detail screen */}
+      <PhotoUpload
+        value={state.coverImageUrl}
+        onChange={url =>
+          dispatch({ type: 'SET_FIELD', field: 'coverImageUrl', value: url })
+        }
+        context="leagues"
+        shape="cover"
+        label="Cover photo"
+      />
 
       {/* Host Name */}
       <Text style={[styles.label, { color: colors.ink }]}>Host Name</Text>

@@ -49,14 +49,14 @@ import {
   DuesStatus,
 } from '../../components/dues/DuesStatusBadge';
 import { PlayerCard } from '../../components/ui/PlayerCard';
+import { PhotoUpload } from '../../components/ui/PhotoUpload';
 import { loggingService } from '../../services/LoggingService';
 import {
-  HeroSection,
+  EntityHeader,
   PersonRow,
   DetailCard,
   FixedBottomCTA,
 } from '../../components/detail';
-import { getSportColor } from '../../constants/sportColors';
 import { formatSportType } from '../../utils/formatters';
 import * as DocumentPicker from 'expo-document-picker';
 import { scheduleParserService } from '../../services/ScheduleParserService';
@@ -114,6 +114,9 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps) {
   );
   const [formMaxMembers, setFormMaxMembers] = useState('10');
   const [formIsPublic, setFormIsPublic] = useState(true);
+  const [formCoverImageUrl, setFormCoverImageUrl] = useState<string | null>(
+    null
+  );
   const [_formErrors, setFormErrors] = useState<Record<string, string>>({});
 
   // Related data
@@ -174,28 +177,7 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps) {
     });
 
   // Set header "Edit" button for managers
-  useEffect(() => {
-    navigation.setOptions({
-      headerRight: () =>
-        !readOnly && isManagerRole ? (
-          <TouchableOpacity
-            onPress={() => setEditMode(true)}
-            style={{ marginRight: 16 }}
-            activeOpacity={0.7}
-          >
-            <Text
-              style={{
-                fontFamily: fonts.ui,
-                fontSize: 16,
-                color: colors.cobalt,
-              }}
-            >
-              Edit
-            </Text>
-          </TouchableOpacity>
-        ) : null,
-    });
-  }, [navigation, readOnly, isManagerRole]);
+  // Header is now handled by EntityHeader — no need for navigation.setOptions
 
   // Sync form state when team loads
   useEffect(() => {
@@ -213,6 +195,7 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps) {
       setFormSkillLevel(team.skillLevel || SkillLevel.ALL_LEVELS);
       setFormMaxMembers(String(team.maxMembers || 10));
       setFormIsPublic(team.isPublic ?? true);
+      setFormCoverImageUrl((team as any).coverImageUrl ?? null);
     }
   }, [team]);
 
@@ -413,6 +396,9 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps) {
       if (maxOk) {
         updates.maxMembers = parseInt(formMaxMembers, 10);
         updates.skillLevel = formSkillLevel;
+      }
+      if (formCoverImageUrl !== (team as any)?.coverImageUrl) {
+        updates.coverImageUrl = formCoverImageUrl;
       }
 
       const updated = await teamService.updateTeam(teamId, updates);
@@ -735,15 +721,35 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps) {
       >
         {/* ── Invitation Banner ── */}
         {isPendingInvite && (
-          <View style={[styles.invitationBanner, { backgroundColor: colors.goldLight + '20', borderColor: colors.goldLight + '40' }]}>
-            <View style={[styles.invitationBannerIcon, { backgroundColor: colors.goldLight + '30' }]}>
+          <View
+            style={[
+              styles.invitationBanner,
+              {
+                backgroundColor: colors.goldLight + '20',
+                borderColor: colors.goldLight + '40',
+              },
+            ]}
+          >
+            <View
+              style={[
+                styles.invitationBannerIcon,
+                { backgroundColor: colors.goldLight + '30' },
+              ]}
+            >
               <Ionicons name="mail-outline" size={24} color={colors.gold} />
             </View>
             <View style={styles.invitationBannerContent}>
-              <Text style={[styles.invitationBannerTitle, { color: colors.ink }]}>
+              <Text
+                style={[styles.invitationBannerTitle, { color: colors.ink }]}
+              >
                 You've been invited!
               </Text>
-              <Text style={[styles.invitationBannerText, { color: colors.inkFaint }]}>
+              <Text
+                style={[
+                  styles.invitationBannerText,
+                  { color: colors.inkFaint },
+                ]}
+              >
                 You've been invited to join this roster. Review the details
                 below and decide if you'd like to join.
               </Text>
@@ -753,23 +759,28 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps) {
 
         {!editMode ? (
           <>
-            {/* ── HeroSection ── */}
-            <HeroSection
-              title={team.name}
-              sportColor={getSportColor(team.sportType || team.sportTypes?.[0])}
-              badges={[
+            {/* ── EntityHeader ── */}
+            <EntityHeader
+              name={team.name}
+              coverUrl={(team as any).coverImageUrl}
+              chips={[
                 { label: sportLabel },
                 { label: skillLabel },
                 team.isPublic ? { label: 'Public' } : { label: 'Private' },
               ]}
-              headline={`${activeMembers.length} / ${team.maxMembers ?? '∞'} players`}
-              subline={`Managed by ${managerName}`}
+              subtitle={`${activeMembers.length} / ${team.maxMembers ?? '∞'} players`}
+              subtitle2={`Managed by ${managerName}`}
+              showEdit={!readOnly && isManagerRole}
+              onEdit={() => setEditMode(true)}
             />
 
             {/* ── Team Chat button ── */}
             {isMember && (
               <TouchableOpacity
-                style={[styles.chatBtn, { backgroundColor: colors.cobalt + '12' }]}
+                style={[
+                  styles.chatBtn,
+                  { backgroundColor: colors.cobalt + '12' },
+                ]}
                 onPress={async () => {
                   try {
                     const conv =
@@ -807,13 +818,18 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps) {
             {/* ── Share Invite Link (managers only) ── */}
             {!readOnly && isManagerRole && isMember && (
               <TouchableOpacity
-                style={[styles.inviteLinkBtn, { backgroundColor: colors.gold + '18' }]}
+                style={[
+                  styles.inviteLinkBtn,
+                  { backgroundColor: colors.gold + '18' },
+                ]}
                 onPress={handleShareInviteLink}
                 activeOpacity={0.8}
                 disabled={isGeneratingLink}
               >
                 <Ionicons name="link-outline" size={18} color={colors.gold} />
-                <Text style={[styles.inviteLinkBtnText, { color: colors.gold }]}>
+                <Text
+                  style={[styles.inviteLinkBtnText, { color: colors.gold }]}
+                >
                   {isGeneratingLink
                     ? 'Generating link...'
                     : 'Share Invite Link'}
@@ -916,7 +932,14 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps) {
               })}
               {pendingMembers.length > 0 && (
                 <>
-                  <Text style={[styles.pendingHeader, { color: colors.inkSecondary }]}>Pending</Text>
+                  <Text
+                    style={[
+                      styles.pendingHeader,
+                      { color: colors.inkSecondary },
+                    ]}
+                  >
+                    Pending
+                  </Text>
                   {pendingMembers.map(m => (
                     <PersonRow
                       key={m.userId}
@@ -938,7 +961,9 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps) {
                   style={styles.leaveLink}
                   activeOpacity={0.7}
                 >
-                  <Text style={[styles.leaveLinkText, { color: colors.error }]}>Leave roster</Text>
+                  <Text style={[styles.leaveLinkText, { color: colors.error }]}>
+                    Leave roster
+                  </Text>
                 </TouchableOpacity>
               )}
             </DetailCard>
@@ -971,14 +996,33 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps) {
                           color={isPending ? colors.gold : colors.cobalt}
                         />
                         <View style={{ flex: 1 }}>
-                          <Text style={[styles.leagueName, { color: colors.ink }]}>{league.name}</Text>
-                          <Text style={[styles.leagueSport, { color: colors.inkSecondary }]}>
+                          <Text
+                            style={[styles.leagueName, { color: colors.ink }]}
+                          >
+                            {league.name}
+                          </Text>
+                          <Text
+                            style={[
+                              styles.leagueSport,
+                              { color: colors.inkSecondary },
+                            ]}
+                          >
                             {league.sportType}
                           </Text>
                         </View>
                         {isPending && (
-                          <View style={[styles.pendingLeagueBadge, { backgroundColor: colors.goldLight }]}>
-                            <Text style={[styles.pendingLeagueBadgeText, { color: colors.ink }]}>
+                          <View
+                            style={[
+                              styles.pendingLeagueBadge,
+                              { backgroundColor: colors.goldLight },
+                            ]}
+                          >
+                            <Text
+                              style={[
+                                styles.pendingLeagueBadgeText,
+                                { color: colors.ink },
+                              ]}
+                            >
                               Pending
                             </Text>
                           </View>
@@ -998,7 +1042,9 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps) {
             {/* ── Upcoming games card ── */}
             <DetailCard title="Upcoming games" delay={150}>
               {upcomingEvents.length === 0 ? (
-                <Text style={[styles.emptyMsg, { color: colors.inkSecondary }]}>No games scheduled yet</Text>
+                <Text style={[styles.emptyMsg, { color: colors.inkSecondary }]}>
+                  No games scheduled yet
+                </Text>
               ) : (
                 upcomingEvents.slice(0, 3).map(event => (
                   <TouchableOpacity
@@ -1011,10 +1057,14 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps) {
                     style={styles.eventRow}
                     activeOpacity={0.7}
                   >
-                    <Text style={[styles.eventDate, { color: colors.inkSecondary }]}>
+                    <Text
+                      style={[styles.eventDate, { color: colors.inkSecondary }]}
+                    >
                       {formatDate(event.startTime)}
                     </Text>
-                    <Text style={[styles.eventTitle, { color: colors.ink }]}>{event.title}</Text>
+                    <Text style={[styles.eventTitle, { color: colors.ink }]}>
+                      {event.title}
+                    </Text>
                     <Ionicons
                       name="chevron-forward"
                       size={16}
@@ -1065,18 +1115,29 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps) {
             {!readOnly && isCaptain && (
               <View style={styles.ownerActions}>
                 <TouchableOpacity
-                  style={[styles.ownerEditBtn, { backgroundColor: colors.pine }]}
+                  style={[
+                    styles.ownerEditBtn,
+                    { backgroundColor: colors.pine },
+                  ]}
                   onPress={() => setEditMode(true)}
                   activeOpacity={0.7}
                 >
-                  <Text style={[styles.ownerEditBtnText, { color: colors.white }]}>Edit Roster</Text>
+                  <Text
+                    style={[styles.ownerEditBtnText, { color: colors.white }]}
+                  >
+                    Edit Roster
+                  </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={[styles.ownerDeleteBtn, { borderColor: colors.heart }]}
                   onPress={() => setShowDeleteModal(true)}
                   activeOpacity={0.7}
                 >
-                  <Text style={[styles.ownerDeleteBtnText, { color: colors.heart }]}>Delete Roster</Text>
+                  <Text
+                    style={[styles.ownerDeleteBtnText, { color: colors.heart }]}
+                  >
+                    Delete Roster
+                  </Text>
                 </TouchableOpacity>
               </View>
             )}
@@ -1084,6 +1145,15 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps) {
         ) : (
           /* ── Edit mode: progressive disclosure form ── */
           <View style={[styles.editSection, { padding: 20 }]}>
+            {/* Cover photo */}
+            <PhotoUpload
+              value={formCoverImageUrl}
+              onChange={url => setFormCoverImageUrl(url)}
+              context="rosters"
+              shape="cover"
+              label="Cover photo"
+            />
+
             {(() => {
               const nameOk = formName.trim().length >= 2;
               const sportOk = nameOk && !!formSportType;
@@ -1097,9 +1167,20 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps) {
 
               return (
                 <>
-                  <Text style={[styles.editStepLabel, { color: colors.inkFaint }]}>Roster Name</Text>
+                  <Text
+                    style={[styles.editStepLabel, { color: colors.inkFaint }]}
+                  >
+                    Roster Name
+                  </Text>
                   <TextInput
-                    style={[styles.editInput, { backgroundColor: colors.white, color: colors.ink, borderColor: colors.white }]}
+                    style={[
+                      styles.editInput,
+                      {
+                        backgroundColor: colors.white,
+                        color: colors.ink,
+                        borderColor: colors.white,
+                      },
+                    ]}
                     value={formName}
                     onChangeText={setFormName}
                     placeholder="Roster name"
@@ -1108,7 +1189,14 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps) {
 
                   {nameOk && (
                     <>
-                      <Text style={[styles.editStepLabel, { color: colors.inkFaint }]}>Sport</Text>
+                      <Text
+                        style={[
+                          styles.editStepLabel,
+                          { color: colors.inkFaint },
+                        ]}
+                      >
+                        Sport
+                      </Text>
                       <FormSelect
                         label=""
                         options={sportTypeOptions}
@@ -1124,12 +1212,28 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps) {
 
                   {sportOk && (
                     <>
-                      <Text style={[styles.editStepLabel, { color: colors.inkFaint }]}>Visibility</Text>
+                      <Text
+                        style={[
+                          styles.editStepLabel,
+                          { color: colors.inkFaint },
+                        ]}
+                      >
+                        Visibility
+                      </Text>
                       <View style={styles.editRow}>
                         <TouchableOpacity
                           style={[
-                            styles.editToggle, { backgroundColor: colors.white, borderColor: colors.white },
-                            !formIsPublic && styles.editToggleActive, !formIsPublic && { backgroundColor: colors.cobalt, borderColor: colors.cobalt }]}
+                            styles.editToggle,
+                            {
+                              backgroundColor: colors.white,
+                              borderColor: colors.white,
+                            },
+                            !formIsPublic && styles.editToggleActive,
+                            !formIsPublic && {
+                              backgroundColor: colors.cobalt,
+                              borderColor: colors.cobalt,
+                            },
+                          ]}
                           onPress={() => setFormIsPublic(false)}
                           activeOpacity={0.75}
                         >
@@ -1140,16 +1244,28 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps) {
                           />
                           <Text
                             style={[
-                              styles.editToggleText, { color: colors.ink },
-                              !formIsPublic && styles.editToggleTextActive, !formIsPublic && { color: colors.white }]}
+                              styles.editToggleText,
+                              { color: colors.ink },
+                              !formIsPublic && styles.editToggleTextActive,
+                              !formIsPublic && { color: colors.white },
+                            ]}
                           >
                             Private
                           </Text>
                         </TouchableOpacity>
                         <TouchableOpacity
                           style={[
-                            styles.editToggle, { backgroundColor: colors.white, borderColor: colors.white },
-                            formIsPublic && styles.editToggleActive, formIsPublic && { backgroundColor: colors.cobalt, borderColor: colors.cobalt }]}
+                            styles.editToggle,
+                            {
+                              backgroundColor: colors.white,
+                              borderColor: colors.white,
+                            },
+                            formIsPublic && styles.editToggleActive,
+                            formIsPublic && {
+                              backgroundColor: colors.cobalt,
+                              borderColor: colors.cobalt,
+                            },
+                          ]}
                           onPress={() => setFormIsPublic(true)}
                           activeOpacity={0.75}
                         >
@@ -1160,8 +1276,11 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps) {
                           />
                           <Text
                             style={[
-                              styles.editToggleText, { color: colors.ink },
-                              formIsPublic && styles.editToggleTextActive, formIsPublic && { color: colors.white }]}
+                              styles.editToggleText,
+                              { color: colors.ink },
+                              formIsPublic && styles.editToggleTextActive,
+                              formIsPublic && { color: colors.white },
+                            ]}
                           >
                             Public
                           </Text>
@@ -1172,9 +1291,23 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps) {
 
                   {visOk && (
                     <>
-                      <Text style={[styles.editStepLabel, { color: colors.inkFaint }]}>Max Players</Text>
+                      <Text
+                        style={[
+                          styles.editStepLabel,
+                          { color: colors.inkFaint },
+                        ]}
+                      >
+                        Max Players
+                      </Text>
                       <TextInput
-                        style={[styles.editInput, { backgroundColor: colors.white, color: colors.ink, borderColor: colors.white }]}
+                        style={[
+                          styles.editInput,
+                          {
+                            backgroundColor: colors.white,
+                            color: colors.ink,
+                            borderColor: colors.white,
+                          },
+                        ]}
                         value={formMaxMembers}
                         onChangeText={v => {
                           const n = parseInt(v, 10);
@@ -1190,7 +1323,14 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps) {
 
                   {maxOk && (
                     <>
-                      <Text style={[styles.editStepLabel, { color: colors.inkFaint }]}>Skill Level</Text>
+                      <Text
+                        style={[
+                          styles.editStepLabel,
+                          { color: colors.inkFaint },
+                        ]}
+                      >
+                        Skill Level
+                      </Text>
                       <FormSelect
                         label=""
                         options={skillLevelOptions}
@@ -1210,7 +1350,11 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps) {
               !!formMaxMembers &&
               parseInt(formMaxMembers) > 0 && (
                 <View style={styles.addMembersSection}>
-                  <Text style={[styles.editStepLabel, { color: colors.inkFaint }]}>Invite Players</Text>
+                  <Text
+                    style={[styles.editStepLabel, { color: colors.inkFaint }]}
+                  >
+                    Invite Players
+                  </Text>
                   <AddMemberSearch
                     onAddMember={handleAddMemberDirectly}
                     existingMemberIds={allMemberIds}
@@ -1277,14 +1421,18 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps) {
           style={styles.conflictBackdrop}
           onPress={() => setShowConflictModal(false)}
         >
-          <View style={[styles.conflictModal, { backgroundColor: colors.white }]}>
+          <View
+            style={[styles.conflictModal, { backgroundColor: colors.white }]}
+          >
             <Ionicons
               name="warning-outline"
               size={32}
               color={colors.heart}
               style={{ alignSelf: 'center', marginBottom: 12 }}
             />
-            <Text style={[styles.conflictTitle, { color: colors.ink }]}>Can't Delete Yet</Text>
+            <Text style={[styles.conflictTitle, { color: colors.ink }]}>
+              Can't Delete Yet
+            </Text>
             <Text style={[styles.conflictMessage, { color: colors.inkSoft }]}>
               This roster is registered in upcoming events. Remove it from each
               event before deleting.
@@ -1292,7 +1440,10 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps) {
             {conflictEvents.map(evt => (
               <TouchableOpacity
                 key={evt.id}
-                style={[styles.conflictEventRow, { backgroundColor: colors.surface }]}
+                style={[
+                  styles.conflictEventRow,
+                  { backgroundColor: colors.surface },
+                ]}
                 onPress={() => {
                   setShowConflictModal(false);
                   (navigation as any).navigate('Home', {
@@ -1303,10 +1454,18 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps) {
                 activeOpacity={0.7}
               >
                 <View style={styles.conflictEventInfo}>
-                  <Text style={[styles.conflictEventTitle, { color: colors.ink }]} numberOfLines={1}>
+                  <Text
+                    style={[styles.conflictEventTitle, { color: colors.ink }]}
+                    numberOfLines={1}
+                  >
                     {evt.title}
                   </Text>
-                  <Text style={[styles.conflictEventDate, { color: colors.inkSoft }]}>
+                  <Text
+                    style={[
+                      styles.conflictEventDate,
+                      { color: colors.inkSoft },
+                    ]}
+                  >
                     {new Date(evt.startTime).toLocaleDateString('en-US', {
                       weekday: 'short',
                       month: 'short',
@@ -1322,11 +1481,16 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps) {
               </TouchableOpacity>
             ))}
             <TouchableOpacity
-              style={[styles.conflictDismissBtn, { backgroundColor: colors.surface }]}
+              style={[
+                styles.conflictDismissBtn,
+                { backgroundColor: colors.surface },
+              ]}
               onPress={() => setShowConflictModal(false)}
               activeOpacity={0.7}
             >
-              <Text style={[styles.conflictDismissText, { color: colors.ink }]}>Got it</Text>
+              <Text style={[styles.conflictDismissText, { color: colors.ink }]}>
+                Got it
+              </Text>
             </TouchableOpacity>
           </View>
         </Pressable>

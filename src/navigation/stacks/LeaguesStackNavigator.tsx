@@ -39,7 +39,7 @@ export function LeaguesStackNavigator() {
       <Stack.Screen
         name="LeagueDetails"
         component={LeagueDetailsScreen}
-        options={{ ...detailHeader, headerTitle: '' }}
+        options={{ headerShown: false }}
       />
       <Stack.Screen
         name="CreateLeague"

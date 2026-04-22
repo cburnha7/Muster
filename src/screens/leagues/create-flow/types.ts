@@ -45,6 +45,7 @@ export interface LeagueWizardState {
   visibility: 'private' | 'public' | null;
   invitedRosters: LeagueRosterInvite[];
   minPlayerRating: string;
+  coverImageUrl: string | null;
   // Step 3: Schedule Preview
   startDate: Date | null;
   endDate: Date | null;
@@ -121,6 +122,7 @@ export function createInitialLeagueState(): LeagueWizardState {
     visibility: null,
     invitedRosters: [],
     minPlayerRating: '',
+    coverImageUrl: null,
     startDate: new Date(),
     endDate: null,
     gamesPerRound: '',

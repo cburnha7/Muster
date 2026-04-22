@@ -239,14 +239,15 @@ export class BaseApiService {
    * Determine if an error should be retried
    */
   private shouldRetry(error: AxiosError): boolean {
-    // Don't retry client errors (4xx) except for specific cases
+    // Don't retry client errors (4xx) except 408 (Request Timeout)
+    // Notably: do NOT retry 429 — the server is rate-limiting us,
+    // and retrying just makes the cascade worse.
     if (
       error.response?.status &&
       error.response.status >= 400 &&
       error.response.status < 500
     ) {
-      // Retry on 408 (Request Timeout) and 429 (Too Many Requests)
-      return error.response.status === 408 || error.response.status === 429;
+      return error.response.status === 408;
     }
 
     // Retry on network errors and server errors (5xx)
