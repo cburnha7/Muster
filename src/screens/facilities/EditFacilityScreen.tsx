@@ -23,7 +23,6 @@ import { FormInput } from '../../components/forms/FormInput';
 import { FormButton } from '../../components/forms/FormButton';
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
 import { ErrorDisplay } from '../../components/ui/ErrorDisplay';
-import { PhotoUpload } from '../../components/ui/PhotoUpload';
 import { OptimizedImage } from '../../components/ui/OptimizedImage';
 import { HoursOfOperationSection } from '../../components/facilities/HoursOfOperationSection';
 import { CancellationPolicyPicker } from '../../components/facilities/CancellationPolicyPicker';
@@ -47,7 +46,6 @@ import { getSurfaceName } from '../../utils/getSurfaceName';
 import { getSportLabel } from '../../constants/sports';
 
 const TABS = [
-  'Basics',
   'Location',
   'Contact',
   'Site Details',
@@ -134,7 +132,6 @@ export function EditFacilityScreen({
   const [facilityMapThumbnailUrl, setFacilityMapThumbnailUrl] = useState<
     string | null
   >(null);
-  const [coverImageUrl, setCoverImageUrl] = useState<string | null>(null);
   const [photoError, setPhotoError] = useState<string | null>(null);
   const [mapError, setMapError] = useState<string | null>(null);
   const [courts, setCourts] = useState<CourtFormData[]>([]);
@@ -250,7 +247,6 @@ export function EditFacilityScreen({
       setPhotos(facility.photos ?? []);
       setFacilityMapUrl(facility.facilityMapUrl ?? null);
       setFacilityMapThumbnailUrl(facility.facilityMapThumbnailUrl ?? null);
-      setCoverImageUrl((facility as any).coverImageUrl ?? null);
 
       const addr = [
         facility.street,
@@ -683,27 +679,9 @@ export function EditFacilityScreen({
         onScroll={handlePagerScroll}
         style={{ flex: 1 }}
       >
-        {/* ── TAB 1 — Basics ─────────────────────────────────────────────── */}
+        {/* ── TAB 1 — Location ───────────────────────────────────────────── */}
         <View style={{ width: screenWidth }}>
           <ScrollView contentContainerStyle={{ paddingBottom: 40 }}>
-            {/* Cover photo */}
-            <View style={{ paddingHorizontal: 16, paddingTop: 16 }}>
-              <PhotoUpload
-                value={coverImageUrl}
-                onChange={async url => {
-                  setCoverImageUrl(url);
-                  try {
-                    await facilityService.updateFacility(facilityId, {
-                      coverImageUrl: url,
-                    } as any);
-                  } catch {}
-                }}
-                context="grounds"
-                shape="cover"
-                label="Cover photo"
-              />
-            </View>
-
             <Text style={s.sectionLabel}>GROUND NAME</Text>
             <View style={s.card}>
               <View style={{ padding: 16 }}>
@@ -833,13 +811,7 @@ export function EditFacilityScreen({
                 ) : null}
               </View>
             </View>
-            {renderActionButtons()}
-          </ScrollView>
-        </View>
 
-        {/* ── TAB 2 — Location ───────────────────────────────────────────── */}
-        <View style={{ width: screenWidth }}>
-          <ScrollView contentContainerStyle={{ paddingBottom: 40 }}>
             <Text style={s.sectionLabel}>SEARCH ADDRESS</Text>
             <View style={s.card}>
               <View style={{ padding: 16 }}>
@@ -1004,7 +976,7 @@ export function EditFacilityScreen({
           </ScrollView>
         </View>
 
-        {/* ── TAB 3 — Contact ────────────────────────────────────────────── */}
+        {/* ── TAB 2 — Contact ────────────────────────────────────────────── */}
         <View style={{ width: screenWidth }}>
           <ScrollView contentContainerStyle={{ paddingBottom: 40 }}>
             <Text style={s.sectionLabel}>CONTACT INFORMATION</Text>
@@ -1053,7 +1025,7 @@ export function EditFacilityScreen({
           </ScrollView>
         </View>
 
-        {/* ── TAB 4 — Site Details ───────────────────────────────────────── */}
+        {/* ── TAB 3 — Site Details ───────────────────────────────────────── */}
         <View style={{ width: screenWidth }}>
           <ScrollView contentContainerStyle={{ paddingBottom: 40 }}>
             {/* Hours of Operation */}
@@ -1247,7 +1219,7 @@ export function EditFacilityScreen({
           </ScrollView>
         </View>
 
-        {/* ── TAB 5 — Courts / Fields ────────────────────────────────────── */}
+        {/* ── TAB 4 — Courts / Fields ────────────────────────────────────── */}
         <View style={{ width: screenWidth }}>
           <ScrollView contentContainerStyle={{ paddingBottom: 40 }}>
             {/* Facility Map */}

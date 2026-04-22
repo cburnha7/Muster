@@ -19,6 +19,7 @@ import { ErrorDisplay } from '../../components/ui/ErrorDisplay';
 import { OptimizedImage } from '../../components/ui/OptimizedImage';
 import { CancellationPolicyDisplay } from '../../components/facilities/CancellationPolicyDisplay';
 import { facilityService } from '../../services/api/FacilityService';
+import { ImageService } from '../../services/ImageService';
 import { OwnerScheduleTab } from '../../components/facilities/OwnerScheduleTab';
 import { UserReservationsTab } from '../../components/facilities/UserReservationsTab';
 import { EntityHeader } from '../../components/detail';
@@ -155,6 +156,26 @@ export function FacilityDetailsScreen({ route }: FacilityDetailsScreenProps) {
     (navigation as any).navigate('EditFacility', { facilityId });
   };
 
+  const handleChangeCoverPhoto = async () => {
+    try {
+      // Delete old cover from R2 if replacing
+      if (coverImageUrl && coverImageUrl.includes('r2.dev')) {
+        await ImageService.deleteImage(coverImageUrl);
+      }
+      const result = await ImageService.pickAndUpload('grounds', {
+        aspect: [16, 9],
+        quality: 0.85,
+      });
+      if (!result) return; // user cancelled
+      setCoverImageUrl(result.publicUrl);
+      await facilityService.updateFacility(facilityId, {
+        coverImageUrl: result.publicUrl,
+      } as any);
+    } catch (err: any) {
+      Alert.alert('Upload Failed', err.message || 'Please try again.');
+    }
+  };
+
   const handleTabPress = (index: number) => {
     setActiveTab(index);
     pagerRef.current?.scrollTo({ x: index * screenWidth, animated: true });
@@ -251,7 +272,7 @@ export function FacilityDetailsScreen({ route }: FacilityDetailsScreenProps) {
         ]}
         subtitle={`${facility.city}, ${facility.state}`}
         showEdit={isOwner}
-        onEdit={handleEdit}
+        onEdit={handleChangeCoverPhoto}
       />
       <TabBar tabs={tabs} activeIndex={activeTab} onPress={handleTabPress} />
 
@@ -906,8 +927,19 @@ export function FacilityDetailsScreen({ route }: FacilityDetailsScreenProps) {
         </View>
       </ScrollView>
 
-      {/* Fixed bottom — Book for non-owner */}
-      {!isOwner && (
+      {/* Fixed bottom — Edit for owner, Book for non-owner */}
+      {isOwner ? (
+        <View style={s.ownerBottomBar}>
+          <TouchableOpacity
+            style={s.editBtn}
+            onPress={handleEdit}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="create-outline" size={18} color={colors.white} />
+            <Text style={s.editBtnText}>Edit Grounds</Text>
+          </TouchableOpacity>
+        </View>
+      ) : (
         <FixedBottomCTA
           label="Book a court"
           onPress={() =>
