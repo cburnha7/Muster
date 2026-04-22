@@ -11,7 +11,7 @@ import {
   approveCancelRequest,
   denyCancelRequest,
 } from '../services/cancel-request';
-import { authMiddleware, optionalAuthMiddleware } from '../middleware/auth';
+import { authMiddleware } from '../middleware/auth';
 
 const router = Router();
 
@@ -19,13 +19,9 @@ const router = Router();
 // GET /cancel-requests/pending
 // Fetch pending cancel requests for the authenticated owner's grounds
 // ---------------------------------------------------------------------------
-router.get('/pending', optionalAuthMiddleware, async (req, res) => {
+router.get('/pending', authMiddleware, async (req, res) => {
   try {
-    const ownerId = req.user?.userId || (req.query.userId as string);
-
-    if (!ownerId) {
-      return res.status(400).json({ error: 'User ID is required' });
-    }
+    const ownerId = req.user!.userId;
 
     const cancelRequests = await prisma.cancelRequest.findMany({
       where: {

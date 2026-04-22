@@ -10,7 +10,7 @@ import { createCancelRequest } from '../services/cancel-request';
 import { stripe } from '../services/stripe-connect';
 import { InsuranceDocumentService } from '../services/InsuranceDocumentService';
 import { requireNonDependent } from '../middleware/require-non-dependent';
-import { authMiddleware, optionalAuthMiddleware } from '../middleware/auth';
+import { authMiddleware } from '../middleware/auth';
 
 const router = Router();
 
@@ -181,8 +181,6 @@ router.delete('/rentals/:rentalId', authMiddleware, async (req, res) => {
     const { cancellationReason } = req.body;
     const userId = req.user!.userId;
 
-    // TODO: Get userId from auth token
-
     // Verify rental exists — include facility (for policy) and bookings (for Stripe refund)
     const rental = await prisma.facilityRental.findUnique({
       where: { id: rentalId },
@@ -318,8 +316,6 @@ router.post(
       const { rentalId } = req.params as { rentalId: string };
       const { cancellationReason } = req.body;
       const userId = req.user!.userId;
-
-      // TODO: Get userId from auth token
 
       if (!cancellationReason || cancellationReason.trim().length < 10) {
         return res.status(400).json({

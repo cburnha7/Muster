@@ -37,17 +37,15 @@ router.put('/verifications/:id/review', authMiddleware, async (req, res) => {
       return res.status(403).json({ error: 'Admin access required' });
 
     const { id } = req.params as { id: string };
-    const { status, reviewerId, notes, rejectionReason } = req.body as {
+    const { status, notes, rejectionReason } = req.body as {
       status: 'approved' | 'rejected';
-      reviewerId: string;
       notes?: string;
       rejectionReason?: string;
     };
+    const reviewerId = req.user!.userId;
 
-    if (!status || !reviewerId) {
-      return res
-        .status(400)
-        .json({ error: 'status and reviewerId are required' });
+    if (!status) {
+      return res.status(400).json({ error: 'status is required' });
     }
 
     if (status !== 'approved' && status !== 'rejected') {

@@ -15,7 +15,7 @@ import {
   NotFoundError,
   ForbiddenError,
 } from '../services/InsuranceDocumentService';
-import { authMiddleware, optionalAuthMiddleware } from '../middleware/auth';
+import { authMiddleware } from '../middleware/auth';
 
 const router = Router();
 
@@ -108,14 +108,9 @@ router.post(
  * List insurance documents for a user.
  * Query params: userId (required), status (optional: "active" | "expired")
  */
-router.get('/', async (req: Request, res: Response) => {
+router.get('/', authMiddleware, async (req: Request, res: Response) => {
   try {
-    const userId = (req.query.userId as string) || getUserId(req);
-    if (!userId) {
-      return res
-        .status(400)
-        .json({ error: 'userId query parameter is required' });
-    }
+    const userId = req.user!.userId;
 
     const status = req.query.status as string | undefined;
 

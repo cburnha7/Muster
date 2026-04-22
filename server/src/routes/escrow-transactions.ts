@@ -12,16 +12,9 @@
 import { Router, Request, Response } from 'express';
 import { prisma } from '../lib/prisma';
 import { EscrowTransactionService } from '../services/EscrowTransactionService';
-import { optionalAuthMiddleware } from '../middleware/auth';
+import { authMiddleware } from '../middleware/auth';
 
 const router = Router();
-
-/**
- * Extract the authenticated user's ID from the request.
- */
-function getUserId(req: Request): string | undefined {
-  return req.user?.userId;
-}
 
 /**
  * GET /api/escrow-transactions
@@ -30,7 +23,7 @@ function getUserId(req: Request): string | undefined {
  * Query param: rentalId (required)
  * Access: restricted to the ground owner of the associated facility (403 for non-owners).
  */
-router.get('/', optionalAuthMiddleware, async (req: Request, res: Response) => {
+router.get('/', authMiddleware, async (req: Request, res: Response) => {
   try {
     const rentalId = req.query.rentalId as string;
     if (!rentalId) {
@@ -39,10 +32,7 @@ router.get('/', optionalAuthMiddleware, async (req: Request, res: Response) => {
         .json({ error: 'rentalId query parameter is required' });
     }
 
-    const userId = getUserId(req);
-    if (!userId) {
-      return res.status(401).json({ error: 'Authentication required' });
-    }
+    const userId = req.user!.userId;
 
     // Look up the rental to find the facility and its owner
     const rental = await prisma.facilityRental.findUnique({

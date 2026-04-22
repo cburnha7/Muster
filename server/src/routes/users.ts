@@ -187,13 +187,7 @@ router.get('/leagues-ready-to-schedule', authMiddleware, async (req, res) => {
 // Get current user's events (organized + confirmed participant)
 router.get('/events', authMiddleware, async (req, res) => {
   try {
-    let userId = req.user?.userId;
-    if (!userId) {
-      userId = req.query.userId as string;
-    }
-    if (!userId) {
-      return res.status(401).json({ error: 'Authentication required' });
-    }
+    const userId = req.user!.userId;
     const filters: UserService.GetEventsFilters = {
       page: req.query.page as string,
       limit: req.query.limit as string,

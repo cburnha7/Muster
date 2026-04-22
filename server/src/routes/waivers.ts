@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { prisma } from '../lib/prisma';
-import { authMiddleware, optionalAuthMiddleware } from '../middleware/auth';
+import { authMiddleware } from '../middleware/auth';
 
 const router = Router();
 
@@ -28,52 +28,45 @@ router.get('/facility/:facilityId', async (req, res) => {
 });
 
 // GET /api/waivers/facility/:facilityId/status?userId= — waiver status for user
-router.get(
-  '/facility/:facilityId/status',
-  optionalAuthMiddleware,
-  async (req, res) => {
-    try {
-      const userId = (req.query.userId as string) || req.user?.userId;
-      if (!userId)
-        return res.status(401).json({ error: 'Authentication required' });
+router.get('/facility/:facilityId/status', authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user!.userId;
 
-      const { facilityId } = req.params as { facilityId: string };
+    const { facilityId } = req.params as { facilityId: string };
 
-      const facility = await prisma.facility.findUnique({
-        where: { id: facilityId },
-        select: { waiverRequired: true, waiverVersion: true },
+    const facility = await prisma.facility.findUnique({
+      where: { id: facilityId },
+      select: { waiverRequired: true, waiverVersion: true },
+    });
+    if (!facility) return res.status(404).json({ error: 'Facility not found' });
+    if (!facility.waiverRequired || !facility.waiverVersion) {
+      return res.json({
+        required: false,
+        signed: false,
+        waiverVersion: null,
       });
-      if (!facility)
-        return res.status(404).json({ error: 'Facility not found' });
-      if (!facility.waiverRequired || !facility.waiverVersion) {
-        return res.json({
-          required: false,
-          signed: false,
-          waiverVersion: null,
-        });
-      }
-
-      const signature = await prisma.waiverSignature.findUnique({
-        where: {
-          userId_facilityId_waiverVersion: {
-            userId,
-            facilityId,
-            waiverVersion: facility.waiverVersion,
-          },
-        },
-      });
-
-      res.json({
-        required: true,
-        signed: !!signature,
-        waiverVersion: facility.waiverVersion,
-      });
-    } catch (error) {
-      console.error('Get waiver status error:', error);
-      res.status(500).json({ error: 'Failed to fetch waiver status' });
     }
+
+    const signature = await prisma.waiverSignature.findUnique({
+      where: {
+        userId_facilityId_waiverVersion: {
+          userId,
+          facilityId,
+          waiverVersion: facility.waiverVersion,
+        },
+      },
+    });
+
+    res.json({
+      required: true,
+      signed: !!signature,
+      waiverVersion: facility.waiverVersion,
+    });
+  } catch (error) {
+    console.error('Get waiver status error:', error);
+    res.status(500).json({ error: 'Failed to fetch waiver status' });
   }
-);
+});
 
 // POST /api/waivers/sign — sign the current waiver
 router.post('/sign', authMiddleware, async (req, res) => {

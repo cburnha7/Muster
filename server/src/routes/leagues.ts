@@ -57,11 +57,11 @@ router.get('/', async (req: Request, res: Response) => {
 // GET /api/leagues/:id/deletion-preview
 router.get(
   '/:id/deletion-preview',
-  optionalAuthMiddleware,
+  authMiddleware,
   async (req: Request, res: Response) => {
     try {
       const { id } = req.params as { id: string };
-      const userId = req.user?.userId || (req.query.userId as string);
+      const userId = req.user!.userId;
       const preview = await LeagueCrudService.getDeletionPreview(id, userId);
       res.json(preview);
     } catch (error: any) {
@@ -159,20 +159,24 @@ router.post(
 );
 
 // GET /api/leagues/:id/join-requests
-router.get('/:id/join-requests', async (req: Request, res: Response) => {
-  try {
-    const { id } = req.params as { id: string };
-    const userId = req.query.userId as string;
-    const joinRequests = await LeagueMembershipService.getJoinRequests(
-      id,
-      userId
-    );
-    res.json(joinRequests);
-  } catch (error: any) {
-    console.error('Error fetching join requests:', error);
-    sendError(res, error);
+router.get(
+  '/:id/join-requests',
+  authMiddleware,
+  async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params as { id: string };
+      const userId = req.user!.userId;
+      const joinRequests = await LeagueMembershipService.getJoinRequests(
+        id,
+        userId
+      );
+      res.json(joinRequests);
+    } catch (error: any) {
+      console.error('Error fetching join requests:', error);
+      sendError(res, error);
+    }
   }
-});
+);
 
 // PUT /api/leagues/:id/join-requests/:requestId
 router.put(
