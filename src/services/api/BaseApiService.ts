@@ -1,25 +1,23 @@
-import axios, {
-  AxiosInstance,
-  AxiosRequestConfig,
-  AxiosResponse,
-  AxiosError,
-  InternalAxiosRequestConfig,
-} from 'axios';
+/**
+ * BaseApiService — fetch-based HTTP client.
+ *
+ * Provides authenticated GET / POST / PUT / PATCH / DELETE / uploadFile
+ * methods with:
+ *   - JWT Bearer token attachment (from TokenStorage)
+ *   - 401 → token refresh → retry (via shared tokenRefreshLock)
+ *   - Retry with exponential backoff for 408 and 5xx
+ *   - Optional in-memory caching for GET requests
+ *
+ * All 16 service classes extend this. The protected method signatures
+ * are the public contract — do NOT change them without updating every
+ * subclass.
+ */
+
 import { Platform } from 'react-native';
 import TokenStorage from '../auth/TokenStorage';
 import { acquireRefresh, performTokenRefresh } from '../auth/tokenRefreshLock';
 import { cacheService, CacheService } from './CacheService';
 import { ApiError } from '../../types';
-import { loggingService } from '../LoggingService';
-
-// Lazy import to avoid circular dependency — store is only accessed at request time
-let _store: any = null;
-function getStore() {
-  if (!_store) {
-    _store = require('../../store/store').store;
-  }
-  return _store;
-}
 
 export interface ApiServiceConfig {
   baseURL: string;
@@ -34,17 +32,26 @@ export interface RetryConfig {
   attempts: number;
   delay: number;
   backoffFactor: number;
-  retryCondition?: (error: AxiosError) => boolean;
 }
 
 export interface CacheOptions {
-  ttl?: number; // Time to live in milliseconds
-  key?: string; // Custom cache key
-  skipCache?: boolean; // Skip cache for this request
+  ttl?: number;
+  key?: string;
+  skipCache?: boolean;
+}
+
+/** Request configuration options for service methods */
+export interface RequestConfig {
+  params?: Record<string, any>;
+  headers?: Record<string, string>;
+  data?: any;
+  cacheOptions?: CacheOptions;
+  [key: string]: any;
 }
 
 export class BaseApiService {
-  protected client: AxiosInstance;
+  /** @deprecated — kept for backward compat. Use the protected methods. */
+  protected client: any;
   private config: ApiServiceConfig;
   private retryConfig: RetryConfig;
   private cache: CacheService;
@@ -56,504 +63,256 @@ export class BaseApiService {
       attempts: config.retryAttempts,
       delay: config.retryDelay,
       backoffFactor: 2,
-      retryCondition: this.shouldRetry.bind(this),
+    };
+    // Stub so subclasses that accidentally reference this.client don't crash
+    this.client = {
+      defaults: { baseURL: config.baseURL, timeout: config.timeout },
+    };
+  }
+
+  // ── Internal fetch wrapper ─────────────────────────────────────
+
+  private async request<T>(
+    method: string,
+    url: string,
+    body?: any,
+    extraHeaders?: Record<string, string>,
+    retryCount = 0
+  ): Promise<T> {
+    const fullUrl = url.startsWith('http')
+      ? url
+      : `${this.config.baseURL}${url.startsWith('/') ? '' : '/'}${url}`;
+
+    const token = await TokenStorage.getAccessToken();
+    const headers: Record<string, string> = {
+      ...(body instanceof FormData
+        ? {}
+        : { 'Content-Type': 'application/json' }),
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...extraHeaders,
     };
 
-    this.client = axios.create({
-      baseURL: config.baseURL,
-      timeout: config.timeout,
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), this.config.timeout);
 
-    this.setupInterceptors();
-  }
-
-  /**
-   * Set up request and response interceptors
-   */
-  private setupInterceptors(): void {
-    // Request interceptor for authentication and logging
-    this.client.interceptors.request.use(
-      async (config: InternalAxiosRequestConfig) => {
-        if (process.env.NODE_ENV === 'development') {
-          console.log('🚀 BaseApiService interceptor running');
-        }
-
-        // Add authentication token - read from TokenStorage for consistency
-        let token = await TokenStorage.getAccessToken();
-        if (token) {
-          config.headers.Authorization = `Bearer ${token}`;
-          if (process.env.NODE_ENV === 'development') {
-            console.log(
-              '🔐 API Request - Token attached:',
-              token.substring(0, 20) + '...'
-            );
-          }
-        } else {
-          if (process.env.NODE_ENV === 'development') {
-            console.log('⚠️ API Request - No token available');
-          }
-        }
-
-        // User context is handled via JWT Bearer token — no X-User-Id header needed
-        const currentUser = await TokenStorage.getUser();
-
-        // Attach X-Active-User-Id header when acting on behalf of a dependent
-        const storeState = getStore().getState();
-        const activeUserId = storeState?.context?.activeUserId;
-        const authUserId = currentUser?.id;
-        if (activeUserId && activeUserId !== authUserId) {
-          config.headers['X-Active-User-Id'] = activeUserId;
-        }
-
-        // Add request ID for tracking
-        config.headers['X-Request-ID'] = this.generateRequestId();
-
-        // Log request if enabled
-        if (this.config.enableLogging) {
-          this.logRequest(config);
-        }
-
-        return config;
-      },
-      (error: AxiosError) => {
-        if (this.config.enableLogging) {
-          console.error('Request interceptor error:', error);
-        }
-        return Promise.reject(error);
+    let response: Response;
+    try {
+      response = await fetch(fullUrl, {
+        method,
+        headers,
+        body:
+          body instanceof FormData
+            ? body
+            : body != null
+              ? JSON.stringify(body)
+              : undefined,
+        signal: controller.signal,
+      });
+    } catch (err: any) {
+      clearTimeout(timeoutId);
+      // Network error or abort — retry if allowed
+      if (retryCount < this.retryConfig.attempts) {
+        const delay =
+          this.retryConfig.delay *
+          Math.pow(this.retryConfig.backoffFactor, retryCount);
+        await this.sleep(delay);
+        return this.request<T>(method, url, body, extraHeaders, retryCount + 1);
       }
-    );
-
-    // Response interceptor for error handling and logging
-    this.client.interceptors.response.use(
-      (response: AxiosResponse) => {
-        // Log successful response if enabled
-        if (this.config.enableLogging) {
-          this.logResponse(response);
-        }
-        return response;
-      },
-      async (error: AxiosError) => {
-        // Log error response if enabled
-        if (this.config.enableLogging) {
-          this.logError(error);
-        }
-
-        // Handle token refresh for 401 errors using the shared refresh lock
-        if (
-          error.response?.status === 401 &&
-          !error.config?.url?.includes('/auth/')
-        ) {
-          try {
-            // Capture the token that was used for the failed request
-            const failedToken = error.config?.headers?.Authorization;
-
-            // Check if a fresh token is already available (e.g. from a concurrent login)
-            const currentToken = await TokenStorage.getAccessToken();
-            if (
-              currentToken &&
-              failedToken &&
-              `Bearer ${currentToken}` !== failedToken
-            ) {
-              // Token was already refreshed — just retry with the new token
-              if (error.config) {
-                error.config.headers.Authorization = `Bearer ${currentToken}`;
-                return this.client.request(error.config);
-              }
-            }
-
-            const currentRefreshToken = await TokenStorage.getRefreshToken();
-            if (!currentRefreshToken) {
-              throw new Error('No refresh token available');
-            }
-
-            // Use the shared lock so RTK Query and Axios never race
-            const tokens = await acquireRefresh(() =>
-              performTokenRefresh(currentRefreshToken)
-            );
-
-            // Retry the original request with new token
-            if (error.config) {
-              error.config.headers.Authorization = `Bearer ${tokens.accessToken}`;
-              // Re-attach user ID header
-              const currentUser = await TokenStorage.getUser();
-              return this.client.request(error.config);
-            }
-          } catch (refreshError: any) {
-            // Only clear session if no fresh login has happened in the meantime
-            const latestToken = await TokenStorage.getAccessToken();
-            const failedToken = error.config?.headers?.Authorization;
-            const tokenStillStale =
-              !latestToken ||
-              (failedToken && `Bearer ${latestToken}` === failedToken);
-
-            if (tokenStillStale) {
-              console.error(
-                '🔒 Token refresh failed, clearing session:',
-                refreshError.message || refreshError
-              );
-              await TokenStorage.clearAll();
-
-              // Dispatch a global event so the app can redirect to login
-              if (
-                Platform.OS === 'web' &&
-                typeof window?.dispatchEvent === 'function'
-              ) {
-                window.dispatchEvent(new CustomEvent('auth:sessionExpired'));
-              }
-            }
-
-            // Reject with a clear auth error
-            return Promise.reject({
-              code: 'SESSION_EXPIRED',
-              message: 'Your session has expired. Please log in again.',
-              status: 401,
-            });
-          }
-        }
-
-        // Handle retry logic for retryable errors
-        if (this.shouldRetry(error) && this.canRetry(error)) {
-          return this.retryRequest(error);
-        }
-
-        // Transform error to our standard format
-        const apiError = this.transformError(error);
-
-        // Log to structured logging service
-        loggingService.logApiError(
-          error.config?.url || 'unknown',
-          error.config?.method?.toUpperCase() || 'UNKNOWN',
-          error.response?.status,
-          apiError.message
-        );
-
-        return Promise.reject(apiError);
-      }
-    );
-  }
-
-  /**
-   * Determine if an error should be retried
-   */
-  private shouldRetry(error: AxiosError): boolean {
-    // Don't retry client errors (4xx) except 408 (Request Timeout)
-    // Notably: do NOT retry 429 — the server is rate-limiting us,
-    // and retrying just makes the cascade worse.
-    if (
-      error.response?.status &&
-      error.response.status >= 400 &&
-      error.response.status < 500
-    ) {
-      return error.response.status === 408;
+      throw this.buildError(0, err.message || 'Network error', fullUrl);
+    } finally {
+      clearTimeout(timeoutId);
     }
 
-    // Retry on network errors and server errors (5xx)
-    return !error.response || error.response.status >= 500;
-  }
+    // ── 401 → refresh token → retry once ──
+    if (response.status === 401 && retryCount === 0) {
+      const refreshToken = await TokenStorage.getRefreshToken();
+      if (refreshToken) {
+        try {
+          await acquireRefresh(() => performTokenRefresh(refreshToken));
+          return this.request<T>(method, url, body, extraHeaders, 1);
+        } catch {
+          // Refresh failed — fall through to error handling
+        }
+      }
+    }
 
-  /**
-   * Check if request can be retried (hasn't exceeded max attempts)
-   */
-  private canRetry(error: AxiosError): boolean {
-    const config = error.config as any;
-    const retryCount = config.__retryCount || 0;
-    return retryCount < this.retryConfig.attempts;
-  }
+    // ── Retry on 408 / 5xx ──
+    if (
+      (response.status === 408 || response.status >= 500) &&
+      retryCount < this.retryConfig.attempts
+    ) {
+      const delay =
+        this.retryConfig.delay *
+        Math.pow(this.retryConfig.backoffFactor, retryCount);
+      await this.sleep(delay);
+      return this.request<T>(method, url, body, extraHeaders, retryCount + 1);
+    }
 
-  /**
-   * Retry a failed request with exponential backoff
-   */
-  private async retryRequest(error: AxiosError): Promise<AxiosResponse> {
-    const config = error.config as any;
-    config.__retryCount = (config.__retryCount || 0) + 1;
-
-    const delay =
-      this.retryConfig.delay *
-      Math.pow(this.retryConfig.backoffFactor, config.__retryCount - 1);
-
-    if (this.config.enableLogging) {
-      console.log(
-        `Retrying request (attempt ${config.__retryCount}/${this.retryConfig.attempts}) after ${delay}ms`
+    // ── Parse response ──
+    if (!response.ok) {
+      let errorBody: any = {};
+      try {
+        errorBody = await response.json();
+      } catch {
+        // Non-JSON error body
+      }
+      throw this.buildError(
+        response.status,
+        errorBody.error || errorBody.message || response.statusText,
+        fullUrl,
+        errorBody
       );
     }
 
-    await this.sleep(delay);
-    return this.client.request(config);
-  }
-
-  /**
-   * Transform Axios error to our standard API error format
-   */
-  private transformError(error: AxiosError): ApiError {
-    if (error.response?.data) {
-      // Server returned an error response
-      const responseData = error.response.data as any;
-      return {
-        code: responseData.code || `HTTP_${error.response.status}`,
-        message: responseData.message || responseData.error || error.message,
-        details: responseData.details || error.response.data,
-        timestamp: new Date(),
-      };
-    } else if (error.request) {
-      // Network error
-      return {
-        code: 'NETWORK_ERROR',
-        message: 'Network request failed. Please check your connection.',
-        details: error.message,
-        timestamp: new Date(),
-      };
-    } else {
-      // Request setup error
-      return {
-        code: 'REQUEST_ERROR',
-        message: error.message || 'An unexpected error occurred',
-        details: error,
-        timestamp: new Date(),
-      };
+    // 204 No Content
+    if (response.status === 204) {
+      return undefined as unknown as T;
     }
+
+    const data = await response.json();
+    return data as T;
   }
 
-  /**
-   * Log outgoing request
-   */
-  private logRequest(config: InternalAxiosRequestConfig): void {
-    console.log(
-      `🚀 API Request: ${config.method?.toUpperCase()} ${config.url}`,
-      {
-        headers: config.headers,
-        data: config.data,
-        params: config.params,
-      }
-    );
+  private buildError(
+    status: number,
+    message: string,
+    url: string,
+    details?: any
+  ): ApiError {
+    const err: any = new Error(message);
+    err.status = status;
+    err.statusCode = status;
+    err.url = url;
+    err.details = details;
+    err.data = details;
+    err.response = { status, data: details };
+    return err;
   }
 
-  /**
-   * Log successful response
-   */
-  private logResponse(response: AxiosResponse): void {
-    console.log(
-      `✅ API Response: ${response.status} ${response.config.method?.toUpperCase()} ${response.config.url}`,
-      {
-        status: response.status,
-        statusText: response.statusText,
-        data: response.data,
-      }
-    );
-  }
-
-  /**
-   * Log error response
-   */
-  private logError(error: AxiosError): void {
-    console.error(
-      `❌ API Error: ${error.config?.method?.toUpperCase()} ${error.config?.url}`,
-      {
-        status: error.response?.status,
-        statusText: error.response?.statusText,
-        message: error.message,
-        data: error.response?.data,
-      }
-    );
-  }
-
-  /**
-   * Generate unique request ID for tracking
-   */
-  private generateRequestId(): string {
-    return `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-  }
-
-  /**
-   * Sleep utility for retry delays
-   */
   private sleep(ms: number): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
 
-  /**
-   * Make a GET request with caching support
-   */
+  // ── Protected HTTP methods (the public contract for subclasses) ──
+
   protected async get<T>(
     url: string,
-    config?: AxiosRequestConfig & { cacheOptions?: CacheOptions }
+    config?: RequestConfig & { cacheOptions?: CacheOptions }
   ): Promise<T> {
     const cacheOptions = config?.cacheOptions;
     const cacheKey =
       cacheOptions?.key || this.generateCacheKey('GET', url, config?.params);
 
-    // Check cache first if caching is enabled and not skipped
     if (this.config.enableCaching && !cacheOptions?.skipCache) {
-      const cachedData = await this.cache.get<T>(cacheKey);
-      if (cachedData) {
-        if (this.config.enableLogging) {
-          console.log(`📦 Cache hit for: GET ${url}`);
-        }
-        return cachedData;
+      const cached = await this.cache.get<T>(cacheKey);
+      if (cached) return cached;
+    }
+
+    // Append query params to URL
+    let fullUrl = url;
+    if (config?.params) {
+      const qs = new URLSearchParams();
+      for (const [k, v] of Object.entries(config.params)) {
+        if (v != null) qs.append(k, String(v));
       }
+      const qsStr = qs.toString();
+      if (qsStr) fullUrl += (url.includes('?') ? '&' : '?') + qsStr;
     }
 
-    const response = await this.client.get<T>(url, config);
+    const data = await this.request<T>(
+      'GET',
+      fullUrl,
+      undefined,
+      config?.headers
+    );
 
-    // Cache the response if caching is enabled
     if (this.config.enableCaching && !cacheOptions?.skipCache) {
-      await this.cache.set(cacheKey, response.data, cacheOptions?.ttl);
+      await this.cache.set(cacheKey, data, cacheOptions?.ttl);
     }
 
-    return response.data;
+    return data;
   }
 
-  /**
-   * Make a POST request
-   */
   protected async post<T>(
     url: string,
     data?: any,
-    config?: AxiosRequestConfig
+    config?: RequestConfig
   ): Promise<T> {
-    const response = await this.client.post<T>(url, data, config);
-
-    // Invalidate related cache entries for POST requests
-    if (this.config.enableCaching) {
-      await this.invalidateRelatedCache(url);
-    }
-
-    return response.data;
+    const result = await this.request<T>('POST', url, data, config?.headers);
+    if (this.config.enableCaching) await this.invalidateRelatedCache(url);
+    return result;
   }
 
-  /**
-   * Make a PUT request
-   */
   protected async put<T>(
     url: string,
     data?: any,
-    config?: AxiosRequestConfig
+    config?: RequestConfig
   ): Promise<T> {
-    const response = await this.client.put<T>(url, data, config);
-
-    // Invalidate related cache entries for PUT requests
-    if (this.config.enableCaching) {
-      await this.invalidateRelatedCache(url);
-    }
-
-    return response.data;
+    const result = await this.request<T>('PUT', url, data, config?.headers);
+    if (this.config.enableCaching) await this.invalidateRelatedCache(url);
+    return result;
   }
 
-  /**
-   * Make a PATCH request
-   */
   protected async patch<T>(
     url: string,
     data?: any,
-    config?: AxiosRequestConfig
+    config?: RequestConfig
   ): Promise<T> {
-    const response = await this.client.patch<T>(url, data, config);
-
-    // Invalidate related cache entries for PATCH requests
-    if (this.config.enableCaching) {
-      await this.invalidateRelatedCache(url);
-    }
-
-    return response.data;
+    const result = await this.request<T>('PATCH', url, data, config?.headers);
+    if (this.config.enableCaching) await this.invalidateRelatedCache(url);
+    return result;
   }
 
-  /**
-   * Make a DELETE request
-   */
-  protected async delete<T>(
-    url: string,
-    config?: AxiosRequestConfig
-  ): Promise<T> {
-    const response = await this.client.delete<T>(url, config);
-
-    // Invalidate related cache entries for DELETE requests
-    if (this.config.enableCaching) {
-      await this.invalidateRelatedCache(url);
-    }
-
-    return response.data;
+  protected async delete<T>(url: string, config?: RequestConfig): Promise<T> {
+    const body = config?.data;
+    const result = await this.request<T>('DELETE', url, body, config?.headers);
+    if (this.config.enableCaching) await this.invalidateRelatedCache(url);
+    return result;
   }
 
-  /**
-   * Upload file with progress tracking
-   */
   protected async uploadFile<T>(
     url: string,
     file: FormData,
-    onProgress?: (progress: number) => void
+    _onProgress?: (progress: number) => void
   ): Promise<T> {
-    const response = await this.client.post<T>(url, file, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-      onUploadProgress: progressEvent => {
-        if (onProgress && progressEvent.total) {
-          const progress = Math.round(
-            (progressEvent.loaded * 100) / progressEvent.total
-          );
-          onProgress(progress);
-        }
-      },
-    });
-    return response.data;
+    // fetch does not support upload progress natively — the callback is ignored
+    return this.request<T>('POST', url, file);
   }
 
-  /**
-   * Generate cache key for request
-   */
+  // ── Cache helpers ──────────────────────────────────────────────
+
   private generateCacheKey(method: string, url: string, params?: any): string {
     const paramsString = params ? JSON.stringify(params) : '';
     return `${method}_${url}_${paramsString}`;
   }
 
-  /**
-   * Invalidate cache entries related to a URL
-   */
   private async invalidateRelatedCache(url: string): Promise<void> {
-    // Extract the base resource from the URL (e.g., '/leagues/123' → 'leagues')
-    const parts = url.split('/').filter(Boolean);
-    const baseResource = parts[0];
-    if (baseResource) {
-      this.cache.clearBySubstring(baseResource);
-      if (this.config.enableLogging) {
-        console.log(`🗑️ Invalidated cache for resource: ${baseResource}`);
-      }
+    const basePath = url.split('?')[0] ?? url;
+    const segments = basePath.split('/').filter(Boolean);
+    if (segments.length > 0) {
+      const resource = segments[0]!;
+      this.cache.clearBySubstring(resource);
     }
   }
 
-  /**
-   * Clear all cache
-   */
   public async clearCache(): Promise<void> {
-    await this.cache.clear();
+    this.cache.clearAll();
   }
 
-  /**
-   * Get cache statistics
-   */
   protected async getCacheStats(): Promise<any> {
     return this.cache.getStats();
   }
 
-  /**
-   * Update base configuration
-   */
   public updateConfig(newConfig: Partial<ApiServiceConfig>): void {
     this.config = { ...this.config, ...newConfig };
-
-    // Update axios instance defaults
-    if (newConfig.baseURL) {
-      this.client.defaults.baseURL = newConfig.baseURL;
-    }
-    if (newConfig.timeout) {
-      this.client.defaults.timeout = newConfig.timeout;
+    if (this.client?.defaults) {
+      if (newConfig.baseURL) this.client.defaults.baseURL = newConfig.baseURL;
+      if (newConfig.timeout) this.client.defaults.timeout = newConfig.timeout;
     }
   }
 }
 
-// Create and export default configuration
+// Default configuration
 export const defaultApiConfig: ApiServiceConfig = {
   baseURL: (() => {
     try {
@@ -562,9 +321,9 @@ export const defaultApiConfig: ApiServiceConfig = {
       return 'http://localhost:3000/api';
     }
   })(),
-  timeout: 30000, // 30 seconds
+  timeout: 30000,
   retryAttempts: 3,
-  retryDelay: 1000, // 1 second
-  enableLogging: process.env.NODE_ENV === 'development', // Enable logging in development mode
-  enableCaching: true, // Enable caching by default
+  retryDelay: 1000,
+  enableLogging: process.env.NODE_ENV === 'development',
+  enableCaching: true,
 };
