@@ -19,6 +19,7 @@ import {
 } from './slices';
 import messagingReducer from './slices/messagingSlice';
 import { contextRecoveryMiddleware } from './middleware/contextRecovery';
+import { resetApiCacheListenerMiddleware } from './middleware/resetApiCacheOnLogin';
 
 // Redux Persist configuration — only persist auth + subscription.
 // Server data (events, facilities, teams, bookings, leagues, matches)
@@ -90,6 +91,7 @@ export const store = configureStore({
         },
       },
     }).concat(
+      resetApiCacheListenerMiddleware.middleware,
       api.middleware,
       eventsApi.middleware,
       cancelRequestsApi.middleware,
@@ -101,30 +103,6 @@ export const store = configureStore({
 
 // Setup RTK Query listeners for caching and synchronization
 setupListeners(store.dispatch);
-
-// Reset all RTK Query caches on every successful login so stale error
-// states from the previous session don't persist across re-logins.
-// The resets are deferred via queueMicrotask to avoid a synchronous
-// dispatch → subscriber → dispatch infinite loop (resetApiState
-// triggers middleware that dispatches more actions, re-entering the
-// subscriber before it returns).
-let previousIsAuthenticated = false;
-let resetScheduled = false;
-store.subscribe(() => {
-  const state = store.getState();
-  const isNowAuthenticated = !!state.auth.user;
-  if (isNowAuthenticated && !previousIsAuthenticated && !resetScheduled) {
-    resetScheduled = true;
-    queueMicrotask(() => {
-      store.dispatch(api.util.resetApiState());
-      store.dispatch(eventsApi.util.resetApiState());
-      store.dispatch(cancelRequestsApi.util.resetApiState());
-      store.dispatch(insuranceDocumentsApi.util.resetApiState());
-      resetScheduled = false;
-    });
-  }
-  previousIsAuthenticated = isNowAuthenticated;
-});
 
 // Create persistor for Redux Persist
 export const persistor = persistStore(store);
