@@ -41,9 +41,6 @@ import {
   ReadyToScheduleLeague,
 } from '../../services/api/UserService';
 
-// Context
-import { useSelector } from 'react-redux';
-
 // Store
 import { selectUser, selectAuthLoading } from '../../store/slices/authSlice';
 import {
