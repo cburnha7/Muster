@@ -1082,7 +1082,9 @@ function AboutTab() {
           icon="shield-outline"
           iconBg={colors.surface}
           label="Privacy Policy"
-          onPress={() => Linking.openURL('https://muster.app/privacy')}
+          onPress={() =>
+            Linking.openURL(`${API_BASE_URL.replace('/api', '')}/privacy`)
+          }
         />
         <MenuRow
           icon="document-text-outline"

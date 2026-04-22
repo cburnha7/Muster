@@ -50,6 +50,7 @@ import inviteRoutes from './routes/invites';
 import placesRoutes from './routes/places';
 import uploadRoutes from './routes/uploads';
 import { conversationsRouter, messagesRouter } from './routes/conversations';
+import privacyRouter from './routes/privacy';
 import { registerLeagueLockMiddleware } from './middleware/league-lock';
 
 /**
@@ -218,6 +219,9 @@ app.use(activeContextMiddleware);
 
 // Serve static files from uploads directory
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+
+// Public pages (no /api prefix — served as HTML)
+app.use('/privacy', privacyRouter);
 
 // Health check — verifies database connectivity
 app.get('/health', async (req, res) => {
