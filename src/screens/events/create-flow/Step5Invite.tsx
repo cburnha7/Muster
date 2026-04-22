@@ -18,6 +18,7 @@ import { fonts, useTheme } from '../../../theme';
 import { EventType } from '../../../types';
 import { InviteItem } from './types';
 import { API_BASE_URL } from '../../../services/api/config';
+import TokenStorage from '../../../services/auth/TokenStorage';
 
 export function Step5Invite() {
   const { colors } = useTheme();
@@ -160,7 +161,24 @@ export function Step5Invite() {
         },
       });
       setShowInviteModal(false);
-      // TODO: Send invite email via server
+
+      // Send invite email via server (best-effort — don't block UX)
+      TokenStorage.getAccessToken()
+        .then(token =>
+          fetch(`${API_BASE_URL}/invites/send`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              ...(token ? { Authorization: `Bearer ${token}` } : {}),
+            },
+            body: JSON.stringify({
+              name,
+              email,
+              context: 'event',
+            }),
+          })
+        )
+        .catch(err => console.warn('Invite email failed:', err));
     },
     [dispatch]
   );
@@ -170,14 +188,28 @@ export function Step5Invite() {
 
   return (
     <ScrollView
-      style={[styles.container, { backgroundColor: colors.white }, { backgroundColor: colors.bgScreen }]}
+      style={[
+        styles.container,
+        { backgroundColor: colors.white },
+        { backgroundColor: colors.bgScreen },
+      ]}
       contentContainerStyle={styles.content}
     >
-      <Text style={[styles.heading, { color: colors.ink }]}>Who's invited?</Text>
+      <Text style={[styles.heading, { color: colors.ink }]}>
+        Who's invited?
+      </Text>
 
       <View style={styles.visibilityRow}>
         <TouchableOpacity
-          style={[styles.visButton, { backgroundColor: colors.surface, borderColor: colors.border }, privateSelected && styles.visButtonActive, privateSelected && { backgroundColor: colors.cobalt, borderColor: colors.cobalt }]}
+          style={[
+            styles.visButton,
+            { backgroundColor: colors.surface, borderColor: colors.border },
+            privateSelected && styles.visButtonActive,
+            privateSelected && {
+              backgroundColor: colors.cobalt,
+              borderColor: colors.cobalt,
+            },
+          ]}
           onPress={() => handleVisibility('private')}
           activeOpacity={0.8}
         >
@@ -187,13 +219,26 @@ export function Step5Invite() {
             color={privateSelected ? colors.white : colors.ink}
           />
           <Text
-            style={[styles.visText, { color: colors.ink }, privateSelected && styles.visTextActive, privateSelected && { color: colors.white }]}
+            style={[
+              styles.visText,
+              { color: colors.ink },
+              privateSelected && styles.visTextActive,
+              privateSelected && { color: colors.white },
+            ]}
           >
             Private
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={[styles.visButton, { backgroundColor: colors.surface, borderColor: colors.border }, publicSelected && styles.visButtonActive, publicSelected && { backgroundColor: colors.cobalt, borderColor: colors.cobalt }]}
+          style={[
+            styles.visButton,
+            { backgroundColor: colors.surface, borderColor: colors.border },
+            publicSelected && styles.visButtonActive,
+            publicSelected && {
+              backgroundColor: colors.cobalt,
+              borderColor: colors.cobalt,
+            },
+          ]}
           onPress={() => handleVisibility('public')}
           activeOpacity={0.8}
         >
@@ -203,7 +248,12 @@ export function Step5Invite() {
             color={publicSelected ? colors.white : colors.ink}
           />
           <Text
-            style={[styles.visText, { color: colors.ink }, publicSelected && styles.visTextActive, publicSelected && { color: colors.white }]}
+            style={[
+              styles.visText,
+              { color: colors.ink },
+              publicSelected && styles.visTextActive,
+              publicSelected && { color: colors.white },
+            ]}
           >
             Public
           </Text>
@@ -216,7 +266,14 @@ export function Step5Invite() {
             {isGame ? 'Search Rosters' : 'Search Rosters & Players'}
           </Text>
           <TextInput
-            style={[styles.searchInput, { backgroundColor: colors.surface, borderColor: colors.border, color: colors.ink }]}
+            style={[
+              styles.searchInput,
+              {
+                backgroundColor: colors.surface,
+                borderColor: colors.border,
+                color: colors.ink,
+              },
+            ]}
             placeholder={
               isGame ? 'Search rosters...' : 'Search rosters or players...'
             }
@@ -234,7 +291,12 @@ export function Step5Invite() {
           )}
 
           {searchResults.length > 0 && (
-            <View style={[styles.resultsList, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <View
+              style={[
+                styles.resultsList,
+                { backgroundColor: colors.surface, borderColor: colors.border },
+              ]}
+            >
               {searchResults.map(item => {
                 const alreadyAdded = state.invitedItems.some(
                   i => i.id === item.id
@@ -242,7 +304,10 @@ export function Step5Invite() {
                 return (
                   <TouchableOpacity
                     key={item.id}
-                    style={[styles.resultRow, { borderBottomColor: colors.border }]}
+                    style={[
+                      styles.resultRow,
+                      { borderBottomColor: colors.border },
+                    ]}
                     onPress={() => handleAddInvite(item)}
                     disabled={alreadyAdded}
                     activeOpacity={0.7}
@@ -267,8 +332,11 @@ export function Step5Invite() {
                     )}
                     <Text
                       style={[
-                        styles.resultName, { color: colors.ink },
-                        alreadyAdded && styles.resultNameMuted, alreadyAdded && { color: colors.inkSoft }]}
+                        styles.resultName,
+                        { color: colors.ink },
+                        alreadyAdded && styles.resultNameMuted,
+                        alreadyAdded && { color: colors.inkSoft },
+                      ]}
                     >
                       {item.name}
                     </Text>
@@ -295,13 +363,24 @@ export function Step5Invite() {
               size={18}
               color={colors.cobalt}
             />
-            <Text style={[styles.inviteToMusterText, { color: colors.cobalt }]}>Invite to Muster</Text>
+            <Text style={[styles.inviteToMusterText, { color: colors.cobalt }]}>
+              Invite to Muster
+            </Text>
           </TouchableOpacity>
 
           {state.invitedItems.length > 0 && (
             <View style={styles.chipsContainer}>
               {state.invitedItems.map(item => (
-                <View key={item.id} style={[styles.inviteeCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+                <View
+                  key={item.id}
+                  style={[
+                    styles.inviteeCard,
+                    {
+                      backgroundColor: colors.surface,
+                      borderColor: colors.border,
+                    },
+                  ]}
+                >
                   <View style={styles.inviteeRow}>
                     {item.type === 'roster' ? (
                       <Ionicons
@@ -316,10 +395,24 @@ export function Step5Invite() {
                         color={colors.cobalt}
                       />
                     )}
-                    <Text style={[styles.chipText, { color: colors.ink }]}>{item.name}</Text>
+                    <Text style={[styles.chipText, { color: colors.ink }]}>
+                      {item.name}
+                    </Text>
                     {(item as any).pending && (
-                      <View style={[styles.pendingBadge, { backgroundColor: colors.gold }]}>
-                        <Text style={[styles.pendingBadgeText, { color: colors.white }]}>Pending</Text>
+                      <View
+                        style={[
+                          styles.pendingBadge,
+                          { backgroundColor: colors.gold },
+                        ]}
+                      >
+                        <Text
+                          style={[
+                            styles.pendingBadgeText,
+                            { color: colors.white },
+                          ]}
+                        >
+                          Pending
+                        </Text>
                       </View>
                     )}
                     <TouchableOpacity
@@ -350,9 +443,18 @@ export function Step5Invite() {
 
       {publicSelected && (
         <>
-          <Text style={[styles.label, { color: colors.ink }]}>Minimum Player Rating</Text>
+          <Text style={[styles.label, { color: colors.ink }]}>
+            Minimum Player Rating
+          </Text>
           <TextInput
-            style={[styles.input, { backgroundColor: colors.surface, borderColor: colors.border, color: colors.ink }]}
+            style={[
+              styles.input,
+              {
+                backgroundColor: colors.surface,
+                borderColor: colors.border,
+                color: colors.ink,
+              },
+            ]}
             placeholder="0 – 100"
             placeholderTextColor={colors.inkSoft}
             keyboardType="numeric"

@@ -15,6 +15,7 @@ import { RosterInviteItem } from './types';
 import { InviteToMusterModal } from '../../../components/invite/InviteToMusterModal';
 import { fonts, useTheme } from '../../../theme';
 import { API_BASE_URL } from '../../../services/api/config';
+import TokenStorage from '../../../services/auth/TokenStorage';
 
 export function RosterStep3Invite() {
   const { colors } = useTheme();
@@ -86,23 +87,56 @@ export function RosterStep3Invite() {
         },
       });
       setShowInviteModal(false);
-      // TODO: Send invite email via server
+
+      // Send invite email via server (best-effort — don't block UX)
+      TokenStorage.getAccessToken()
+        .then(token =>
+          fetch(`${API_BASE_URL}/invites/send`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              ...(token ? { Authorization: `Bearer ${token}` } : {}),
+            },
+            body: JSON.stringify({
+              name,
+              email,
+              context: 'roster',
+              contextId: undefined, // team not yet created at this step
+              contextName: state.name,
+            }),
+          })
+        )
+        .catch(err => console.warn('Invite email failed:', err));
     },
-    [dispatch]
+    [dispatch, state.name]
   );
 
   return (
     <ScrollView
-      style={[styles.container, { backgroundColor: colors.white }, { backgroundColor: colors.bgScreen }]}
+      style={[
+        styles.container,
+        { backgroundColor: colors.white },
+        { backgroundColor: colors.bgScreen },
+      ]}
       contentContainerStyle={styles.content}
       keyboardShouldPersistTaps="handled"
       showsVerticalScrollIndicator={false}
     >
-      <Text style={[styles.heading, { color: colors.ink }]}>Who's invited?</Text>
+      <Text style={[styles.heading, { color: colors.ink }]}>
+        Who's invited?
+      </Text>
 
       <View style={styles.visRow}>
         <TouchableOpacity
-          style={[styles.visBtn, { backgroundColor: colors.surface, borderColor: colors.border }, privateSelected && styles.visBtnActive, privateSelected && { backgroundColor: colors.cobalt, borderColor: colors.cobalt }]}
+          style={[
+            styles.visBtn,
+            { backgroundColor: colors.surface, borderColor: colors.border },
+            privateSelected && styles.visBtnActive,
+            privateSelected && {
+              backgroundColor: colors.cobalt,
+              borderColor: colors.cobalt,
+            },
+          ]}
           onPress={() =>
             dispatch({ type: 'SET_VISIBILITY', visibility: 'private' })
           }
@@ -114,13 +148,26 @@ export function RosterStep3Invite() {
             color={privateSelected ? colors.white : colors.ink}
           />
           <Text
-            style={[styles.visText, { color: colors.ink }, privateSelected && styles.visTextActive, privateSelected && { color: colors.white }]}
+            style={[
+              styles.visText,
+              { color: colors.ink },
+              privateSelected && styles.visTextActive,
+              privateSelected && { color: colors.white },
+            ]}
           >
             Private
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={[styles.visBtn, { backgroundColor: colors.surface, borderColor: colors.border }, publicSelected && styles.visBtnActive, publicSelected && { backgroundColor: colors.cobalt, borderColor: colors.cobalt }]}
+          style={[
+            styles.visBtn,
+            { backgroundColor: colors.surface, borderColor: colors.border },
+            publicSelected && styles.visBtnActive,
+            publicSelected && {
+              backgroundColor: colors.cobalt,
+              borderColor: colors.cobalt,
+            },
+          ]}
           onPress={() =>
             dispatch({ type: 'SET_VISIBILITY', visibility: 'public' })
           }
@@ -132,7 +179,12 @@ export function RosterStep3Invite() {
             color={publicSelected ? colors.white : colors.ink}
           />
           <Text
-            style={[styles.visText, { color: colors.ink }, publicSelected && styles.visTextActive, publicSelected && { color: colors.white }]}
+            style={[
+              styles.visText,
+              { color: colors.ink },
+              publicSelected && styles.visTextActive,
+              publicSelected && { color: colors.white },
+            ]}
           >
             Public
           </Text>
@@ -141,9 +193,18 @@ export function RosterStep3Invite() {
 
       {privateSelected && (
         <>
-          <Text style={[styles.label, { color: colors.ink }]}>Search Players & Rosters</Text>
+          <Text style={[styles.label, { color: colors.ink }]}>
+            Search Players & Rosters
+          </Text>
           <TextInput
-            style={[styles.searchInput, { backgroundColor: colors.surface, borderColor: colors.border, color: colors.ink }]}
+            style={[
+              styles.searchInput,
+              {
+                backgroundColor: colors.surface,
+                borderColor: colors.border,
+                color: colors.ink,
+              },
+            ]}
             placeholder="Search by name..."
             placeholderTextColor={colors.inkSoft}
             value={query}
@@ -157,13 +218,21 @@ export function RosterStep3Invite() {
             />
           )}
           {results.length > 0 && (
-            <View style={[styles.resultsList, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <View
+              style={[
+                styles.resultsList,
+                { backgroundColor: colors.surface, borderColor: colors.border },
+              ]}
+            >
               {results.map(item => {
                 const added = state.invitedItems.some(i => i.id === item.id);
                 return (
                   <TouchableOpacity
                     key={item.id}
-                    style={[styles.resultRow, { borderBottomColor: colors.border }]}
+                    style={[
+                      styles.resultRow,
+                      { borderBottomColor: colors.border },
+                    ]}
                     onPress={() => {
                       dispatch({ type: 'ADD_INVITE', item });
                       setQuery('');
@@ -191,7 +260,12 @@ export function RosterStep3Invite() {
                       />
                     )}
                     <Text
-                      style={[styles.resultName, { color: colors.ink }, added && styles.resultMuted, added && { color: colors.inkSoft }]}
+                      style={[
+                        styles.resultName,
+                        { color: colors.ink },
+                        added && styles.resultMuted,
+                        added && { color: colors.inkSoft },
+                      ]}
                     >
                       {item.name}
                     </Text>
@@ -218,13 +292,24 @@ export function RosterStep3Invite() {
               size={18}
               color={colors.cobalt}
             />
-            <Text style={[styles.inviteToMusterText, { color: colors.cobalt }]}>Invite to Muster</Text>
+            <Text style={[styles.inviteToMusterText, { color: colors.cobalt }]}>
+              Invite to Muster
+            </Text>
           </TouchableOpacity>
 
           {state.invitedItems.length > 0 && (
             <View style={styles.chipList}>
               {state.invitedItems.map(item => (
-                <View key={item.id} style={[styles.chip, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+                <View
+                  key={item.id}
+                  style={[
+                    styles.chip,
+                    {
+                      backgroundColor: colors.surface,
+                      borderColor: colors.border,
+                    },
+                  ]}
+                >
                   {item.type === 'roster' ? (
                     <Ionicons
                       name="people-outline"
@@ -238,10 +323,24 @@ export function RosterStep3Invite() {
                       color={colors.cobalt}
                     />
                   )}
-                  <Text style={[styles.chipText, { color: colors.ink }]}>{item.name}</Text>
+                  <Text style={[styles.chipText, { color: colors.ink }]}>
+                    {item.name}
+                  </Text>
                   {(item as any).pending && (
-                    <View style={[styles.pendingBadge, { backgroundColor: colors.gold }]}>
-                      <Text style={[styles.pendingBadgeText, { color: colors.white }]}>Pending</Text>
+                    <View
+                      style={[
+                        styles.pendingBadge,
+                        { backgroundColor: colors.gold },
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.pendingBadgeText,
+                          { color: colors.white },
+                        ]}
+                      >
+                        Pending
+                      </Text>
                     </View>
                   )}
                   <TouchableOpacity
@@ -271,9 +370,18 @@ export function RosterStep3Invite() {
 
       {publicSelected && (
         <>
-          <Text style={[styles.label, { color: colors.ink }]}>Minimum Player Rating</Text>
+          <Text style={[styles.label, { color: colors.ink }]}>
+            Minimum Player Rating
+          </Text>
           <TextInput
-            style={[styles.input, { backgroundColor: colors.surface, borderColor: colors.border, color: colors.ink }]}
+            style={[
+              styles.input,
+              {
+                backgroundColor: colors.surface,
+                borderColor: colors.border,
+                color: colors.ink,
+              },
+            ]}
             placeholder="0 – 100"
             placeholderTextColor={colors.inkSoft}
             keyboardType="numeric"
