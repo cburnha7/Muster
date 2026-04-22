@@ -7,25 +7,26 @@ import {
   Switch,
   Alert,
 } from 'react-native';
-import { userService } from '../../services/api/UserService';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { NotificationPreferences } from '../../types';
 import { FormButton } from '../../components/forms/FormButton';
-import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
-import { ErrorDisplay } from '../../components/ui/ErrorDisplay';
 import { fonts, useTheme } from '../../theme';
+
+const STORAGE_KEY = 'notificationPreferences';
+
+const DEFAULT_PREFS: NotificationPreferences = {
+  eventReminders: true,
+  eventUpdates: true,
+  newEventAlerts: true,
+  marketingEmails: false,
+  pushNotifications: true,
+};
 
 export function NotificationPreferencesScreen(): JSX.Element {
   const { colors } = useTheme();
-  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [preferences, setPreferences] = useState<NotificationPreferences>({
-    eventReminders: true,
-    eventUpdates: true,
-    newEventAlerts: true,
-    marketingEmails: false,
-    pushNotifications: true,
-  });
+  const [preferences, setPreferences] =
+    useState<NotificationPreferences>(DEFAULT_PREFS);
 
   useEffect(() => {
     loadPreferences();
@@ -33,16 +34,12 @@ export function NotificationPreferencesScreen(): JSX.Element {
 
   const loadPreferences = async () => {
     try {
-      setLoading(true);
-      setError(null);
-      // TODO: Re-enable when backend /users/notifications endpoint is implemented
-      // const prefs = await userService.getNotificationPreferences();
-      // setPreferences(prefs);
-      // For now, use defaults
-    } catch (err: any) {
-      setError(err.message || 'Failed to load notification preferences');
-    } finally {
-      setLoading(false);
+      const stored = await AsyncStorage.getItem(STORAGE_KEY);
+      if (stored) {
+        setPreferences({ ...DEFAULT_PREFS, ...JSON.parse(stored) });
+      }
+    } catch {
+      // Fall back to defaults silently
     }
   };
 
@@ -56,23 +53,14 @@ export function NotificationPreferencesScreen(): JSX.Element {
   const handleSave = async () => {
     try {
       setSaving(true);
-      // TODO: Re-enable when backend /users/notifications endpoint is implemented
-      // await userService.updateNotificationPreferences(preferences);
+      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(preferences));
       Alert.alert('Success', 'Notification preferences updated successfully');
-    } catch (err: any) {
-      Alert.alert('Error', err.message || 'Failed to update preferences');
+    } catch {
+      Alert.alert('Error', 'Failed to save preferences');
     } finally {
       setSaving(false);
     }
   };
-
-  if (loading) {
-    return <LoadingSpinner />;
-  }
-
-  if (error) {
-    return <ErrorDisplay message={error} onRetry={loadPreferences} />;
-  }
 
   const renderToggle = (
     label: string,
@@ -81,10 +69,22 @@ export function NotificationPreferencesScreen(): JSX.Element {
     disabled = false,
     isLast = false
   ) => (
-    <View style={[styles.preferenceItem, { borderBottomColor: colors.border + '60' }, isLast && styles.preferenceItemLast]}>
+    <View
+      style={[
+        styles.preferenceItem,
+        { borderBottomColor: colors.border + '60' },
+        isLast && styles.preferenceItemLast,
+      ]}
+    >
       <View style={styles.preferenceInfo}>
-        <Text style={[styles.preferenceLabel, { color: colors.ink }]}>{label}</Text>
-        <Text style={[styles.preferenceDescription, { color: colors.inkSecondary }]}>{description}</Text>
+        <Text style={[styles.preferenceLabel, { color: colors.ink }]}>
+          {label}
+        </Text>
+        <Text
+          style={[styles.preferenceDescription, { color: colors.inkSecondary }]}
+        >
+          {description}
+        </Text>
       </View>
       <Switch
         value={preferences[key]}
@@ -93,9 +93,7 @@ export function NotificationPreferencesScreen(): JSX.Element {
           false: colors.border,
           true: colors.cobalt + '50',
         }}
-        thumbColor={
-          preferences[key] ? colors.cobalt : colors.background
-        }
+        thumbColor={preferences[key] ? colors.cobalt : colors.surface}
         disabled={disabled}
         style={{ transform: [{ scaleX: 0.85 }, { scaleY: 0.85 }] }}
       />
@@ -109,8 +107,15 @@ export function NotificationPreferencesScreen(): JSX.Element {
       showsVerticalScrollIndicator={false}
     >
       {/* Push Notifications */}
-      <Text style={[styles.sectionHeader, { color: colors.inkSecondary }]}>Push Notifications</Text>
-      <View style={[styles.card, { backgroundColor: colors.bgCard, shadowColor: colors.ink }]}>
+      <Text style={[styles.sectionHeader, { color: colors.inkSecondary }]}>
+        Push Notifications
+      </Text>
+      <View
+        style={[
+          styles.card,
+          { backgroundColor: colors.bgCard, shadowColor: colors.ink },
+        ]}
+      >
         <Text style={[styles.cardDescription, { color: colors.inkSecondary }]}>
           Receive notifications on your device about important updates
         </Text>
@@ -124,8 +129,15 @@ export function NotificationPreferencesScreen(): JSX.Element {
       </View>
 
       {/* Event Notifications */}
-      <Text style={[styles.sectionHeader, { color: colors.inkSecondary }]}>Event Notifications</Text>
-      <View style={[styles.card, { backgroundColor: colors.bgCard, shadowColor: colors.ink }]}>
+      <Text style={[styles.sectionHeader, { color: colors.inkSecondary }]}>
+        Event Notifications
+      </Text>
+      <View
+        style={[
+          styles.card,
+          { backgroundColor: colors.bgCard, shadowColor: colors.ink },
+        ]}
+      >
         {renderToggle(
           'Event Reminders',
           'Get reminded about upcoming events',
@@ -148,8 +160,15 @@ export function NotificationPreferencesScreen(): JSX.Element {
       </View>
 
       {/* Email Notifications */}
-      <Text style={[styles.sectionHeader, { color: colors.inkSecondary }]}>Email</Text>
-      <View style={[styles.card, { backgroundColor: colors.bgCard, shadowColor: colors.ink }]}>
+      <Text style={[styles.sectionHeader, { color: colors.inkSecondary }]}>
+        Email
+      </Text>
+      <View
+        style={[
+          styles.card,
+          { backgroundColor: colors.bgCard, shadowColor: colors.ink },
+        ]}
+      >
         {renderToggle(
           'Marketing Emails',
           'Promotional emails and special offers',
