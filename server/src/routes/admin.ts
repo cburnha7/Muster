@@ -36,8 +36,13 @@ router.put('/verifications/:id/review', authMiddleware, async (req, res) => {
     if (!user || user.role !== 'admin')
       return res.status(403).json({ error: 'Admin access required' });
 
-    const { id } = req.params;
-    const { status, reviewerId, notes, rejectionReason } = req.body;
+    const { id } = req.params as { id: string };
+    const { status, reviewerId, notes, rejectionReason } = req.body as {
+      status: 'approved' | 'rejected';
+      reviewerId: string;
+      notes?: string;
+      rejectionReason?: string;
+    };
 
     if (!status || !reviewerId) {
       return res
@@ -93,7 +98,10 @@ router.post(
         return res.status(403).json({ error: 'Admin access required' });
       }
 
-      const { code, trialDurationDays } = req.body;
+      const { code, trialDurationDays } = req.body as {
+        code: string;
+        trialDurationDays?: number;
+      };
       const promoCode = await create(code, trialDurationDays ?? 30, userId);
       return res.status(201).json(promoCode);
     } catch (error: any) {
