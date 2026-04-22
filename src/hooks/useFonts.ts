@@ -9,28 +9,27 @@ import { Platform } from 'react-native';
 import * as Font from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
 
-// Build the font asset map at load time.
-let fontAssets: Record<string, any> = {};
-try {
-  const jakarta = require('@expo-google-fonts/plus-jakarta-sans');
-  const inter = require('@expo-google-fonts/inter');
-  fontAssets = {
-    PlusJakartaSans_400Regular: jakarta.PlusJakartaSans_400Regular,
-    PlusJakartaSans_500Medium: jakarta.PlusJakartaSans_500Medium,
-    PlusJakartaSans_600SemiBold: jakarta.PlusJakartaSans_600SemiBold,
-    PlusJakartaSans_700Bold: jakarta.PlusJakartaSans_700Bold,
-    PlusJakartaSans_800ExtraBold: jakarta.PlusJakartaSans_800ExtraBold,
-    Inter_400Regular: inter.Inter_400Regular,
-    Inter_500Medium: inter.Inter_500Medium,
-    Inter_600SemiBold: inter.Inter_600SemiBold,
-    Inter_700Bold: inter.Inter_700Bold,
-  };
-} catch (e) {
-  console.warn(
-    'Font packages failed to load — will use system fonts:',
-    (e as Error).message
-  );
-}
+import {
+  Fraunces_700Bold,
+  Fraunces_700Bold_Italic,
+  Fraunces_900Black,
+} from '@expo-google-fonts/fraunces';
+import {
+  Nunito_400Regular,
+  Nunito_500Medium,
+  Nunito_600SemiBold,
+  Nunito_700Bold,
+} from '@expo-google-fonts/nunito';
+
+const fontAssets = {
+  Fraunces_700Bold,
+  Fraunces_700Bold_Italic,
+  Fraunces_900Black,
+  Nunito_400Regular,
+  Nunito_500Medium,
+  Nunito_600SemiBold,
+  Nunito_700Bold,
+};
 
 const FONT_TIMEOUT_MS = 3000;
 
@@ -67,11 +66,6 @@ export function useFonts() {
 
     async function loadFonts() {
       try {
-        if (Object.keys(fontAssets).length === 0) {
-          console.warn('No font assets available — using system fonts');
-          resolve();
-          return;
-        }
         await Font.loadAsync(fontAssets);
         console.log('Fonts loaded successfully');
       } catch (err) {
