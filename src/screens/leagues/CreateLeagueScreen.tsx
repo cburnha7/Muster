@@ -15,7 +15,6 @@ import { Step4Who as Step5Invite } from './create-flow/Step4Who';
 import { WizardSuccessScreen } from '../../components/wizard/WizardSuccessScreen';
 import { UpsellModal } from '../../components/paywall/UpsellModal';
 import { leagueService } from '../../services/api/LeagueService';
-import { addLeague } from '../../store/slices/leaguesSlice';
 import { selectUser } from '../../store/slices/authSlice';
 import { useFeatureGate } from '../../hooks/useFeatureGate';
 import { SkillLevel } from '../../types';
@@ -95,7 +94,6 @@ function CreateLeagueInner() {
       };
 
       const newLeague = await leagueService.createLeague(data, user.id);
-      reduxDispatch(addLeague(newLeague as any));
 
       // Invite rosters
       for (const roster of state.invitedRosters) {
