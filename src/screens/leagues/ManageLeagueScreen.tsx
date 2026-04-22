@@ -32,7 +32,7 @@ import {
   LeagueMembership,
 } from '../../types/league';
 import { Team } from '../../types';
-import { colors, fonts, useTheme } from '../../theme';
+import { fonts, useTheme } from '../../theme';
 
 export const ManageLeagueScreen: React.FC = () => {
   const { colors } = useTheme();
@@ -334,8 +334,8 @@ export const ManageLeagueScreen: React.FC = () => {
         showsVerticalScrollIndicator={false}
       >
         {/* Edit League Info */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>League Information</Text>
+        <View style={[styles.section, { backgroundColor: colors.bgCard, shadowColor: colors.ink }]}>
+          <Text style={[styles.sectionTitle, { color: colors.ink }]}>League Information</Text>
           <LeagueForm
             initialData={league}
             onSubmit={handleUpdateLeague}
@@ -368,13 +368,13 @@ export const ManageLeagueScreen: React.FC = () => {
 
         {/* Commissioner Team Management */}
         <TouchableOpacity
-          style={styles.section}
+          style={[styles.section, { backgroundColor: colors.bgCard, shadowColor: colors.ink }]}
           onPress={() =>
             (navigation as any).navigate('LeagueTeamManagement', { leagueId })
           }
           activeOpacity={0.7}
         >
-          <View style={[styles.sectionHeader, { borderBottomWidth: 0 }]}>
+          <View style={[styles.sectionHeader, { borderBottomColor: colors.border }, { borderBottomWidth: 0 }]}>
             <View
               style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}
             >
@@ -409,10 +409,10 @@ export const ManageLeagueScreen: React.FC = () => {
         </TouchableOpacity>
 
         {/* Manage Teams */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>League Rosters</Text>
-            <Text style={styles.memberCount}>
+        <View style={[styles.section, { backgroundColor: colors.bgCard, shadowColor: colors.ink }]}>
+          <View style={[styles.sectionHeader, { borderBottomColor: colors.border }]}>
+            <Text style={[styles.sectionTitle, { color: colors.ink }]}>League Rosters</Text>
+            <Text style={[styles.memberCount, { color: colors.cobalt }]}>
               {members.length} {members.length === 1 ? 'roster' : 'rosters'}
             </Text>
           </View>
@@ -428,22 +428,22 @@ export const ManageLeagueScreen: React.FC = () => {
                 size={48}
                 color={colors.inkFaint}
               />
-              <Text style={styles.emptyStateText}>
+              <Text style={[styles.emptyStateText, { color: colors.inkFaint }]}>
                 No rosters have joined yet
               </Text>
-              <Text style={styles.emptyStateSubtext}>
+              <Text style={[styles.emptyStateSubtext, { color: colors.inkFaint }]}>
                 Rosters can join from the league details page
               </Text>
             </View>
           ) : (
             <View style={styles.teamsList}>
               {members.map(membership => (
-                <View key={membership.id} style={styles.teamItem}>
+                <View key={membership.id} style={[styles.teamItem, { backgroundColor: colors.bgSubtle }]}>
                   <View style={styles.teamInfo}>
-                    <Text style={styles.teamName}>
+                    <Text style={[styles.teamName, { color: colors.ink }]}>
                       {(membership as any).team?.name || 'Unknown Roster'}
                     </Text>
-                    <Text style={styles.teamStats}>
+                    <Text style={[styles.teamStats, { color: colors.inkFaint }]}>
                       {membership.matchesPlayed} matches • {membership.points}{' '}
                       points
                     </Text>
@@ -483,16 +483,16 @@ export const ManageLeagueScreen: React.FC = () => {
 
         {/* Roster Search & Invitation — Private Leagues only */}
         {isPrivateLeague && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Add Rosters</Text>
-            <Text style={styles.sectionDescription}>
+          <View style={[styles.section, { backgroundColor: colors.bgCard, shadowColor: colors.ink }]}>
+            <Text style={[styles.sectionTitle, { color: colors.ink }]}>Add Rosters</Text>
+            <Text style={[styles.sectionDescription, { color: colors.inkFaint }]}>
               Search for rosters by name and send league invitations
             </Text>
 
             <View style={styles.rosterSearchContainer}>
               <View style={styles.searchRow}>
                 <TextInput
-                  style={styles.searchInput}
+                  style={[styles.searchInput, { borderColor: colors.border, color: colors.ink, backgroundColor: colors.bgSubtle }]}
                   value={rosterSearchQuery}
                   onChangeText={text => {
                     setRosterSearchQuery(text);
@@ -526,25 +526,25 @@ export const ManageLeagueScreen: React.FC = () => {
 
               {/* Success feedback */}
               {inviteSuccess && (
-                <View style={styles.inviteSuccessContainer}>
+                <View style={[styles.inviteSuccessContainer, { backgroundColor: colors.successLight }]}>
                   <Ionicons
                     name="checkmark-circle"
                     size={18}
                     color={colors.cobalt}
                   />
-                  <Text style={styles.inviteSuccessText}>{inviteSuccess}</Text>
+                  <Text style={[styles.inviteSuccessText, { color: colors.cobalt }]}>{inviteSuccess}</Text>
                 </View>
               )}
 
               {/* Error feedback */}
               {inviteError && (
-                <View style={styles.inviteErrorContainer}>
+                <View style={[styles.inviteErrorContainer, { backgroundColor: colors.errorLight }]}>
                   <Ionicons
                     name="alert-circle"
                     size={18}
                     color={colors.heart}
                   />
-                  <Text style={styles.inviteErrorText}>{inviteError}</Text>
+                  <Text style={[styles.inviteErrorText, { color: colors.heart }]}>{inviteError}</Text>
                 </View>
               )}
 
@@ -559,13 +559,13 @@ export const ManageLeagueScreen: React.FC = () => {
                     const isInviting = invitingRosterId === roster.id;
 
                     return (
-                      <View key={roster.id} style={styles.searchResultItem}>
+                      <View key={roster.id} style={[styles.searchResultItem, { backgroundColor: colors.bgSubtle }]}>
                         <View style={styles.searchResultInfo}>
-                          <Text style={styles.searchResultName}>
+                          <Text style={[styles.searchResultName, { color: colors.ink }]}>
                             {roster.name}
                           </Text>
                           {roster.sportType && (
-                            <Text style={styles.searchResultMeta}>
+                            <Text style={[styles.searchResultMeta, { color: colors.inkFaint }]}>
                               {roster.sportType} • {roster.members?.length ?? 0}{' '}
                               players
                             </Text>
@@ -573,18 +573,18 @@ export const ManageLeagueScreen: React.FC = () => {
                         </View>
 
                         {status === 'pending' ? (
-                          <View style={styles.statusBadgePending}>
-                            <Text style={styles.statusBadgeText}>Pending</Text>
+                          <View style={[styles.statusBadgePending, { backgroundColor: colors.goldLight }]}>
+                            <Text style={[styles.statusBadgeText, { color: colors.ink }]}>Pending</Text>
                           </View>
                         ) : status === 'active' ? (
-                          <View style={styles.statusBadgeActive}>
-                            <Text style={styles.statusBadgeTextActive}>
+                          <View style={[styles.statusBadgeActive, { backgroundColor: colors.successLight }]}>
+                            <Text style={[styles.statusBadgeTextActive, { color: colors.cobalt }]}>
                               Accepted
                             </Text>
                           </View>
                         ) : status === 'withdrawn' ? (
-                          <View style={styles.statusBadgeDeclined}>
-                            <Text style={styles.statusBadgeText}>Declined</Text>
+                          <View style={[styles.statusBadgeDeclined, { backgroundColor: colors.errorLight }]}>
+                            <Text style={[styles.statusBadgeText, { color: colors.ink }]}>Declined</Text>
                           </View>
                         ) : (
                           <TouchableOpacity
@@ -605,7 +605,7 @@ export const ManageLeagueScreen: React.FC = () => {
                                 color={colors.white}
                               />
                             ) : (
-                              <Text style={styles.inviteButtonText}>
+                              <Text style={[styles.inviteButtonText, { color: colors.white }]}>
                                 Invite
                               </Text>
                             )}
@@ -622,7 +622,7 @@ export const ManageLeagueScreen: React.FC = () => {
                 rosterSearchQuery.trim() &&
                 !isSearchingRosters &&
                 !inviteError && (
-                  <Text style={styles.noSearchResults}>
+                  <Text style={[styles.noSearchResults, { color: colors.inkFaint }]}>
                     No rosters found matching "{rosterSearchQuery.trim()}"
                   </Text>
                 )}
@@ -632,8 +632,8 @@ export const ManageLeagueScreen: React.FC = () => {
             {members.filter(
               m => m.status === 'pending' && m.memberType === 'roster'
             ).length > 0 && (
-              <View style={styles.pendingInvitations}>
-                <Text style={styles.pendingInvitationsTitle}>
+              <View style={[styles.pendingInvitations, { borderTopColor: colors.border }]}>
+                <Text style={[styles.pendingInvitationsTitle, { color: colors.ink }]}>
                   Pending Invitations
                 </Text>
                 {members
@@ -650,11 +650,11 @@ export const ManageLeagueScreen: React.FC = () => {
                         size={18}
                         color={colors.gold}
                       />
-                      <Text style={styles.pendingInvitationName}>
+                      <Text style={[styles.pendingInvitationName, { color: colors.ink }]}>
                         {(membership as any).team?.name || 'Unknown Roster'}
                       </Text>
-                      <View style={styles.statusBadgePending}>
-                        <Text style={styles.statusBadgeText}>Pending</Text>
+                      <View style={[styles.statusBadgePending, { backgroundColor: colors.goldLight }]}>
+                        <Text style={[styles.statusBadgeText, { color: colors.ink }]}>Pending</Text>
                       </View>
                     </View>
                   ))}
@@ -664,9 +664,9 @@ export const ManageLeagueScreen: React.FC = () => {
         )}
 
         {/* Upload Documents */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Documents</Text>
-          <Text style={styles.sectionDescription}>
+        <View style={[styles.section, { backgroundColor: colors.bgCard, shadowColor: colors.ink }]}>
+          <Text style={[styles.sectionTitle, { color: colors.ink }]}>Documents</Text>
+          <Text style={[styles.sectionDescription, { color: colors.inkFaint }]}>
             Upload league rules, insurance policies, or other important
             documents
           </Text>
@@ -690,7 +690,7 @@ export const ManageLeagueScreen: React.FC = () => {
               size="large"
               leftIcon="trash-outline"
             />
-            <Text style={styles.deleteHint}>
+            <Text style={[styles.deleteHint, { color: colors.inkFaint }]}>
               This will permanently remove the league and issue any applicable
               refunds.
             </Text>
@@ -704,17 +704,14 @@ export const ManageLeagueScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
   },
   scrollView: {
     flex: 1,
   },
   section: {
     marginBottom: 12,
-    backgroundColor: colors.surface,
     borderRadius: 16,
     padding: 16,
-    shadowColor: colors.ink,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.04,
     shadowRadius: 8,
@@ -727,19 +724,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
   },
   sectionTitle: {
     fontSize: 18,
     fontFamily: fonts.headingSemi,
-    color: colors.ink,
     paddingHorizontal: 16,
     paddingTop: 16,
     paddingBottom: 8,
   },
   sectionDescription: {
     fontSize: 14,
-    color: colors.inkFaint,
     paddingHorizontal: 16,
     paddingBottom: 12,
     lineHeight: 20,
@@ -747,7 +741,6 @@ const styles = StyleSheet.create({
   memberCount: {
     fontSize: 14,
     fontFamily: fonts.headingSemi,
-    color: colors.cobalt,
   },
   loadingContainer: {
     padding: 32,
@@ -760,13 +753,11 @@ const styles = StyleSheet.create({
   emptyStateText: {
     fontSize: 16,
     fontFamily: fonts.headingSemi,
-    color: colors.inkFaint,
     marginTop: 16,
     textAlign: 'center',
   },
   emptyStateSubtext: {
     fontSize: 14,
-    color: colors.inkFaint,
     marginTop: 8,
     textAlign: 'center',
   },
@@ -779,7 +770,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingVertical: 12,
     paddingHorizontal: 16,
-    backgroundColor: colors.background,
     borderRadius: 12,
     marginBottom: 8,
   },
@@ -789,12 +779,10 @@ const styles = StyleSheet.create({
   teamName: {
     fontSize: 16,
     fontFamily: fonts.headingSemi,
-    color: colors.ink,
     marginBottom: 4,
   },
   teamStats: {
     fontSize: 14,
-    color: colors.inkFaint,
   },
   removeButton: {
     padding: 8,
@@ -812,17 +800,13 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     borderWidth: 1,
-    borderColor: colors.border,
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 10,
     fontSize: 15,
     fontFamily: fonts.body,
-    color: colors.ink,
-    backgroundColor: colors.background,
   },
   searchButton: {
-    backgroundColor: colors.cobalt,
     borderRadius: 9999,
     width: 44,
     height: 44,
@@ -837,13 +821,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 10,
     padding: 10,
-    backgroundColor: colors.successLight,
     borderRadius: 8,
   },
   inviteSuccessText: {
     fontFamily: fonts.body,
     fontSize: 14,
-    color: colors.cobalt,
     marginLeft: 6,
     flex: 1,
   },
@@ -852,13 +834,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 10,
     padding: 10,
-    backgroundColor: colors.errorLight,
     borderRadius: 8,
   },
   inviteErrorText: {
     fontFamily: fonts.body,
     fontSize: 14,
-    color: colors.heart,
     marginLeft: 6,
     flex: 1,
   },
@@ -871,7 +851,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingVertical: 10,
     paddingHorizontal: 12,
-    backgroundColor: colors.background,
     borderRadius: 8,
     marginBottom: 6,
   },
@@ -882,16 +861,13 @@ const styles = StyleSheet.create({
   searchResultName: {
     fontFamily: fonts.semibold,
     fontSize: 15,
-    color: colors.ink,
   },
   searchResultMeta: {
     fontFamily: fonts.body,
     fontSize: 13,
-    color: colors.inkFaint,
     marginTop: 2,
   },
   inviteButton: {
-    backgroundColor: colors.cobalt,
     borderRadius: 9999,
     paddingHorizontal: 16,
     paddingVertical: 8,
@@ -905,22 +881,18 @@ const styles = StyleSheet.create({
   inviteButtonText: {
     fontFamily: fonts.ui,
     fontSize: 14,
-    color: colors.white,
   },
   statusBadgePending: {
-    backgroundColor: colors.goldLight,
     borderRadius: 12,
     paddingHorizontal: 10,
     paddingVertical: 4,
   },
   statusBadgeActive: {
-    backgroundColor: colors.successLight,
     borderRadius: 12,
     paddingHorizontal: 10,
     paddingVertical: 4,
   },
   statusBadgeDeclined: {
-    backgroundColor: colors.errorLight,
     borderRadius: 12,
     paddingHorizontal: 10,
     paddingVertical: 4,
@@ -928,21 +900,18 @@ const styles = StyleSheet.create({
   statusBadgeText: {
     fontFamily: fonts.label,
     fontSize: 11,
-    color: colors.ink,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
   statusBadgeTextActive: {
     fontFamily: fonts.label,
     fontSize: 11,
-    color: colors.cobalt,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
   noSearchResults: {
     fontFamily: fonts.body,
     fontSize: 14,
-    color: colors.inkFaint,
     marginTop: 12,
     textAlign: 'center',
     paddingVertical: 8,
@@ -951,14 +920,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingBottom: 16,
     borderTopWidth: 1,
-    borderTopColor: colors.border,
     marginTop: 4,
     paddingTop: 12,
   },
   pendingInvitationsTitle: {
     fontFamily: fonts.label,
     fontSize: 12,
-    color: colors.ink,
     textTransform: 'uppercase',
     letterSpacing: 1,
     marginBottom: 8,
@@ -972,7 +939,6 @@ const styles = StyleSheet.create({
   pendingInvitationName: {
     fontFamily: fonts.body,
     fontSize: 15,
-    color: colors.ink,
     flex: 1,
   },
   deleteSection: {
@@ -982,7 +948,6 @@ const styles = StyleSheet.create({
   deleteHint: {
     fontFamily: fonts.body,
     fontSize: 13,
-    color: colors.inkFaint,
     textAlign: 'center',
     marginTop: 10,
     lineHeight: 18,

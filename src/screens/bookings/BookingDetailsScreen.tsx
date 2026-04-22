@@ -15,7 +15,7 @@ import {
 } from '@react-navigation/native';
 import { useDispatch } from 'react-redux';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, fonts, useTheme } from '../../theme';
+import { fonts, useTheme } from '../../theme';
 
 import { ScreenHeader } from '../../components/navigation/ScreenHeader';
 import { FormButton } from '../../components/forms/FormButton';
@@ -340,9 +340,16 @@ export function BookingDetailsScreen(): JSX.Element {
         showsVerticalScrollIndicator={false}
       >
         {/* Booking Status */}
-        <View style={styles.section}>
+        <View
+          style={[
+            styles.section,
+            { backgroundColor: colors.bgCard, shadowColor: colors.ink },
+          ]}
+        >
           <View style={styles.statusHeader}>
-            <Text style={styles.sectionTitle}>Booking Status</Text>
+            <Text style={[styles.sectionTitle, { color: colors.ink }]}>
+              Booking Status
+            </Text>
             {booking.status !== BookingStatus.COMPLETED && (
               <View
                 style={[
@@ -350,7 +357,7 @@ export function BookingDetailsScreen(): JSX.Element {
                   { backgroundColor: getStatusColor(booking.status) },
                 ]}
               >
-                <Text style={styles.statusText}>
+                <Text style={[styles.statusText, { color: colors.white }]}>
                   {booking.status
                     ? booking.status.replace('_', ' ').toUpperCase()
                     : 'UNKNOWN'}
@@ -360,13 +367,13 @@ export function BookingDetailsScreen(): JSX.Element {
           </View>
 
           <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>Booking ID</Text>
-            <Text style={styles.detailValue}>{booking.id}</Text>
+            <Text style={[styles.detailLabel, { color: colors.inkSecondary }]}>Booking ID</Text>
+            <Text style={[styles.detailValue, { color: colors.ink }]}>{booking.id}</Text>
           </View>
 
           <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>Booked On</Text>
-            <Text style={styles.detailValue}>
+            <Text style={[styles.detailLabel, { color: colors.inkSecondary }]}>Booked On</Text>
+            <Text style={[styles.detailValue, { color: colors.ink }]}>
               {new Date(booking.bookedAt).toLocaleDateString('en-US', {
                 year: 'numeric',
                 month: 'long',
@@ -379,8 +386,8 @@ export function BookingDetailsScreen(): JSX.Element {
 
           {booking.cancelledAt && (
             <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>Cancelled On</Text>
-              <Text style={styles.detailValue}>
+              <Text style={[styles.detailLabel, { color: colors.inkSecondary }]}>Cancelled On</Text>
+              <Text style={[styles.detailValue, { color: colors.ink }]}>
                 {new Date(booking.cancelledAt).toLocaleDateString('en-US', {
                   year: 'numeric',
                   month: 'long',
@@ -394,8 +401,8 @@ export function BookingDetailsScreen(): JSX.Element {
 
           {booking.cancellationReason && (
             <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>Cancellation Reason</Text>
-              <Text style={styles.detailValue}>
+              <Text style={[styles.detailLabel, { color: colors.inkSecondary }]}>Cancellation Reason</Text>
+              <Text style={[styles.detailValue, { color: colors.ink }]}>
                 {booking.cancellationReason}
               </Text>
             </View>
@@ -404,17 +411,17 @@ export function BookingDetailsScreen(): JSX.Element {
 
         {/* Event Details */}
         {event && (
-          <View style={styles.section}>
+          <View style={[styles.section, { backgroundColor: colors.bgCard, shadowColor: colors.ink }]}>
             <View style={styles.eventHeader}>
               <Ionicons
                 name={getSportIcon(event.sportType) as any}
                 size={24}
                 color={colors.cobalt}
               />
-              <Text style={styles.eventTitle}>{event.title}</Text>
+              <Text style={[styles.eventTitle, { color: colors.ink }]}>{event.title}</Text>
             </View>
 
-            <Text style={styles.eventDescription}>{event.description}</Text>
+            <Text style={[styles.eventDescription, { color: colors.inkSecondary }]}>{event.description}</Text>
 
             <View style={styles.detailRow}>
               <Ionicons
@@ -423,11 +430,11 @@ export function BookingDetailsScreen(): JSX.Element {
                 color={colors.inkSecondary}
               />
               <View style={styles.detailContent}>
-                <Text style={styles.detailLabel}>Date & Time</Text>
-                <Text style={styles.detailValue}>
+                <Text style={[styles.detailLabel, { color: colors.inkSecondary }]}>Date & Time</Text>
+                <Text style={[styles.detailValue, { color: colors.ink }]}>
                   {formatDateTime(event.startTime).date}
                 </Text>
-                <Text style={styles.detailSubtext}>
+                <Text style={[styles.detailSubtext, { color: colors.inkSecondary }]}>
                   {formatDateTime(event.startTime).time} -{' '}
                   {formatDateTime(event.endTime).time}
                 </Text>
@@ -441,12 +448,12 @@ export function BookingDetailsScreen(): JSX.Element {
                 color={colors.inkSecondary}
               />
               <View style={styles.detailContent}>
-                <Text style={styles.detailLabel}>Location</Text>
-                <Text style={styles.detailValue}>
+                <Text style={[styles.detailLabel, { color: colors.inkSecondary }]}>Location</Text>
+                <Text style={[styles.detailValue, { color: colors.ink }]}>
                   {event.facility?.name || event.locationName || 'Location TBD'}
                 </Text>
                 {event.facility && (
-                  <Text style={styles.detailSubtext}>
+                  <Text style={[styles.detailSubtext, { color: colors.inkSecondary }]}>
                     {event.facility.street}, {event.facility.city}
                   </Text>
                 )}
@@ -460,8 +467,8 @@ export function BookingDetailsScreen(): JSX.Element {
                 color={colors.inkSecondary}
               />
               <View style={styles.detailContent}>
-                <Text style={styles.detailLabel}>Skill Level</Text>
-                <Text style={styles.detailValue}>
+                <Text style={[styles.detailLabel, { color: colors.inkSecondary }]}>Skill Level</Text>
+                <Text style={[styles.detailValue, { color: colors.ink }]}>
                   {event.skillLevel
                     ? event.skillLevel.replace('_', ' ').toUpperCase()
                     : 'N/A'}
@@ -476,8 +483,8 @@ export function BookingDetailsScreen(): JSX.Element {
                 color={colors.inkSecondary}
               />
               <View style={styles.detailContent}>
-                <Text style={styles.detailLabel}>Participants</Text>
-                <Text style={styles.detailValue}>
+                <Text style={[styles.detailLabel, { color: colors.inkSecondary }]}>Participants</Text>
+                <Text style={[styles.detailValue, { color: colors.ink }]}>
                   {event.currentParticipants} / {event.maxParticipants}
                 </Text>
               </View>
@@ -491,8 +498,8 @@ export function BookingDetailsScreen(): JSX.Element {
                   color={colors.inkSecondary}
                 />
                 <View style={styles.detailContent}>
-                  <Text style={styles.detailLabel}>Equipment Needed</Text>
-                  <Text style={styles.detailValue}>
+                  <Text style={[styles.detailLabel, { color: colors.inkSecondary }]}>Equipment Needed</Text>
+                  <Text style={[styles.detailValue, { color: colors.ink }]}>
                     {event.equipment.join(', ')}
                   </Text>
                 </View>
@@ -502,18 +509,18 @@ export function BookingDetailsScreen(): JSX.Element {
         )}
 
         {/* Payment Details */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Payment Details</Text>
+        <View style={[styles.section, { backgroundColor: colors.bgCard, shadowColor: colors.ink }]}>
+          <Text style={[styles.sectionTitle, { color: colors.ink }]}>Payment Details</Text>
 
           <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>Amount</Text>
-            <Text style={styles.detailValue}>
+            <Text style={[styles.detailLabel, { color: colors.inkSecondary }]}>Amount</Text>
+            <Text style={[styles.detailValue, { color: colors.ink }]}>
               {event?.price > 0 ? `$${event.price.toFixed(2)}` : 'Free'}
             </Text>
           </View>
 
           <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>Payment Status</Text>
+            <Text style={[styles.detailLabel, { color: colors.inkSecondary }]}>Payment Status</Text>
             <View
               style={[
                 styles.paymentStatusBadge,
@@ -522,7 +529,7 @@ export function BookingDetailsScreen(): JSX.Element {
                 },
               ]}
             >
-              <Text style={styles.paymentStatusText}>
+              <Text style={[styles.paymentStatusText, { color: colors.white }]}>
                 {booking.paymentStatus
                   ? booking.paymentStatus.replace('_', ' ').toUpperCase()
                   : 'UNKNOWN'}
@@ -532,33 +539,33 @@ export function BookingDetailsScreen(): JSX.Element {
 
           {booking.paymentId && (
             <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>Payment ID</Text>
-              <Text style={styles.detailValue}>{booking.paymentId}</Text>
+              <Text style={[styles.detailLabel, { color: colors.inkSecondary }]}>Payment ID</Text>
+              <Text style={[styles.detailValue, { color: colors.ink }]}>{booking.paymentId}</Text>
             </View>
           )}
 
           {booking.refundAmount && booking.refundAmount > 0 && (
             <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>Refund Amount</Text>
-              <Text style={styles.detailValue}>${booking.refundAmount}</Text>
+              <Text style={[styles.detailLabel, { color: colors.inkSecondary }]}>Refund Amount</Text>
+              <Text style={[styles.detailValue, { color: colors.ink }]}>${booking.refundAmount}</Text>
             </View>
           )}
         </View>
 
         {/* Team Details */}
         {booking.team && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Team Details</Text>
+          <View style={[styles.section, { backgroundColor: colors.bgCard, shadowColor: colors.ink }]}>
+            <Text style={[styles.sectionTitle, { color: colors.ink }]}>Team Details</Text>
 
             <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>Team Name</Text>
-              <Text style={styles.detailValue}>{booking.team.name}</Text>
+              <Text style={[styles.detailLabel, { color: colors.inkSecondary }]}>Team Name</Text>
+              <Text style={[styles.detailValue, { color: colors.ink }]}>{booking.team.name}</Text>
             </View>
 
             {booking.team.description && (
               <View style={styles.detailRow}>
-                <Text style={styles.detailLabel}>Description</Text>
-                <Text style={styles.detailValue}>
+                <Text style={[styles.detailLabel, { color: colors.inkSecondary }]}>Description</Text>
+                <Text style={[styles.detailValue, { color: colors.ink }]}>
                   {booking.team.description}
                 </Text>
               </View>
@@ -568,7 +575,7 @@ export function BookingDetailsScreen(): JSX.Element {
       </ScrollView>
 
       {/* Action Buttons */}
-      <View style={styles.actions}>
+      <View style={[styles.actions, { backgroundColor: colors.bgCard, borderTopColor: colors.bgScreen }]}>
         {event && (
           <FormButton
             title="View Event"
@@ -596,7 +603,6 @@ export function BookingDetailsScreen(): JSX.Element {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
   },
   scrollView: {
     flex: 1,
@@ -605,9 +611,7 @@ const styles = StyleSheet.create({
     paddingBottom: 20,
   },
   section: {
-    backgroundColor: colors.white,
     borderRadius: 16,
-    shadowColor: colors.ink,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.07,
     shadowRadius: 10,
@@ -619,7 +623,6 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontFamily: fonts.heading,
     fontSize: 18,
-    color: colors.ink,
     marginBottom: 12,
   },
   statusHeader: {
@@ -634,7 +637,6 @@ const styles = StyleSheet.create({
     borderRadius: 16,
   },
   statusText: {
-    color: colors.white,
     fontSize: 12,
     fontFamily: fonts.headingSemi,
   },
@@ -646,14 +648,12 @@ const styles = StyleSheet.create({
   eventTitle: {
     fontSize: 20,
     fontFamily: fonts.headingSemi,
-    color: colors.ink,
     marginLeft: 8,
     flex: 1,
   },
   eventDescription: {
     fontSize: 16,
     fontFamily: fonts.body,
-    color: colors.inkSecondary,
     lineHeight: 24,
     marginBottom: 16,
   },
@@ -670,20 +670,17 @@ const styles = StyleSheet.create({
   detailLabel: {
     fontSize: 14,
     fontFamily: fonts.body,
-    color: colors.inkSecondary,
     marginBottom: 2,
     flex: 1,
   },
   detailValue: {
     fontSize: 16,
-    color: colors.ink,
     fontFamily: fonts.label,
     flex: 2,
   },
   detailSubtext: {
     fontSize: 14,
     fontFamily: fonts.body,
-    color: colors.inkSecondary,
     marginTop: 2,
   },
   paymentStatusBadge: {
@@ -693,7 +690,6 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
   },
   paymentStatusText: {
-    color: colors.white,
     fontSize: 12,
     fontFamily: fonts.headingSemi,
   },
@@ -701,9 +697,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     paddingHorizontal: 16,
     paddingVertical: 12,
-    backgroundColor: colors.white,
     borderTopWidth: 1,
-    borderTopColor: colors.background,
   },
   actionButton: {
     flex: 1,

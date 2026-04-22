@@ -32,7 +32,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { FormInput } from '../../components/forms/FormInput';
 import { FormButton } from '../../components/forms/FormButton';
 import { SSOButton } from '../../components/auth/SSOButton';
-import { colors } from '../../theme';
+import { useTheme } from '../../theme';
 import ValidationService from '../../services/auth/ValidationService';
 import SSOService from '../../services/auth/SSOService';
 import {
@@ -63,6 +63,7 @@ export function InviteRegistrationScreen({
   const { inviteCode, teamName, teamSport } = route.params ?? {};
   const navigation = useNavigation();
   const dispatch = useDispatch();
+  const { colors } = useTheme();
 
   // Step tracking
   const [step, setStep] = useState(0); // 0 = account, 1 = child/self
@@ -287,16 +288,22 @@ export function InviteRegistrationScreen({
   // ── Render Step 1: Account Creation ──
   const renderAccountStep = () => (
     <>
-      <View style={styles.teamBanner}>
+      <View
+        style={[styles.teamBanner, { backgroundColor: colors.gold + '18' }]}
+      >
         <Ionicons name="people" size={20} color={colors.gold} />
-        <Text style={styles.teamBannerText}>
+        <Text style={[styles.teamBannerText, { color: colors.inkSecondary }]}>
           You've been invited to join{' '}
-          <Text style={styles.teamBannerName}>{teamName}</Text>
+          <Text style={[styles.teamBannerName, { color: colors.ink }]}>
+            {teamName}
+          </Text>
         </Text>
       </View>
 
-      <Text style={styles.stepTitle}>Create your account</Text>
-      <Text style={styles.stepSubtitle}>
+      <Text style={[styles.stepTitle, { color: colors.ink }]}>
+        Create your account
+      </Text>
+      <Text style={[styles.stepSubtitle, { color: colors.inkSecondary }]}>
         Sign up to join the team. It only takes a minute.
       </Text>
 
@@ -357,7 +364,9 @@ export function InviteRegistrationScreen({
       />
 
       <View style={styles.ssoSection}>
-        <Text style={styles.ssoText}>Or sign up with</Text>
+        <Text style={[styles.ssoText, { color: colors.inkMuted }]}>
+          Or sign up with
+        </Text>
         <View style={styles.ssoRow}>
           {Platform.OS === 'ios' && (
             <SSOButton
@@ -380,9 +389,11 @@ export function InviteRegistrationScreen({
         style={styles.loginLink}
         onPress={() => (navigation as any).navigate('Login')}
       >
-        <Text style={styles.loginLinkText}>
+        <Text style={[styles.loginLinkText, { color: colors.inkSecondary }]}>
           Already have an account?{' '}
-          <Text style={styles.loginLinkBold}>Sign in</Text>
+          <Text style={[styles.loginLinkBold, { color: colors.cobalt }]}>
+            Sign in
+          </Text>
         </Text>
       </TouchableOpacity>
     </>
@@ -391,14 +402,20 @@ export function InviteRegistrationScreen({
   // ── Render Step 2: Child or Self ──
   const renderChildStep = () => (
     <>
-      <Text style={styles.stepTitle}>Who's joining?</Text>
-      <Text style={styles.stepSubtitle}>
+      <Text style={[styles.stepTitle, { color: colors.ink }]}>
+        Who's joining?
+      </Text>
+      <Text style={[styles.stepSubtitle, { color: colors.inkSecondary }]}>
         Is this for your child or are you joining as a player?
       </Text>
 
-      <View style={styles.toggleRow}>
+      <View style={[styles.toggleRow, { backgroundColor: colors.bgCard }]}>
         <Text
-          style={[styles.toggleLabel, !isForChild && styles.toggleLabelActive]}
+          style={[
+            styles.toggleLabel,
+            { color: colors.inkMuted },
+            !isForChild && { color: colors.ink, fontWeight: '700' },
+          ]}
         >
           This is for me
         </Text>
@@ -409,7 +426,11 @@ export function InviteRegistrationScreen({
           thumbColor={isForChild ? colors.gold : colors.cobalt}
         />
         <Text
-          style={[styles.toggleLabel, isForChild && styles.toggleLabelActive]}
+          style={[
+            styles.toggleLabel,
+            { color: colors.inkMuted },
+            isForChild && { color: colors.ink, fontWeight: '700' },
+          ]}
         >
           For my child
         </Text>
@@ -442,13 +463,15 @@ export function InviteRegistrationScreen({
       )}
 
       {!isForChild && (
-        <View style={styles.selfNote}>
+        <View
+          style={[styles.selfNote, { backgroundColor: colors.cobalt + '10' }]}
+        >
           <Ionicons
             name="information-circle-outline"
             size={18}
             color={colors.cobalt}
           />
-          <Text style={styles.selfNoteText}>
+          <Text style={[styles.selfNoteText, { color: colors.inkSecondary }]}>
             You'll be added as a player on {teamName}.
           </Text>
         </View>
@@ -466,14 +489,16 @@ export function InviteRegistrationScreen({
         disabled={isLoading}
       >
         <Ionicons name="arrow-back" size={18} color={colors.inkSecondary} />
-        <Text style={styles.backBtnText}>Back</Text>
+        <Text style={[styles.backBtnText, { color: colors.inkSecondary }]}>
+          Back
+        </Text>
       </TouchableOpacity>
     </>
   );
 
   return (
     <KeyboardAvoidingView
-      style={styles.container}
+      style={[styles.container, { backgroundColor: colors.bgScreen }]}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <ScrollView
@@ -484,10 +509,18 @@ export function InviteRegistrationScreen({
         {/* Progress indicator */}
         <View style={styles.progressRow}>
           <View
-            style={[styles.progressDot, step === 0 && styles.progressDotActive]}
+            style={[
+              styles.progressDot,
+              { backgroundColor: colors.border },
+              step === 0 && { width: 24, backgroundColor: colors.cobalt },
+            ]}
           />
           <View
-            style={[styles.progressDot, step === 1 && styles.progressDotActive]}
+            style={[
+              styles.progressDot,
+              { backgroundColor: colors.border },
+              step === 1 && { width: 24, backgroundColor: colors.cobalt },
+            ]}
           />
         </View>
 
@@ -500,7 +533,6 @@ export function InviteRegistrationScreen({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
   },
   scrollContent: {
     padding: 24,
@@ -520,18 +552,12 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: colors.border,
-  },
-  progressDotActive: {
-    width: 24,
-    backgroundColor: colors.cobalt || colors.cobalt,
   },
 
   // Team banner
   teamBanner: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.gold + '18',
     borderRadius: 12,
     padding: 14,
     gap: 10,
@@ -540,23 +566,19 @@ const styles = StyleSheet.create({
   teamBannerText: {
     flex: 1,
     fontSize: 14,
-    color: colors.inkSecondary,
     lineHeight: 20,
   },
   teamBannerName: {
     fontWeight: '700',
-    color: colors.ink,
   },
 
   // Step content
   stepTitle: {
     fontSize: 26,
     fontWeight: '700',
-    color: colors.ink,
   },
   stepSubtitle: {
     fontSize: 15,
-    color: colors.inkSecondary,
     lineHeight: 22,
     marginBottom: 8,
   },
@@ -578,7 +600,6 @@ const styles = StyleSheet.create({
   },
   ssoText: {
     fontSize: 13,
-    color: colors.inkMuted,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
@@ -594,11 +615,9 @@ const styles = StyleSheet.create({
   },
   loginLinkText: {
     fontSize: 14,
-    color: colors.inkSecondary,
   },
   loginLinkBold: {
     fontWeight: '700',
-    color: colors.cobalt || colors.cobalt,
   },
 
   // Toggle
@@ -608,18 +627,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 12,
     paddingVertical: 16,
-    backgroundColor: colors.white,
     borderRadius: 12,
     marginVertical: 8,
   },
   toggleLabel: {
     fontSize: 15,
-    color: colors.inkMuted,
     fontWeight: '500',
-  },
-  toggleLabelActive: {
-    color: colors.ink,
-    fontWeight: '700',
   },
 
   // Child fields
@@ -633,13 +646,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 8,
     padding: 14,
-    backgroundColor: colors.cobalt + '10',
     borderRadius: 10,
   },
   selfNoteText: {
     flex: 1,
     fontSize: 14,
-    color: colors.inkSecondary,
     lineHeight: 20,
   },
 
@@ -654,7 +665,6 @@ const styles = StyleSheet.create({
   },
   backBtnText: {
     fontSize: 15,
-    color: colors.inkSecondary,
     fontWeight: '500',
   },
 });

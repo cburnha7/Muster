@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { Calendar, DateData } from 'react-native-calendars';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, Spacing, TextStyles, useTheme } from '../../theme';
+import { Spacing, TextStyles, useTheme } from '../../theme';
 import { courtService, TimeSlot, Court } from '../../services/api/CourtService';
 import {
   calendarTheme,
@@ -199,14 +199,14 @@ export function GroundAvailabilityScreen({
         style={[styles.loadingContainer, { backgroundColor: colors.bgScreen }]}
       >
         <ActivityIndicator size="large" color={colors.cobalt} />
-        <Text style={styles.loadingText}>Loading availability...</Text>
+        <Text style={[styles.loadingText, { color: colors.textSecondary }]}>Loading availability...</Text>
       </View>
     );
   }
 
   return (
     <View style={[styles.container, { backgroundColor: colors.bgScreen }]}>
-      <View style={styles.header}>
+      <View style={[styles.header, { backgroundColor: colors.bgScreen, borderBottomColor: colors.border }]}>
         <TouchableOpacity
           style={styles.backButton}
           onPress={() => navigation.goBack()}
@@ -214,8 +214,8 @@ export function GroundAvailabilityScreen({
           <Ionicons name="arrow-back" size={24} color={colors.textPrimary} />
         </TouchableOpacity>
         <View style={styles.headerContent}>
-          <Text style={styles.headerTitle}>Ground Availability</Text>
-          <Text style={styles.headerSubtitle}>{facilityName}</Text>
+          <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>Ground Availability</Text>
+          <Text style={[styles.headerSubtitle, { color: colors.textSecondary }]}>{facilityName}</Text>
         </View>
       </View>
 
@@ -225,7 +225,7 @@ export function GroundAvailabilityScreen({
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
       >
-        <View style={styles.calendarContainer}>
+        <View style={[styles.calendarContainer, { backgroundColor: colors.surface, shadowColor: colors.ink }]}>
           <Calendar
             current={selectedDate}
             onDayPress={handleDateSelect}
@@ -242,7 +242,7 @@ export function GroundAvailabilityScreen({
 
         {courts.length > 0 && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Select Courts</Text>
+            <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Select Courts</Text>
             <View style={styles.courtSelector}>
               {courts.map(court => (
                 <TouchableOpacity
@@ -272,7 +272,7 @@ export function GroundAvailabilityScreen({
         {selectedCourtIds.length > 0 ? (
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>
+              <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>
                 Availability for{' '}
                 {new Date(selectedDate).toLocaleDateString('en-US', {
                   month: 'short',
@@ -294,7 +294,7 @@ export function GroundAvailabilityScreen({
                 }}
               >
                 <Ionicons name="add-circle" size={24} color={colors.cobalt} />
-                <Text style={styles.addButtonText}>Block Slot</Text>
+                <Text style={[styles.addButtonText, { color: colors.cobalt }]}>Block Slot</Text>
               </TouchableOpacity>
             </View>
             <TimeSlotGrid
@@ -310,32 +310,32 @@ export function GroundAvailabilityScreen({
               size={64}
               color={colors.inkFaint}
             />
-            <Text style={styles.emptyStateText}>
+            <Text style={[styles.emptyStateText, { color: colors.textSecondary }]}>
               Select at least one court to view availability
             </Text>
           </View>
         )}
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Legend</Text>
+          <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Legend</Text>
           <View style={styles.legend}>
             <View style={styles.legendItem}>
               <View
                 style={[styles.legendColor, { backgroundColor: colors.cobalt }]}
               />
-              <Text style={styles.legendText}>Available</Text>
+              <Text style={[styles.legendText, { color: colors.textPrimary }]}>Available</Text>
             </View>
             <View style={styles.legendItem}>
               <View
                 style={[styles.legendColor, { backgroundColor: colors.heart }]}
               />
-              <Text style={styles.legendText}>Blocked</Text>
+              <Text style={[styles.legendText, { color: colors.textPrimary }]}>Blocked</Text>
             </View>
             <View style={styles.legendItem}>
               <View
                 style={[styles.legendColor, { backgroundColor: colors.ink }]}
               />
-              <Text style={styles.legendText}>Rented</Text>
+              <Text style={[styles.legendText, { color: colors.textPrimary }]}>Rented</Text>
             </View>
           </View>
         </View>
@@ -362,17 +362,14 @@ export function GroundAvailabilityScreen({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: colors.background,
   },
   loadingText: {
     ...TextStyles.body,
-    color: colors.textSecondary,
     marginTop: Spacing.md,
   },
   header: {
@@ -380,9 +377,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.md,
-    backgroundColor: colors.background,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
   },
   backButton: {
     padding: Spacing.sm,
@@ -393,22 +388,18 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     ...TextStyles.h3,
-    color: colors.textPrimary,
   },
   headerSubtitle: {
     ...TextStyles.caption,
-    color: colors.textSecondary,
     marginTop: 2,
   },
   content: {
     flex: 1,
   },
   calendarContainer: {
-    backgroundColor: colors.surface,
     marginBottom: Spacing.md,
     borderRadius: 12,
     marginHorizontal: Spacing.lg,
-    shadowColor: colors.ink,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.08,
     shadowRadius: 4,
@@ -426,7 +417,6 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     ...TextStyles.h4,
-    color: colors.textPrimary,
   },
   addButton: {
     flexDirection: 'row',
@@ -435,7 +425,6 @@ const styles = StyleSheet.create({
   },
   addButtonText: {
     ...TextStyles.body,
-    color: colors.cobalt,
     fontWeight: '600',
   },
   courtSelector: {
@@ -447,21 +436,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.sm,
     borderRadius: 20,
-    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: colors.border,
   },
-  courtChipSelected: {
-    backgroundColor: colors.cobalt,
-    borderColor: colors.cobalt,
-  },
+  courtChipSelected: {},
   courtChipText: {
     ...TextStyles.body,
-    color: colors.textPrimary,
   },
-  courtChipTextSelected: {
-    color: colors.textInverse,
-  },
+  courtChipTextSelected: {},
   emptyState: {
     alignItems: 'center',
     justifyContent: 'center',
@@ -469,7 +450,6 @@ const styles = StyleSheet.create({
   },
   emptyStateText: {
     ...TextStyles.body,
-    color: colors.textSecondary,
     textAlign: 'center',
     marginTop: Spacing.md,
   },
@@ -491,6 +471,5 @@ const styles = StyleSheet.create({
   },
   legendText: {
     ...TextStyles.body,
-    color: colors.textPrimary,
   },
 });

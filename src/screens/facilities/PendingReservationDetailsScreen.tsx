@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, fonts, Spacing, useTheme } from '../../theme';
+import { fonts, Spacing, useTheme } from '../../theme';
 import {
   useApproveReservationMutation,
   useDenyReservationMutation,
@@ -154,14 +154,14 @@ export function PendingReservationDetailsScreen() {
   return (
     <View style={[styles.container, { backgroundColor: colors.bgScreen }]}>
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
         <TouchableOpacity
           onPress={() => navigation.goBack()}
           style={styles.backButton}
         >
           <Ionicons name="arrow-back" size={24} color={colors.ink} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Reservation Details</Text>
+        <Text style={[styles.headerTitle, { color: colors.ink }]}>Reservation Details</Text>
         <View style={{ width: 40 }} />
       </View>
 
@@ -179,7 +179,7 @@ export function PendingReservationDetailsScreen() {
                 : styles.confirmedBadge,
             ]}
           >
-            <Text style={styles.statusText}>
+            <Text style={[styles.statusText, { color: colors.ink }]}>
               {rental.status === 'pending_approval'
                 ? 'Pending Approval'
                 : rental.status}
@@ -188,42 +188,42 @@ export function PendingReservationDetailsScreen() {
         </View>
 
         {/* Renter info */}
-        <View style={styles.section}>
-          <Text style={styles.sectionLabel}>Renter</Text>
+        <View style={[styles.section, { backgroundColor: colors.bgCard, shadowColor: colors.ink }]}>
+          <Text style={[styles.sectionLabel, { color: colors.inkFaint }]}>Renter</Text>
           <View style={styles.infoRow}>
             <Ionicons name="person-outline" size={18} color={colors.inkFaint} />
-            <Text style={styles.infoText}>
+            <Text style={[styles.infoText, { color: colors.ink }]}>
               {renter ? `${renter.firstName} ${renter.lastName}` : 'Unknown'}
             </Text>
           </View>
           {renter?.email && (
             <View style={styles.infoRow}>
               <Ionicons name="mail-outline" size={18} color={colors.inkFaint} />
-              <Text style={styles.infoText}>{renter.email}</Text>
+              <Text style={[styles.infoText, { color: colors.ink }]}>{renter.email}</Text>
             </View>
           )}
         </View>
 
         {/* Ground & Court */}
-        <View style={styles.section}>
-          <Text style={styles.sectionLabel}>Ground</Text>
+        <View style={[styles.section, { backgroundColor: colors.bgCard, shadowColor: colors.ink }]}>
+          <Text style={[styles.sectionLabel, { color: colors.inkFaint }]}>Ground</Text>
           <View style={styles.infoRow}>
             <Ionicons
               name="location-outline"
               size={18}
               color={colors.inkFaint}
             />
-            <Text style={styles.infoText}>{facility?.name || 'Unknown'}</Text>
+            <Text style={[styles.infoText, { color: colors.ink }]}>{facility?.name || 'Unknown'}</Text>
           </View>
           <View style={styles.infoRow}>
             <Ionicons name="grid-outline" size={18} color={colors.inkFaint} />
-            <Text style={styles.infoText}>{court?.name || 'Court'}</Text>
+            <Text style={[styles.infoText, { color: colors.ink }]}>{court?.name || 'Court'}</Text>
           </View>
         </View>
 
         {/* Date & Time */}
-        <View style={styles.section}>
-          <Text style={styles.sectionLabel}>Date & Time</Text>
+        <View style={[styles.section, { backgroundColor: colors.bgCard, shadowColor: colors.ink }]}>
+          <Text style={[styles.sectionLabel, { color: colors.inkFaint }]}>Date & Time</Text>
           {timeSlot?.date && (
             <View style={styles.infoRow}>
               <Ionicons
@@ -231,13 +231,13 @@ export function PendingReservationDetailsScreen() {
                 size={18}
                 color={colors.inkFaint}
               />
-              <Text style={styles.infoText}>{formatDate(timeSlot.date)}</Text>
+              <Text style={[styles.infoText, { color: colors.ink }]}>{formatDate(timeSlot.date)}</Text>
             </View>
           )}
           {timeSlot?.startTime && timeSlot?.endTime && (
             <View style={styles.infoRow}>
               <Ionicons name="time-outline" size={18} color={colors.inkFaint} />
-              <Text style={styles.infoText}>
+              <Text style={[styles.infoText, { color: colors.ink }]}>
                 {formatTime(timeSlot.startTime)} –{' '}
                 {formatTime(timeSlot.endTime)}
               </Text>
@@ -246,11 +246,11 @@ export function PendingReservationDetailsScreen() {
         </View>
 
         {/* Price */}
-        <View style={styles.section}>
-          <Text style={styles.sectionLabel}>Price</Text>
+        <View style={[styles.section, { backgroundColor: colors.bgCard, shadowColor: colors.ink }]}>
+          <Text style={[styles.sectionLabel, { color: colors.inkFaint }]}>Price</Text>
           <View style={styles.infoRow}>
             <Ionicons name="cash-outline" size={18} color={colors.inkFaint} />
-            <Text style={styles.infoText}>
+            <Text style={[styles.infoText, { color: colors.ink }]}>
               ${rental.totalPrice?.toFixed(2) ?? '0.00'}
             </Text>
           </View>
@@ -258,10 +258,10 @@ export function PendingReservationDetailsScreen() {
 
         {/* Insurance Document */}
         {insuranceDoc && (
-          <View style={styles.section}>
-            <Text style={styles.sectionLabel}>Proof of Insurance</Text>
+          <View style={[styles.section, { backgroundColor: colors.bgCard, shadowColor: colors.ink }]}>
+            <Text style={[styles.sectionLabel, { color: colors.inkFaint }]}>Proof of Insurance</Text>
             <TouchableOpacity
-              style={styles.documentCard}
+              style={[styles.documentCard, { backgroundColor: colors.surface }]}
               onPress={() => {
                 if (insuranceDoc.documentUrl) {
                   Linking.openURL(insuranceDoc.documentUrl).catch(() =>
@@ -281,11 +281,11 @@ export function PendingReservationDetailsScreen() {
                 color={colors.cobalt}
               />
               <View style={styles.documentInfo}>
-                <Text style={styles.documentName} numberOfLines={1}>
+                <Text style={[styles.documentName, { color: colors.cobalt }]} numberOfLines={1}>
                   {insuranceDoc.policyName || 'Insurance Document'}
                 </Text>
                 {insuranceDoc.providerName && (
-                  <Text style={styles.documentProvider}>
+                  <Text style={[styles.documentProvider, { color: colors.inkFaint }]}>
                     {insuranceDoc.providerName}
                   </Text>
                 )}
@@ -306,7 +306,7 @@ export function PendingReservationDetailsScreen() {
               {isApproving ? (
                 <ActivityIndicator size="small" color={colors.white} />
               ) : (
-                <Text style={styles.actionBtnText}>Approve</Text>
+                <Text style={[styles.actionBtnText, { color: colors.white }]}>Approve</Text>
               )}
             </TouchableOpacity>
             <TouchableOpacity
@@ -317,7 +317,7 @@ export function PendingReservationDetailsScreen() {
               {isDenying ? (
                 <ActivityIndicator size="small" color={colors.white} />
               ) : (
-                <Text style={styles.actionBtnText}>Deny</Text>
+                <Text style={[styles.actionBtnText, { color: colors.white }]}>Deny</Text>
               )}
             </TouchableOpacity>
           </View>
@@ -328,12 +328,11 @@ export function PendingReservationDetailsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.white },
+  container: { flex: 1 },
   centered: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: colors.white,
   },
   header: {
     flexDirection: 'row',
@@ -342,25 +341,21 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 56,
     paddingBottom: 12,
-    backgroundColor: colors.surface,
     borderBottomWidth: 1,
-    borderBottomColor: colors.white,
   },
   backButton: { width: 40, height: 40, justifyContent: 'center' },
-  headerTitle: { fontFamily: fonts.heading, fontSize: 20, color: colors.ink },
+  headerTitle: { fontFamily: fonts.heading, fontSize: 20 },
   content: { flex: 1 },
   contentContainer: { padding: 16, paddingBottom: 40 },
   statusRow: { alignItems: 'flex-start', marginBottom: 20 },
   statusBadge: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 16 },
-  pendingBadge: { backgroundColor: colors.warningLight },
-  confirmedBadge: { backgroundColor: colors.successLight },
-  statusText: { fontFamily: fonts.label, fontSize: 13, color: colors.ink },
+  pendingBadge: {},
+  confirmedBadge: {},
+  statusText: { fontFamily: fonts.label, fontSize: 13 },
   section: {
-    backgroundColor: colors.surface,
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
-    shadowColor: colors.ink,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
     shadowRadius: 8,
@@ -369,7 +364,6 @@ const styles = StyleSheet.create({
   sectionLabel: {
     fontFamily: fonts.label,
     fontSize: 12,
-    color: colors.inkFaint,
     textTransform: 'uppercase',
     marginBottom: 10,
   },
@@ -382,23 +376,20 @@ const styles = StyleSheet.create({
   infoText: {
     fontFamily: fonts.body,
     fontSize: 15,
-    color: colors.ink,
     flex: 1,
   },
   documentCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.surface,
     borderRadius: 10,
     padding: 14,
     gap: 12,
   },
   documentInfo: { flex: 1 },
-  documentName: { fontFamily: fonts.label, fontSize: 14, color: colors.cobalt },
+  documentName: { fontFamily: fonts.label, fontSize: 14 },
   documentProvider: {
     fontFamily: fonts.body,
     fontSize: 13,
-    color: colors.inkFaint,
     marginTop: 2,
   },
   actionRow: { flexDirection: 'row', gap: 12, marginTop: 8 },
@@ -409,11 +400,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  approveBtn: { backgroundColor: colors.cobalt },
-  denyBtn: { backgroundColor: colors.heart },
+  approveBtn: {},
+  denyBtn: {},
   actionBtnText: {
     fontFamily: fonts.ui,
     fontSize: 15,
-    color: colors.white,
   },
 });

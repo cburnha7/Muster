@@ -20,7 +20,7 @@ import {
   TabSearchModal,
   TabSearchResult,
 } from '../../components/search/TabSearchModal';
-import { colors, fonts, Spacing, useTheme } from '../../theme';
+import { fonts, Spacing, useTheme } from '../../theme';
 import { leagueService } from '../../services/api/LeagueService';
 import { userService } from '../../services/api/UserService';
 import { selectUser } from '../../store/slices/authSlice';
@@ -283,7 +283,7 @@ export function LeaguesBrowserScreen() {
               }
             >
               <Text
-                style={[styles.sectionTitle, { color: colors.textPrimary }]}
+                style={[styles.sectionTitle, { color: colors.ink }, { color: colors.textPrimary }]}
               >
                 Active
               </Text>
@@ -293,11 +293,11 @@ export function LeaguesBrowserScreen() {
         ListEmptyComponent={
           <View style={styles.empty}>
             <Ionicons name="trophy-outline" size={40} color={colors.border} />
-            <Text style={[styles.emptyTitle, { color: colors.textPrimary }]}>
+            <Text style={[styles.emptyTitle, { color: colors.ink }, { color: colors.textPrimary }]}>
               No active leagues
             </Text>
             <Text
-              style={[styles.emptySubtitle, { color: colors.textSecondary }]}
+              style={[styles.emptySubtitle, { color: colors.inkSecondary }, { color: colors.textSecondary }]}
             >
               Join or create a league to get started
             </Text>
@@ -322,7 +322,7 @@ export function LeaguesBrowserScreen() {
                 activeOpacity={0.7}
               >
                 <Text
-                  style={[styles.sectionTitle, { color: colors.textPrimary }]}
+                  style={[styles.sectionTitle, { color: colors.ink }, { color: colors.textPrimary }]}
                 >
                   Past Seasons
                 </Text>
@@ -348,7 +348,7 @@ export function LeaguesBrowserScreen() {
 
       {/* FAB */}
       {!isDependent && (
-        <TouchableOpacity style={styles.fab} onPress={handleCreateLeague}>
+        <TouchableOpacity style={[styles.fab, { backgroundColor: colors.cobalt, shadowColor: colors.cobalt }]} onPress={handleCreateLeague}>
           <Ionicons name="add" size={26} color={colors.white} />
         </TouchableOpacity>
       )}
@@ -370,7 +370,6 @@ export function LeaguesBrowserScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
   },
   chipRow: {
     paddingHorizontal: 20,
@@ -383,24 +382,17 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 9999,
-    backgroundColor: colors.surface,
     alignSelf: 'flex-start' as any,
   },
-  chipActive: {
-    backgroundColor: colors.cobalt,
-  },
+  chipActive: {},
   chipText: {
     fontFamily: fonts.headingSemi,
     fontSize: 13,
-    color: colors.inkSecondary,
   },
-  chipTextActive: {
-    color: colors.white,
-  },
+  chipTextActive: {},
   sectionTitle: {
     fontFamily: fonts.heading,
     fontSize: 18,
-    color: colors.ink,
     letterSpacing: -0.3,
     paddingHorizontal: 20,
     paddingTop: 4,
@@ -425,12 +417,10 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontFamily: fonts.heading,
     fontSize: 18,
-    color: colors.ink,
   },
   emptySubtitle: {
     fontFamily: fonts.body,
     fontSize: 15,
-    color: colors.inkSecondary,
   },
   fab: {
     position: 'absolute',
@@ -439,10 +429,8 @@ const styles = StyleSheet.create({
     width: 58,
     height: 58,
     borderRadius: 29,
-    backgroundColor: colors.cobalt,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: colors.cobalt,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.38,
     shadowRadius: 12,

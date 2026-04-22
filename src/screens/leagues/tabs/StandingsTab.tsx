@@ -16,7 +16,7 @@ import { LeagueService } from '../../../services/api/LeagueService';
 import { seasonService } from '../../../services/api/SeasonService';
 import { TeamStanding, Season } from '../../../types';
 import { useNavigation } from '@react-navigation/native';
-import { colors, useTheme } from '../../../theme';
+import { useTheme } from '../../../theme';
 
 interface StandingsTabProps {
   leagueId: string;
@@ -122,8 +122,8 @@ export const StandingsTab: React.FC<StandingsTabProps> = ({ leagueId }) => {
     return (
       <View style={styles.emptyState}>
         <Ionicons name="trophy-outline" size={64} color={colors.inkMuted} />
-        <Text style={styles.emptyText}>No standings available</Text>
-        <Text style={styles.emptySubtext}>
+        <Text style={[styles.emptyText, { color: colors.inkSecondary }]}>No standings available</Text>
+        <Text style={[styles.emptySubtext, { color: colors.inkMuted }]}>
           Standings will appear once matches are recorded
         </Text>
       </View>
@@ -133,7 +133,7 @@ export const StandingsTab: React.FC<StandingsTabProps> = ({ leagueId }) => {
   return (
     <View style={[styles.container, { backgroundColor: colors.bgScreen }]}>
       {/* Controls Section */}
-      <View style={styles.controls}>
+      <View style={[styles.controls, { backgroundColor: colors.bgScreen, borderBottomColor: colors.border }]}>
         {seasons.length > 0 && (
           <View style={styles.seasonSelector}>
             <FormSelect
@@ -147,12 +147,12 @@ export const StandingsTab: React.FC<StandingsTabProps> = ({ leagueId }) => {
         )}
 
         <TouchableOpacity
-          style={styles.refreshButton}
+          style={[styles.refreshButton, { backgroundColor: colors.bgCard, borderColor: colors.cobalt }]}
           onPress={handleRefresh}
           disabled={isRefreshing}
         >
           <Ionicons name="refresh" size={20} color={colors.cobalt} />
-          <Text style={styles.refreshText}>Refresh</Text>
+          <Text style={[styles.refreshText, { color: colors.cobalt }]}>Refresh</Text>
         </TouchableOpacity>
       </View>
 
@@ -177,16 +177,13 @@ export const StandingsTab: React.FC<StandingsTabProps> = ({ leagueId }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.white,
   },
   controls: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 16,
     paddingVertical: 12,
-    backgroundColor: colors.background,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
     gap: 12,
   },
   seasonSelector: {
@@ -200,16 +197,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 16,
     paddingVertical: 10,
-    backgroundColor: colors.white,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: colors.cobalt,
     gap: 6,
   },
   refreshText: {
     fontSize: 14,
     fontWeight: '600',
-    color: colors.cobalt,
   },
   scrollView: {
     flex: 1,
@@ -224,13 +218,11 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: 18,
     fontWeight: '600',
-    color: colors.inkSecondary,
     marginTop: 16,
     textAlign: 'center',
   },
   emptySubtext: {
     fontSize: 14,
-    color: colors.inkMuted,
     marginTop: 8,
     textAlign: 'center',
   },

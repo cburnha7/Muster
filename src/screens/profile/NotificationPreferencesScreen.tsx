@@ -12,7 +12,7 @@ import { NotificationPreferences } from '../../types';
 import { FormButton } from '../../components/forms/FormButton';
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
 import { ErrorDisplay } from '../../components/ui/ErrorDisplay';
-import { colors, fonts, useTheme } from '../../theme';
+import { fonts, useTheme } from '../../theme';
 
 export function NotificationPreferencesScreen(): JSX.Element {
   const { colors } = useTheme();
@@ -81,10 +81,10 @@ export function NotificationPreferencesScreen(): JSX.Element {
     disabled = false,
     isLast = false
   ) => (
-    <View style={[styles.preferenceItem, isLast && styles.preferenceItemLast]}>
+    <View style={[styles.preferenceItem, { borderBottomColor: colors.border + '60' }, isLast && styles.preferenceItemLast]}>
       <View style={styles.preferenceInfo}>
-        <Text style={styles.preferenceLabel}>{label}</Text>
-        <Text style={styles.preferenceDescription}>{description}</Text>
+        <Text style={[styles.preferenceLabel, { color: colors.ink }]}>{label}</Text>
+        <Text style={[styles.preferenceDescription, { color: colors.inkSecondary }]}>{description}</Text>
       </View>
       <Switch
         value={preferences[key]}
@@ -109,9 +109,9 @@ export function NotificationPreferencesScreen(): JSX.Element {
       showsVerticalScrollIndicator={false}
     >
       {/* Push Notifications */}
-      <Text style={styles.sectionHeader}>Push Notifications</Text>
-      <View style={styles.card}>
-        <Text style={styles.cardDescription}>
+      <Text style={[styles.sectionHeader, { color: colors.inkSecondary }]}>Push Notifications</Text>
+      <View style={[styles.card, { backgroundColor: colors.bgCard, shadowColor: colors.ink }]}>
+        <Text style={[styles.cardDescription, { color: colors.inkSecondary }]}>
           Receive notifications on your device about important updates
         </Text>
         {renderToggle(
@@ -124,8 +124,8 @@ export function NotificationPreferencesScreen(): JSX.Element {
       </View>
 
       {/* Event Notifications */}
-      <Text style={styles.sectionHeader}>Event Notifications</Text>
-      <View style={styles.card}>
+      <Text style={[styles.sectionHeader, { color: colors.inkSecondary }]}>Event Notifications</Text>
+      <View style={[styles.card, { backgroundColor: colors.bgCard, shadowColor: colors.ink }]}>
         {renderToggle(
           'Event Reminders',
           'Get reminded about upcoming events',
@@ -148,8 +148,8 @@ export function NotificationPreferencesScreen(): JSX.Element {
       </View>
 
       {/* Email Notifications */}
-      <Text style={styles.sectionHeader}>Email</Text>
-      <View style={styles.card}>
+      <Text style={[styles.sectionHeader, { color: colors.inkSecondary }]}>Email</Text>
+      <View style={[styles.card, { backgroundColor: colors.bgCard, shadowColor: colors.ink }]}>
         {renderToggle(
           'Marketing Emails',
           'Promotional emails and special offers',
@@ -173,7 +173,6 @@ export function NotificationPreferencesScreen(): JSX.Element {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
   },
   content: {
     paddingHorizontal: 20,
@@ -182,17 +181,14 @@ const styles = StyleSheet.create({
   sectionHeader: {
     fontFamily: fonts.label,
     fontSize: 12,
-    color: colors.inkSecondary,
     textTransform: 'uppercase',
     letterSpacing: 0.8,
     marginTop: 24,
     marginBottom: 8,
   },
   card: {
-    backgroundColor: colors.white,
     borderRadius: 16,
     padding: 16,
-    shadowColor: colors.ink,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.04,
     shadowRadius: 8,
@@ -201,7 +197,6 @@ const styles = StyleSheet.create({
   cardDescription: {
     fontFamily: fonts.body,
     fontSize: 13,
-    color: colors.inkSecondary,
     marginBottom: 12,
     lineHeight: 18,
   },
@@ -211,7 +206,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 12,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colors.border + '60',
   },
   preferenceItemLast: {
     borderBottomWidth: 0,
@@ -223,13 +217,11 @@ const styles = StyleSheet.create({
   preferenceLabel: {
     fontFamily: fonts.body,
     fontSize: 15,
-    color: colors.ink,
     marginBottom: 2,
   },
   preferenceDescription: {
     fontFamily: fonts.body,
     fontSize: 12,
-    color: colors.inkSecondary,
     lineHeight: 16,
   },
   saveButton: {

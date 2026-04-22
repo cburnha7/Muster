@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, fonts, useTheme } from '../../theme';
+import { fonts, useTheme } from '../../theme';
 // Types imported from navigation/types
 
 const TOTAL_STEPS = 5;
@@ -147,7 +147,7 @@ export const PersonaSetupScreen: React.FC = () => {
             {Array.from({ length: TOTAL_STEPS }).map((_, i) => (
               <View
                 key={i}
-                style={[styles.progressDot, i <= 3 && styles.progressDotActive]}
+                style={[styles.progressDot, { backgroundColor: colors.border }, i <= 3 && styles.progressDotActive]}
               />
             ))}
           </View>
@@ -164,8 +164,8 @@ export const PersonaSetupScreen: React.FC = () => {
             {/* Skill level picker mode */}
             {isSkillLevelMode && (
               <>
-                <Text style={styles.title}>How would you rate yourself?</Text>
-                <Text style={styles.subtitle}>
+                <Text style={[styles.title, { color: colors.ink }]}>How would you rate yourself?</Text>
+                <Text style={[styles.subtitle, { color: colors.inkSecondary }]}>
                   This helps us match you with the right games
                 </Text>
 
@@ -202,26 +202,26 @@ export const PersonaSetupScreen: React.FC = () => {
             {/* Persona-specific mode */}
             {!isSkillLevelMode && personaConfig && (
               <>
-                <Text style={styles.title}>{personaConfig.title}</Text>
-                <Text style={styles.subtitle}>{personaConfig.description}</Text>
+                <Text style={[styles.title, { color: colors.ink }]}>{personaConfig.title}</Text>
+                <Text style={[styles.subtitle, { color: colors.inkSecondary }]}>{personaConfig.description}</Text>
 
                 <View style={styles.personaActions}>
                   <TouchableOpacity
-                    style={styles.actionButton}
+                    style={[styles.actionButton, { backgroundColor: colors.cobalt }]}
                     onPress={handleActionButton}
                     activeOpacity={0.85}
                   >
-                    <Text style={styles.actionButtonText}>
+                    <Text style={[styles.actionButtonText, { color: colors.white }]}>
                       {personaConfig.actionLabel}
                     </Text>
                   </TouchableOpacity>
 
                   <TouchableOpacity
-                    style={styles.laterButton}
+                    style={[styles.laterButton, { backgroundColor: colors.surface }]}
                     onPress={handleLater}
                     activeOpacity={0.8}
                   >
-                    <Text style={styles.laterButtonText}>
+                    <Text style={[styles.laterButtonText, { color: colors.inkSecondary }]}>
                       {personaConfig.laterLabel}
                     </Text>
                   </TouchableOpacity>
@@ -235,16 +235,16 @@ export const PersonaSetupScreen: React.FC = () => {
         <View style={styles.bottomSection}>
           {isSkillLevelMode && (
             <TouchableOpacity
-              style={styles.continueButton}
+              style={[styles.continueButton, { backgroundColor: colors.cobalt }]}
               onPress={handleContinue}
               activeOpacity={0.85}
             >
-              <Text style={styles.continueButtonText}>Continue</Text>
+              <Text style={[styles.continueButtonText, { color: colors.white }]}>Continue</Text>
             </TouchableOpacity>
           )}
 
           <TouchableOpacity onPress={handleSkip} style={styles.skipLink}>
-            <Text style={styles.skipLinkText}>Skip</Text>
+            <Text style={[styles.skipLinkText, { color: colors.inkSecondary }]}>Skip</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -255,7 +255,6 @@ export const PersonaSetupScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
   },
   content: {
     flex: 1,
@@ -283,10 +282,8 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: colors.border,
   },
   progressDotActive: {
-    backgroundColor: colors.cobalt,
     width: 24,
     borderRadius: 4,
   },
@@ -300,14 +297,12 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontFamily: fonts.heading,
-    color: colors.ink,
     letterSpacing: -0.5,
     marginBottom: 8,
   },
   subtitle: {
     fontSize: 16,
     fontFamily: fonts.body,
-    color: colors.inkSecondary,
     lineHeight: 24,
     marginBottom: 40,
   },
@@ -319,29 +314,22 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   skillChip: {
-    backgroundColor: colors.surface,
     borderRadius: 9999,
     paddingVertical: 16,
     paddingHorizontal: 28,
   },
-  skillChipSelected: {
-    backgroundColor: colors.cobalt,
-  },
+  skillChipSelected: {},
   skillChipText: {
     fontSize: 16,
     fontFamily: fonts.headingSemi,
-    color: colors.ink,
   },
-  skillChipTextSelected: {
-    color: colors.white,
-  },
+  skillChipTextSelected: {},
 
   // Persona actions
   personaActions: {
     gap: 16,
   },
   actionButton: {
-    backgroundColor: colors.cobalt,
     borderRadius: 9999,
     paddingVertical: 18,
     paddingHorizontal: 32,
@@ -352,11 +340,9 @@ const styles = StyleSheet.create({
   actionButtonText: {
     fontSize: 18,
     fontFamily: fonts.ui,
-    color: colors.white,
     letterSpacing: -0.1,
   },
   laterButton: {
-    backgroundColor: colors.surface,
     borderRadius: 9999,
     paddingVertical: 18,
     paddingHorizontal: 32,
@@ -367,7 +353,6 @@ const styles = StyleSheet.create({
   laterButtonText: {
     fontSize: 18,
     fontFamily: fonts.ui,
-    color: colors.inkSecondary,
     letterSpacing: -0.1,
   },
 
@@ -379,7 +364,6 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   continueButton: {
-    backgroundColor: colors.cobalt,
     borderRadius: 9999,
     paddingVertical: 18,
     paddingHorizontal: 32,
@@ -391,7 +375,6 @@ const styles = StyleSheet.create({
   continueButtonText: {
     fontSize: 18,
     fontFamily: fonts.ui,
-    color: colors.white,
     letterSpacing: -0.1,
   },
   skipLink: {
@@ -400,6 +383,5 @@ const styles = StyleSheet.create({
   skipLinkText: {
     fontSize: 15,
     fontFamily: fonts.headingSemi,
-    color: colors.inkSecondary,
   },
 });

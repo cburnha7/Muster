@@ -13,7 +13,7 @@ import {
   DeletionImpactSummary,
 } from '../../services/api/LeagueService';
 import { selectUser } from '../../store/slices/authSlice';
-import { colors, fonts, useTheme } from '../../theme';
+import { fonts, useTheme } from '../../theme';
 
 export const LeagueDeletionConfirmScreen: React.FC = () => {
   const { colors } = useTheme();
@@ -144,81 +144,81 @@ export const LeagueDeletionConfirmScreen: React.FC = () => {
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
       >
-        <Text style={styles.leagueName}>{preview.leagueName}</Text>
-        <Text style={styles.warningText}>
+        <Text style={[styles.leagueName, { color: colors.ink }]}>{preview.leagueName}</Text>
+        <Text style={[styles.warningText, { color: colors.heart }]}>
           Deleting this league is permanent. Review the impact below before
           confirming.
         </Text>
 
         {/* Events */}
-        <View style={styles.impactCard}>
+        <View style={[styles.impactCard, { backgroundColor: colors.surface }]}>
           <View style={styles.impactRow}>
-            <Text style={styles.impactLabel}>Events to delete</Text>
-            <Text style={styles.impactValue}>{preview.eventCount}</Text>
+            <Text style={[styles.impactLabel, { color: colors.ink }]}>Events to delete</Text>
+            <Text style={[styles.impactValue, { color: colors.ink }]}>{preview.eventCount}</Text>
           </View>
           {hasEvents && (
-            <Text style={styles.impactNote}>
+            <Text style={[styles.impactNote, { color: colors.inkFaint }]}>
               All league events will be permanently removed.
             </Text>
           )}
         </View>
 
         {/* Rentals */}
-        <View style={styles.impactCard}>
+        <View style={[styles.impactCard, { backgroundColor: colors.surface }]}>
           <View style={styles.impactRow}>
-            <Text style={styles.impactLabel}>
+            <Text style={[styles.impactLabel, { color: colors.ink }]}>
               Court reservations to release
             </Text>
-            <Text style={styles.impactValue}>{preview.rentalCount}</Text>
+            <Text style={[styles.impactValue, { color: colors.ink }]}>{preview.rentalCount}</Text>
           </View>
           {hasRentals && (
-            <Text style={styles.impactNote}>
+            <Text style={[styles.impactNote, { color: colors.inkFaint }]}>
               Reservations will be unlinked from the league but not cancelled.
             </Text>
           )}
         </View>
 
         {/* Stripe Refunds */}
-        <View style={styles.impactCard}>
+        <View style={[styles.impactCard, { backgroundColor: colors.surface }]}>
           <View style={styles.impactRow}>
-            <Text style={styles.impactLabel}>Player dues refunds</Text>
-            <Text style={styles.impactValue}>
+            <Text style={[styles.impactLabel, { color: colors.ink }]}>Player dues refunds</Text>
+            <Text style={[styles.impactValue, { color: colors.ink }]}>
               {preview.stripeRefunds.count}
             </Text>
           </View>
           {hasStripeRefunds && (
             <View style={styles.impactRow}>
-              <Text style={styles.impactLabel}>Total refund amount</Text>
-              <Text style={styles.impactValueMoney}>
+              <Text style={[styles.impactLabel, { color: colors.ink }]}>Total refund amount</Text>
+              <Text style={[styles.impactValueMoney, { color: colors.heart }]}>
                 {formatCurrency(preview.stripeRefunds.totalAmount)}
               </Text>
             </View>
           )}
           {hasStripeRefunds && (
-            <Text style={styles.impactNote}>
+            <Text style={[styles.impactNote, { color: colors.inkFaint }]}>
               Refunds will be issued to each player via Stripe.
             </Text>
           )}
         </View>
 
         {/* Roster Balance Refunds */}
-        <View style={styles.impactCard}>
+        <View style={[styles.impactCard, { backgroundColor: colors.surface }]}>
           <View style={styles.impactRow}>
-            <Text style={styles.impactLabel}>Roster balance credits</Text>
-            <Text style={styles.impactValue}>
+            <Text style={[styles.impactLabel, { color: colors.ink }]}>Roster balance credits</Text>
+            <Text style={[styles.impactValue, { color: colors.ink }]}>
               {preview.rosterBalanceRefunds.count}
             </Text>
           </View>
           {hasRosterRefunds && (
             <View style={styles.impactRow}>
-              <Text style={styles.impactLabel}>Total credit amount</Text>
-              <Text style={styles.impactValueMoney}>
+              <Text style={[styles.impactLabel, { color: colors.ink }]}>Total credit amount</Text>
+              <Text style={[styles.impactValueMoney, { color: colors.heart }]}>
                 ${preview.rosterBalanceRefunds.totalAmount.toFixed(2)}
               </Text>
             </View>
           )}
           {hasRosterRefunds && (
-            <Text style={styles.impactNote}>
+            <Text style={[styles.impactNote, { color: colors.inkFaint }]}>
               Membership fees will be credited back to each roster's balance.
             </Text>
           )}
@@ -249,7 +249,6 @@ export const LeagueDeletionConfirmScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.white,
   },
   scrollView: {
     flex: 1,
@@ -261,18 +260,15 @@ const styles = StyleSheet.create({
   leagueName: {
     fontFamily: fonts.heading,
     fontSize: 22,
-    color: colors.ink,
     marginBottom: 8,
   },
   warningText: {
     fontFamily: fonts.body,
     fontSize: 15,
-    color: colors.heart,
     lineHeight: 22,
     marginBottom: 20,
   },
   impactCard: {
-    backgroundColor: colors.surface,
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
@@ -286,22 +282,18 @@ const styles = StyleSheet.create({
   impactLabel: {
     fontFamily: fonts.body,
     fontSize: 15,
-    color: colors.ink,
   },
   impactValue: {
     fontFamily: fonts.ui,
     fontSize: 16,
-    color: colors.ink,
   },
   impactValueMoney: {
     fontFamily: fonts.ui,
     fontSize: 16,
-    color: colors.heart,
   },
   impactNote: {
     fontFamily: fonts.body,
     fontSize: 13,
-    color: colors.inkFaint,
     marginTop: 8,
     lineHeight: 18,
   },

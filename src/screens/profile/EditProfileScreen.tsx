@@ -26,7 +26,7 @@ import { ErrorDisplay } from '../../components/ui/ErrorDisplay';
 import { PhotoUpload } from '../../components/ui/PhotoUpload';
 import { loggingService } from '../../services/LoggingService';
 import { validateEmail, validatePhoneNumber } from '../../utils/validation';
-import { colors, fonts, useTheme } from '../../theme';
+import { fonts, useTheme } from '../../theme';
 import { SportType } from '../../types';
 
 const SPORT_OPTIONS: SelectOption[] = [
@@ -315,7 +315,7 @@ export function EditProfileScreen(): JSX.Element {
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <ScrollView
-        style={styles.container}
+        style={[styles.container, { backgroundColor: colors.bgCard }]}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
@@ -337,7 +337,7 @@ export function EditProfileScreen(): JSX.Element {
           />
 
           {/* Form Fields */}
-          <View style={styles.formSection}>
+          <View style={[styles.formSection, { backgroundColor: colors.bgCard, shadowColor: colors.ink }]}>
             <FormInput
               label="First Name"
               value={firstName}
@@ -639,7 +639,6 @@ export function EditProfileScreen(): JSX.Element {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.surface,
   },
   content: {
     padding: 16,
@@ -647,10 +646,8 @@ const styles = StyleSheet.create({
   imageSection: {
     alignItems: 'center',
     marginBottom: 24,
-    backgroundColor: colors.surface,
     padding: 24,
     borderRadius: 12,
-    shadowColor: colors.black,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
     shadowRadius: 2,
@@ -669,14 +666,12 @@ const styles = StyleSheet.create({
     width: 180,
     height: 180,
     borderRadius: 90,
-    backgroundColor: colors.cobalt,
     justifyContent: 'center',
     alignItems: 'center',
   },
   profileImagePlaceholderText: {
     fontSize: 64,
     fontWeight: 'bold',
-    color: colors.white,
   },
   uploadingOverlay: {
     position: 'absolute',
@@ -684,7 +679,6 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: colors.overlay,
     borderRadius: 90,
     justifyContent: 'center',
     alignItems: 'center',
@@ -696,25 +690,17 @@ const styles = StyleSheet.create({
   imageButton: {
     paddingHorizontal: 20,
     paddingVertical: 10,
-    backgroundColor: colors.pine,
     borderRadius: 8,
   },
   imageButtonText: {
-    color: colors.white,
     fontSize: 14,
     fontWeight: '600',
   },
-  removeButton: {
-    backgroundColor: colors.error,
-  },
-  removeButtonText: {
-    color: colors.white,
-  },
+  removeButton: {},
+  removeButtonText: {},
   formSection: {
-    backgroundColor: colors.surface,
     padding: 16,
     borderRadius: 12,
-    shadowColor: colors.black,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
     shadowRadius: 2,
@@ -730,7 +716,6 @@ const styles = StyleSheet.create({
   sportsLabel: {
     fontSize: 14,
     fontWeight: '600',
-    color: colors.inkSecondary,
     marginBottom: 12,
   },
   sportsList: {
@@ -742,22 +727,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
-    backgroundColor: colors.background,
     borderWidth: 1,
-    borderColor: colors.border,
   },
-  sportTagSelected: {
-    backgroundColor: colors.cobaltLight,
-    borderColor: colors.cobalt,
-  },
+  sportTagSelected: {},
   sportTagText: {
     fontSize: 14,
-    color: colors.inkSecondary,
     fontWeight: '500',
   },
-  sportTagTextSelected: {
-    color: colors.cobalt,
-  },
+  sportTagTextSelected: {},
   saveButton: {
     marginTop: 24,
   },

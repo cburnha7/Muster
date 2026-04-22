@@ -15,7 +15,7 @@ import { LoadingSpinner } from '../../../components/ui/LoadingSpinner';
 import { ErrorDisplay } from '../../../components/ui/ErrorDisplay';
 import { leagueService } from '../../../services/api/LeagueService';
 import { LeagueMembership, Team } from '../../../types';
-import { colors, fonts, useTheme } from '../../../theme';
+import { fonts, useTheme } from '../../../theme';
 
 interface TeamsTabProps {
   leagueId: string;
@@ -110,7 +110,7 @@ export const TeamsTab: React.FC<TeamsTabProps> = ({ leagueId }) => {
 
     return (
       <TouchableOpacity
-        style={styles.rosterRow}
+        style={[styles.rosterRow, { backgroundColor: colors.surface }]}
         onPress={() => handleRosterPress(item.team!)}
         activeOpacity={0.7}
       >
@@ -118,23 +118,23 @@ export const TeamsTab: React.FC<TeamsTabProps> = ({ leagueId }) => {
         {item.team.logo ? (
           <Image source={{ uri: item.team.logo }} style={styles.rosterLogo} />
         ) : (
-          <View style={styles.rosterLogoPlaceholder}>
+          <View style={[styles.rosterLogoPlaceholder, { backgroundColor: colors.bgCard }]}>
             <Ionicons name="people" size={20} color={colors.cobalt} />
           </View>
         )}
 
         {/* Name + player count */}
         <View style={styles.rosterInfo}>
-          <Text style={styles.rosterName} numberOfLines={1}>
+          <Text style={[styles.rosterName, { color: colors.ink }]} numberOfLines={1}>
             {item.team.name}
           </Text>
-          <Text style={styles.playerCount}>
+          <Text style={[styles.playerCount, { color: colors.inkFaint }]}>
             {playerCount} {playerCount === 1 ? 'player' : 'players'}
           </Text>
         </View>
 
         {/* Win / Loss record */}
-        <Text style={styles.record}>{record}</Text>
+        <Text style={[styles.record, { color: colors.ink }]}>{record}</Text>
 
         <Ionicons name="chevron-forward" size={16} color={colors.inkFaint} />
       </TouchableOpacity>
@@ -146,7 +146,7 @@ export const TeamsTab: React.FC<TeamsTabProps> = ({ leagueId }) => {
 
     return (
       <View style={styles.emptyState}>
-        <Text style={styles.emptyText}>No rosters in this league yet</Text>
+        <Text style={[styles.emptyText, { color: colors.inkFaint }]}>No rosters in this league yet</Text>
       </View>
     );
   };
@@ -197,7 +197,6 @@ export const TeamsTab: React.FC<TeamsTabProps> = ({ leagueId }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.white,
   },
   listContent: {
     paddingVertical: 8,
@@ -205,7 +204,6 @@ const styles = StyleSheet.create({
   rosterRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.surface,
     marginHorizontal: 16,
     marginVertical: 4,
     paddingHorizontal: 14,
@@ -221,7 +219,6 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: colors.white,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -232,18 +229,15 @@ const styles = StyleSheet.create({
   rosterName: {
     fontSize: 15,
     fontFamily: fonts.semibold,
-    color: colors.ink,
   },
   playerCount: {
     fontSize: 13,
     fontFamily: fonts.body,
-    color: colors.inkFaint,
     marginTop: 2,
   },
   record: {
     fontSize: 15,
     fontFamily: fonts.label,
-    color: colors.ink,
     marginRight: 8,
   },
   emptyState: {
@@ -255,7 +249,6 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: 15,
     fontFamily: fonts.body,
-    color: colors.inkFaint,
     textAlign: 'center',
   },
   footer: {

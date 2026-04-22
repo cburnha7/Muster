@@ -23,7 +23,7 @@ import TokenStorage from '../../services/auth/TokenStorage';
 import { API_BASE_URL } from '../../services/api/config';
 import { getSportEmoji } from '../../constants/sports';
 import { getSportColor } from '../../constants/sportColors';
-import { colors, fonts, useTheme } from '../../theme';
+import { fonts, useTheme } from '../../theme';
 import { formatSportType } from '../../utils/formatters';
 import { DependentProfile } from '../../types/dependent';
 
@@ -143,7 +143,7 @@ export function DependentProfileScreen() {
         ]}
       >
         <Ionicons name="person-outline" size={48} color={colors.border} />
-        <Text style={styles.emptyText}>Could not load profile.</Text>
+        <Text style={[styles.emptyText, { color: colors.inkSecondary }]}>Could not load profile.</Text>
       </View>
     );
   }
@@ -183,17 +183,17 @@ export function DependentProfileScreen() {
       {/* ── Action Buttons ── */}
       <View style={styles.actionRow}>
         <TouchableOpacity
-          style={styles.actionBtn}
+          style={[styles.actionBtn, { borderColor: colors.cobalt }]}
           onPress={() =>
             (navigation as any).navigate('EditProfile', { dependentId })
           }
           activeOpacity={0.7}
         >
           <Ionicons name="create-outline" size={18} color={colors.cobalt} />
-          <Text style={styles.actionBtnText}>Edit</Text>
+          <Text style={[styles.actionBtnText, { color: colors.cobalt }]}>Edit</Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={[styles.actionBtn, styles.actionBtnCobalt]}
+          style={[styles.actionBtn, { borderColor: colors.cobalt }, styles.actionBtnCobalt]}
           onPress={() =>
             (navigation as any).navigate('AvailabilityCalendar', {
               userId: dependentId,
@@ -202,7 +202,7 @@ export function DependentProfileScreen() {
           activeOpacity={0.7}
         >
           <Ionicons name="calendar-outline" size={18} color={colors.cobalt} />
-          <Text style={[styles.actionBtnText, styles.actionBtnTextCobalt]}>
+          <Text style={[styles.actionBtnText, { color: colors.cobalt }, styles.actionBtnTextCobalt]}>
             Availability
           </Text>
         </TouchableOpacity>
@@ -235,18 +235,18 @@ export function DependentProfileScreen() {
         </TouchableOpacity>
       </View>
       {!canTransfer && (
-        <Text style={styles.transferHint}>
+        <Text style={[styles.transferHint, { color: colors.border }]}>
           Transfer available when dependent turns 18
         </Text>
       )}
 
       {/* ── Recent Games ── */}
-      <Text style={styles.sectionTitle}>Recent Games</Text>
-      <View style={styles.sectionCard}>
+      <Text style={[styles.sectionTitle, { color: colors.ink }]}>Recent Games</Text>
+      <View style={[styles.sectionCard, { backgroundColor: colors.surface }]}>
         {recentGames.length === 0 ? (
           <View style={styles.emptySection}>
             <Ionicons name="calendar-outline" size={32} color={colors.border} />
-            <Text style={styles.emptyText}>No games played yet</Text>
+            <Text style={[styles.emptyText, { color: colors.inkSecondary }]}>No games played yet</Text>
           </View>
         ) : (
           recentGames.map((booking: any, idx: number) => {
@@ -271,11 +271,11 @@ export function DependentProfileScreen() {
                   style={[styles.sportDot, { backgroundColor: sportColor }]}
                 />
                 <View style={styles.gameInfo}>
-                  <Text style={styles.gameName} numberOfLines={1}>
+                  <Text style={[styles.gameName, { color: colors.ink }]} numberOfLines={1}>
                     {event.title ?? `Event ${idx + 1}`}
                   </Text>
                   {event.startTime && (
-                    <Text style={styles.gameMeta} numberOfLines={1}>
+                    <Text style={[styles.gameMeta, { color: colors.inkSecondary }]} numberOfLines={1}>
                       {formatEventDate(event.startTime)}{' '}
                       {event.facility?.name ? `· ${event.facility.name}` : ''}
                     </Text>
@@ -293,12 +293,12 @@ export function DependentProfileScreen() {
       </View>
 
       {/* ── Teams ── */}
-      <Text style={styles.sectionTitle}>Teams</Text>
-      <View style={styles.sectionCard}>
+      <Text style={[styles.sectionTitle, { color: colors.ink }]}>Teams</Text>
+      <View style={[styles.sectionCard, { backgroundColor: colors.surface }]}>
         {rosterMemberships.length === 0 ? (
           <View style={styles.emptySection}>
             <Ionicons name="people-outline" size={32} color={colors.border} />
-            <Text style={styles.emptyText}>Not a member of any Rosters</Text>
+            <Text style={[styles.emptyText, { color: colors.inkSecondary }]}>Not a member of any Rosters</Text>
           </View>
         ) : (
           rosterMemberships.map((member: any, idx: number) => {
@@ -329,10 +329,10 @@ export function DependentProfileScreen() {
                   <Text style={styles.teamEmoji}>{getSportEmoji(sport)}</Text>
                 </View>
                 <View style={styles.gameInfo}>
-                  <Text style={styles.gameName} numberOfLines={1}>
+                  <Text style={[styles.gameName, { color: colors.ink }]} numberOfLines={1}>
                     {team.name ?? `Roster ${idx + 1}`}
                   </Text>
-                  <Text style={styles.gameMeta}>
+                  <Text style={[styles.gameMeta, { color: colors.inkSecondary }]}>
                     {team.members?.length ?? 0} players
                   </Text>
                 </View>
@@ -348,12 +348,12 @@ export function DependentProfileScreen() {
       </View>
 
       {/* ── League Memberships ── */}
-      <Text style={styles.sectionTitle}>League Memberships</Text>
-      <View style={styles.sectionCard}>
+      <Text style={[styles.sectionTitle, { color: colors.ink }]}>League Memberships</Text>
+      <View style={[styles.sectionCard, { backgroundColor: colors.surface }]}>
         {leagueMemberships.length === 0 ? (
           <View style={styles.emptySection}>
             <Ionicons name="trophy-outline" size={32} color={colors.border} />
-            <Text style={styles.emptyText}>Not a member of any Leagues</Text>
+            <Text style={[styles.emptyText, { color: colors.inkSecondary }]}>Not a member of any Leagues</Text>
           </View>
         ) : (
           leagueMemberships.map((membership: any, idx: number) => {
@@ -382,10 +382,10 @@ export function DependentProfileScreen() {
                   <Text style={styles.teamEmoji}>{getSportEmoji(sport)}</Text>
                 </View>
                 <View style={styles.gameInfo}>
-                  <Text style={styles.gameName} numberOfLines={1}>
+                  <Text style={[styles.gameName, { color: colors.ink }]} numberOfLines={1}>
                     {league.name ?? `League ${idx + 1}`}
                   </Text>
-                  <Text style={styles.gameMeta}>
+                  <Text style={[styles.gameMeta, { color: colors.inkSecondary }]}>
                     {sport ? formatSportType(sport) : ''}
                   </Text>
                 </View>
@@ -408,7 +408,6 @@ export function DependentProfileScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
   },
   content: {
     paddingBottom: 24,
@@ -427,50 +426,34 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: colors.cobalt,
     gap: 4,
   },
-  actionBtnCobalt: {
-    borderColor: colors.cobalt,
-  },
-  actionBtnTransfer: {
-    borderColor: colors.ink,
-  },
+  actionBtnCobalt: {},
+  actionBtnTransfer: {},
   actionBtnDisabled: {
-    borderColor: colors.border,
     opacity: 0.6,
   },
   actionBtnText: {
     fontFamily: fonts.ui,
     fontSize: 13,
-    color: colors.cobalt,
   },
-  actionBtnTextCobalt: {
-    color: colors.cobalt,
-  },
-  actionBtnTextTransfer: {
-    color: colors.ink,
-  },
-  actionBtnTextDisabled: {
-    color: colors.border,
-  },
+  actionBtnTextCobalt: {},
+  actionBtnTextTransfer: {},
+  actionBtnTextDisabled: {},
   transferHint: {
     fontFamily: fonts.body,
     fontSize: 12,
-    color: colors.border,
     marginTop: 6,
     fontStyle: 'italic',
   },
   sectionTitle: {
     fontFamily: fonts.headingSemi,
     fontSize: 16,
-    color: colors.ink,
     marginTop: 24,
     marginBottom: 10,
     letterSpacing: -0.2,
   },
   sectionCard: {
-    backgroundColor: colors.surface,
     borderRadius: 14,
     overflow: 'hidden',
   },
@@ -481,7 +464,6 @@ const styles = StyleSheet.create({
     paddingVertical: 13,
     gap: 12,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colors.border + '50',
   },
   gameRowLast: {
     borderBottomWidth: 0,
@@ -508,12 +490,10 @@ const styles = StyleSheet.create({
   gameName: {
     fontFamily: fonts.body,
     fontSize: 15,
-    color: colors.ink,
   },
   gameMeta: {
     fontFamily: fonts.body,
     fontSize: 12,
-    color: colors.inkSecondary,
   },
   emptySection: {
     alignItems: 'center',
@@ -524,6 +504,5 @@ const styles = StyleSheet.create({
   emptyText: {
     fontFamily: fonts.body,
     fontSize: 14,
-    color: colors.inkSecondary,
   },
 });

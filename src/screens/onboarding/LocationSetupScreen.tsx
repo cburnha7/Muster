@@ -15,7 +15,7 @@ import {
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
-import { colors, fonts, useTheme } from '../../theme';
+import { fonts, useTheme } from '../../theme';
 // Types imported from navigation/types
 
 const TOTAL_STEPS = 5;
@@ -147,14 +147,14 @@ export const LocationSetupScreen: React.FC = () => {
               contentContainerStyle={styles.scrollContent}
               keyboardShouldPersistTaps="handled"
             >
-              <Text style={styles.title}>Where do you play?</Text>
-              <Text style={styles.subtitle}>
+              <Text style={[styles.title, { color: colors.ink }]}>Where do you play?</Text>
+              <Text style={[styles.subtitle, { color: colors.inkSecondary }]}>
                 We'll show you games and facilities nearby
               </Text>
 
               {/* Location confirmed state */}
               {locationConfirmed && (
-                <View style={styles.confirmedCard}>
+                <View style={[styles.confirmedCard, { backgroundColor: colors.surface }]}>
                   <View style={styles.confirmedIconRow}>
                     <View style={styles.confirmedIcon}>
                       <Ionicons
@@ -164,8 +164,8 @@ export const LocationSetupScreen: React.FC = () => {
                       />
                     </View>
                   </View>
-                  <Text style={styles.confirmedText}>Looks like you're in</Text>
-                  <Text style={styles.confirmedLocation}>
+                  <Text style={[styles.confirmedText, { color: colors.inkSecondary }]}>Looks like you're in</Text>
+                  <Text style={[styles.confirmedLocation, { color: colors.ink }]}>
                     {city}, {state}
                   </Text>
                   <TouchableOpacity
@@ -175,7 +175,7 @@ export const LocationSetupScreen: React.FC = () => {
                     }}
                     style={styles.changeLink}
                   >
-                    <Text style={styles.changeLinkText}>Change</Text>
+                    <Text style={[styles.changeLinkText, { color: colors.cobalt }]}>Change</Text>
                   </TouchableOpacity>
                 </View>
               )}
@@ -184,7 +184,7 @@ export const LocationSetupScreen: React.FC = () => {
               {!locationConfirmed && !showManualEntry && (
                 <View style={styles.locationActions}>
                   <TouchableOpacity
-                    style={styles.locationButton}
+                    style={[styles.locationButton, { backgroundColor: colors.cobalt }]}
                     onPress={handleUseMyLocation}
                     disabled={locationLoading}
                     activeOpacity={0.85}
@@ -199,20 +199,20 @@ export const LocationSetupScreen: React.FC = () => {
                         style={styles.locationButtonIcon}
                       />
                     )}
-                    <Text style={styles.locationButtonText}>
+                    <Text style={[styles.locationButtonText, { color: colors.white }]}>
                       {locationLoading ? 'Finding you...' : 'Use My Location'}
                     </Text>
                   </TouchableOpacity>
 
                   {locationError && (
-                    <Text style={styles.errorText}>{locationError}</Text>
+                    <Text style={[styles.errorText, { color: colors.error }]}>{locationError}</Text>
                   )}
 
                   <TouchableOpacity
                     onPress={() => setShowManualEntry(true)}
                     style={styles.manualLink}
                   >
-                    <Text style={styles.manualLinkText}>Enter manually</Text>
+                    <Text style={[styles.manualLinkText, { color: colors.cobalt }]}>Enter manually</Text>
                   </TouchableOpacity>
                 </View>
               )}
@@ -221,9 +221,9 @@ export const LocationSetupScreen: React.FC = () => {
               {!locationConfirmed && showManualEntry && (
                 <View style={styles.manualFields}>
                   <View style={styles.inputContainer}>
-                    <Text style={styles.inputLabel}>City</Text>
+                    <Text style={[styles.inputLabel, { color: colors.inkSecondary }]}>City</Text>
                     <TextInput
-                      style={styles.textInput}
+                      style={[styles.textInput, { backgroundColor: colors.bgSubtle, color: colors.ink }]}
                       value={city}
                       onChangeText={setCity}
                       placeholder="San Francisco"
@@ -232,9 +232,9 @@ export const LocationSetupScreen: React.FC = () => {
                     />
                   </View>
                   <View style={styles.inputContainer}>
-                    <Text style={styles.inputLabel}>State</Text>
+                    <Text style={[styles.inputLabel, { color: colors.inkSecondary }]}>State</Text>
                     <TextInput
-                      style={styles.textInput}
+                      style={[styles.textInput, { backgroundColor: colors.bgSubtle, color: colors.ink }]}
                       value={state}
                       onChangeText={setState}
                       placeholder="CA"
@@ -250,7 +250,7 @@ export const LocationSetupScreen: React.FC = () => {
                     }}
                     style={styles.manualLink}
                   >
-                    <Text style={styles.manualLinkText}>
+                    <Text style={[styles.manualLinkText, { color: colors.cobalt }]}>
                       Use my location instead
                     </Text>
                   </TouchableOpacity>
@@ -262,15 +262,15 @@ export const LocationSetupScreen: React.FC = () => {
           {/* Bottom */}
           <View style={styles.bottomSection}>
             <TouchableOpacity
-              style={styles.continueButton}
+              style={[styles.continueButton, { backgroundColor: colors.cobalt }]}
               onPress={handleContinue}
               activeOpacity={0.85}
             >
-              <Text style={styles.continueButtonText}>Continue</Text>
+              <Text style={[styles.continueButtonText, { color: colors.white }]}>Continue</Text>
             </TouchableOpacity>
 
             <TouchableOpacity onPress={handleSkip} style={styles.skipLink}>
-              <Text style={styles.skipLinkText}>Skip</Text>
+              <Text style={[styles.skipLinkText, { color: colors.inkSecondary }]}>Skip</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -282,7 +282,6 @@ export const LocationSetupScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
   },
   flex: {
     flex: 1,
@@ -313,10 +312,8 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: colors.border,
   },
   progressDotActive: {
-    backgroundColor: colors.cobalt,
     width: 24,
     borderRadius: 4,
   },
@@ -330,14 +327,12 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontFamily: fonts.heading,
-    color: colors.ink,
     letterSpacing: -0.5,
     marginBottom: 8,
   },
   subtitle: {
     fontSize: 16,
     fontFamily: fonts.body,
-    color: colors.inkSecondary,
     lineHeight: 24,
     marginBottom: 40,
   },
@@ -349,7 +344,6 @@ const styles = StyleSheet.create({
   },
   locationButton: {
     flexDirection: 'row',
-    backgroundColor: colors.cobalt,
     borderRadius: 9999,
     paddingVertical: 18,
     paddingHorizontal: 36,
@@ -364,13 +358,11 @@ const styles = StyleSheet.create({
   locationButtonText: {
     fontSize: 18,
     fontFamily: fonts.ui,
-    color: colors.white,
     letterSpacing: -0.1,
   },
   errorText: {
     fontSize: 14,
     fontFamily: fonts.body,
-    color: colors.error,
     textAlign: 'center',
   },
   manualLink: {
@@ -379,13 +371,11 @@ const styles = StyleSheet.create({
   manualLinkText: {
     fontSize: 15,
     fontFamily: fonts.headingSemi,
-    color: colors.cobalt,
     textAlign: 'center',
   },
 
   // Confirmed state
   confirmedCard: {
-    backgroundColor: colors.surface,
     borderRadius: 20,
     padding: 32,
     alignItems: 'center',
@@ -397,13 +387,11 @@ const styles = StyleSheet.create({
   confirmedText: {
     fontSize: 15,
     fontFamily: fonts.body,
-    color: colors.inkSecondary,
     marginBottom: 4,
   },
   confirmedLocation: {
     fontSize: 22,
     fontFamily: fonts.heading,
-    color: colors.ink,
     letterSpacing: -0.3,
     marginBottom: 16,
   },
@@ -413,7 +401,6 @@ const styles = StyleSheet.create({
   changeLinkText: {
     fontSize: 14,
     fontFamily: fonts.headingSemi,
-    color: colors.cobalt,
   },
 
   // Manual entry
@@ -426,18 +413,15 @@ const styles = StyleSheet.create({
   inputLabel: {
     fontSize: 13,
     fontFamily: fonts.label,
-    color: colors.inkSecondary,
     textTransform: 'uppercase',
     letterSpacing: 1.2,
   },
   textInput: {
-    backgroundColor: colors.bgSubtle,
     borderRadius: 14,
     paddingHorizontal: 18,
     paddingVertical: 16,
     fontSize: 16,
     fontFamily: fonts.body,
-    color: colors.ink,
   },
 
   // Bottom
@@ -448,7 +432,6 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   continueButton: {
-    backgroundColor: colors.cobalt,
     borderRadius: 9999,
     paddingVertical: 18,
     paddingHorizontal: 32,
@@ -460,7 +443,6 @@ const styles = StyleSheet.create({
   continueButtonText: {
     fontSize: 18,
     fontFamily: fonts.ui,
-    color: colors.white,
     letterSpacing: -0.1,
   },
   skipLink: {
@@ -469,6 +451,5 @@ const styles = StyleSheet.create({
   skipLinkText: {
     fontSize: 15,
     fontFamily: fonts.headingSemi,
-    color: colors.inkSecondary,
   },
 });

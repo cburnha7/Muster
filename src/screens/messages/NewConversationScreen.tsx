@@ -12,7 +12,7 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import { useSelector } from 'react-redux';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, fonts, useTheme } from '../../theme';
+import { fonts, useTheme } from '../../theme';
 import { conversationService } from '../../services/api/ConversationService';
 import { teamService } from '../../services/api/TeamService';
 import type { RootState } from '../../store/store';
@@ -148,7 +148,7 @@ export function NewConversationScreen() {
     if (item._kind === 'team') {
       return (
         <TouchableOpacity
-          style={styles.row}
+          style={[styles.row, { backgroundColor: colors.bgCard, shadowColor: colors.ink }]}
           activeOpacity={0.6}
           onPress={() => openTeamChat(item.id, item.name)}
         >
@@ -157,7 +157,7 @@ export function NewConversationScreen() {
           >
             <Ionicons name="people" size={20} color={colors.cobalt} />
           </View>
-          <Text style={styles.rowName} numberOfLines={1}>
+          <Text style={[styles.rowName, { color: colors.ink }]} numberOfLines={1}>
             {item.name}
           </Text>
           <Ionicons name="chevron-forward" size={18} color={colors.inkSecondary} />
@@ -168,7 +168,7 @@ export function NewConversationScreen() {
     // player
     return (
       <TouchableOpacity
-        style={styles.row}
+        style={[styles.row, { backgroundColor: colors.bgCard, shadowColor: colors.ink }]}
         activeOpacity={0.6}
         onPress={() => openDM(item.id, item.name)}
       >
@@ -178,9 +178,9 @@ export function NewConversationScreen() {
             { backgroundColor: colors.border },
           ]}
         >
-          <Text style={styles.avatarText}>{getInitial(item.name)}</Text>
+          <Text style={[styles.avatarText, { color: colors.ink }]}>{getInitial(item.name)}</Text>
         </View>
-        <Text style={styles.rowName} numberOfLines={1}>
+        <Text style={[styles.rowName, { color: colors.ink }]} numberOfLines={1}>
           {item.name}
         </Text>
         <Ionicons name="chevron-forward" size={18} color={colors.inkSecondary} />
@@ -190,7 +190,7 @@ export function NewConversationScreen() {
 
   const renderSectionHeader = ({ section }: { section: { title: string } }) => (
     <View style={styles.sectionHeader}>
-      <Text style={styles.sectionTitle}>{section.title}</Text>
+      <Text style={[styles.sectionTitle, { color: colors.inkSecondary }]}>{section.title}</Text>
     </View>
   );
 
@@ -199,7 +199,7 @@ export function NewConversationScreen() {
     <View style={[styles.container, { backgroundColor: colors.bgScreen }]}>
       {/* Search bar */}
       <View style={styles.searchContainer}>
-        <View style={styles.searchBar}>
+        <View style={[styles.searchBar, { backgroundColor: colors.bgSubtle }]}>
           <Ionicons
             name="search"
             size={18}
@@ -207,7 +207,7 @@ export function NewConversationScreen() {
             style={{ marginRight: 8 }}
           />
           <TextInput
-            style={styles.searchInput}
+            style={[styles.searchInput, { color: colors.ink }]}
             placeholder="Search people or teams..."
             placeholderTextColor={colors.inkSecondary}
             value={query}
@@ -239,10 +239,10 @@ export function NewConversationScreen() {
             color={colors.inkSecondary}
             style={{ marginBottom: 12 }}
           />
-          <Text style={styles.emptyTitle}>
+          <Text style={[styles.emptyTitle, { color: colors.ink }]}>
             {query ? 'No results' : 'No contacts yet'}
           </Text>
-          <Text style={styles.emptySubtitle}>
+          <Text style={[styles.emptySubtitle, { color: colors.inkSecondary }]}>
             {query
               ? 'Try a different search term.'
               : 'Join a team or play in a game to see contacts here.'}
@@ -273,7 +273,6 @@ export function NewConversationScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.surface,
   },
   searchContainer: {
     paddingHorizontal: 16,
@@ -283,7 +282,6 @@ const styles = StyleSheet.create({
   searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.bgSubtle,
     borderRadius: 12,
     paddingHorizontal: 14,
     height: 44,
@@ -292,7 +290,6 @@ const styles = StyleSheet.create({
     flex: 1,
     fontFamily: fonts.body,
     fontSize: 15,
-    color: colors.ink,
     padding: 0,
   },
   listContent: {
@@ -307,19 +304,16 @@ const styles = StyleSheet.create({
     fontFamily: fonts.label,
     fontSize: 12,
     letterSpacing: 1.6,
-    color: colors.inkSecondary,
     textTransform: 'uppercase',
   },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.white,
     marginHorizontal: 16,
     marginBottom: 2,
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderRadius: 16,
-    shadowColor: colors.black,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.04,
     shadowRadius: 2,
@@ -336,13 +330,11 @@ const styles = StyleSheet.create({
   avatarText: {
     fontFamily: fonts.headingSemi,
     fontSize: 18,
-    color: colors.ink,
   },
   rowName: {
     flex: 1,
     fontFamily: fonts.headingSemi,
     fontSize: 15,
-    color: colors.ink,
   },
   centered: {
     flex: 1,
@@ -353,18 +345,15 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontFamily: fonts.headingSemi,
     fontSize: 17,
-    color: colors.ink,
     marginBottom: 4,
   },
   emptySubtitle: {
     fontFamily: fonts.body,
     fontSize: 14,
-    color: colors.inkSecondary,
     textAlign: 'center',
   },
   overlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(255,255,255,0.5)',
     alignItems: 'center',
     justifyContent: 'center',
   },

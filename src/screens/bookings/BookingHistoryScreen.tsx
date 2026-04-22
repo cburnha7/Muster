@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, useTheme } from '../../theme';
+import { useTheme } from '../../theme';
 
 import { BookingCard } from '../../components/ui/BookingCard';
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
@@ -165,10 +165,10 @@ export function BookingHistoryScreen(): JSX.Element {
   const renderEmptyState = () => (
     <View style={styles.emptyState}>
       <Ionicons name="time-outline" size={64} color={colors.inkMuted} />
-      <Text style={styles.emptyTitle}>
+      <Text style={[styles.emptyTitle, { color: colors.ink }]}>
         {searchQuery ? 'No Matching Bookings' : 'No Booking History'}
       </Text>
-      <Text style={styles.emptySubtitle}>
+      <Text style={[styles.emptySubtitle, { color: colors.inkSecondary }]}>
         {searchQuery
           ? 'Try adjusting your search terms'
           : 'Your booking history will appear here once you start booking events'}
@@ -188,7 +188,7 @@ export function BookingHistoryScreen(): JSX.Element {
 
   // Render search header
   const renderSearchHeader = () => (
-    <View style={styles.searchContainer}>
+    <View style={[styles.searchContainer, { backgroundColor: colors.bgCard, borderBottomColor: colors.border }]}>
       <FormInput
         placeholder="Search bookings..."
         value={searchQuery}
@@ -257,31 +257,31 @@ export function BookingHistoryScreen(): JSX.Element {
 
       {/* Statistics Footer */}
       {bookings.length > 0 && (
-        <View style={styles.statsContainer}>
+        <View style={[styles.statsContainer, { backgroundColor: colors.bgCard, borderTopColor: colors.border }]}>
           <View style={styles.statItem}>
-            <Text style={styles.statValue}>{bookings.length}</Text>
-            <Text style={styles.statLabel}>Total Bookings</Text>
+            <Text style={[styles.statValue, { color: colors.cobalt }]}>{bookings.length}</Text>
+            <Text style={[styles.statLabel, { color: colors.inkSecondary }]}>Total Bookings</Text>
           </View>
           <View style={styles.statItem}>
-            <Text style={styles.statValue}>
+            <Text style={[styles.statValue, { color: colors.cobalt }]}>
               {bookings.filter(b => b.status === 'completed').length}
             </Text>
-            <Text style={styles.statLabel}>Completed</Text>
+            <Text style={[styles.statLabel, { color: colors.inkSecondary }]}>Completed</Text>
           </View>
           <View style={styles.statItem}>
-            <Text style={styles.statValue}>
+            <Text style={[styles.statValue, { color: colors.cobalt }]}>
               {bookings.filter(b => b.status === 'cancelled').length}
             </Text>
-            <Text style={styles.statLabel}>Cancelled</Text>
+            <Text style={[styles.statLabel, { color: colors.inkSecondary }]}>Cancelled</Text>
           </View>
           <View style={styles.statItem}>
-            <Text style={styles.statValue}>
+            <Text style={[styles.statValue, { color: colors.cobalt }]}>
               $
               {bookings
                 .reduce((sum, b) => sum + (b.event.price || 0), 0)
                 .toFixed(0)}
             </Text>
-            <Text style={styles.statLabel}>Total Spent</Text>
+            <Text style={[styles.statLabel, { color: colors.inkSecondary }]}>Total Spent</Text>
           </View>
         </View>
       )}
@@ -292,16 +292,13 @@ export function BookingHistoryScreen(): JSX.Element {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.white,
   },
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 16,
     paddingVertical: 12,
-    backgroundColor: colors.white,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
   },
   searchInput: {
     flex: 1,
@@ -323,13 +320,11 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 20,
     fontWeight: '600',
-    color: colors.ink,
     marginTop: 16,
     marginBottom: 8,
   },
   emptySubtitle: {
     fontSize: 16,
-    color: colors.inkSecondary,
     textAlign: 'center',
   },
   footer: {
@@ -338,10 +333,8 @@ const styles = StyleSheet.create({
   },
   statsContainer: {
     flexDirection: 'row',
-    backgroundColor: colors.white,
     paddingVertical: 16,
     borderTopWidth: 1,
-    borderTopColor: colors.border,
   },
   statItem: {
     flex: 1,
@@ -350,12 +343,10 @@ const styles = StyleSheet.create({
   statValue: {
     fontSize: 18,
     fontWeight: '700',
-    color: colors.cobalt,
     marginBottom: 4,
   },
   statLabel: {
     fontSize: 12,
-    color: colors.inkSecondary,
     textAlign: 'center',
   },
 });

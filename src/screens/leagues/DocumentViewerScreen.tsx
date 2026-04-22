@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { WebView } from 'react-native-webview';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, Spacing, TextStyles, useTheme } from '../../theme';
+import { Spacing, TextStyles, useTheme } from '../../theme';
 import { leagueService } from '../../services/api/LeagueService';
 import { performanceMonitoringService } from '../../services/monitoring/PerformanceMonitoringService';
 
@@ -147,7 +147,7 @@ export const DocumentViewerScreen: React.FC<DocumentViewerScreenProps> = ({
         style={[styles.centerContainer, { backgroundColor: colors.bgScreen }]}
       >
         <ActivityIndicator size="large" color={colors.cobalt} />
-        <Text style={styles.loadingText}>Loading document...</Text>
+        <Text style={[styles.loadingText, { color: colors.textSecondary }]}>Loading document...</Text>
       </View>
     );
   }
@@ -162,19 +162,19 @@ export const DocumentViewerScreen: React.FC<DocumentViewerScreenProps> = ({
           size={64}
           color={colors.inkFaint}
         />
-        <Text style={styles.errorTitle}>Failed to Load Document</Text>
-        <Text style={styles.errorMessage}>
+        <Text style={[styles.errorTitle, { color: colors.textPrimary }]}>Failed to Load Document</Text>
+        <Text style={[styles.errorMessage, { color: colors.textSecondary }]}>
           {error || 'Document URL not available'}
         </Text>
-        <TouchableOpacity style={styles.retryButton} onPress={handleRetry}>
-          <Text style={styles.retryButtonText}>Retry</Text>
+        <TouchableOpacity style={[styles.retryButton, { backgroundColor: colors.cobalt }]} onPress={handleRetry}>
+          <Text style={[styles.retryButtonText, { color: colors.textInverse }]}>Retry</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.downloadFallbackButton}
           onPress={handleDownload}
         >
           <Ionicons name="download-outline" size={20} color={colors.cobalt} />
-          <Text style={styles.downloadFallbackText}>Try Download Instead</Text>
+          <Text style={[styles.downloadFallbackText, { color: colors.cobalt }]}>Try Download Instead</Text>
         </TouchableOpacity>
       </View>
     );
@@ -216,7 +216,7 @@ export const DocumentViewerScreen: React.FC<DocumentViewerScreenProps> = ({
         onLoadEnd={() => setLoading(false)}
         startInLoadingState={true}
         renderLoading={() => (
-          <View style={styles.webviewLoading}>
+          <View style={[styles.webviewLoading, { backgroundColor: colors.bgScreen }]}>
             <ActivityIndicator size="large" color={colors.cobalt} />
           </View>
         )}
@@ -232,7 +232,7 @@ export const DocumentViewerScreen: React.FC<DocumentViewerScreenProps> = ({
 
       {/* Floating download button for mobile */}
       <TouchableOpacity
-        style={styles.floatingDownloadButton}
+        style={[styles.floatingDownloadButton, { backgroundColor: colors.cobalt, shadowColor: colors.ink }]}
         onPress={handleDownload}
       >
         <Ionicons name="download" size={24} color={colors.textInverse} />
@@ -244,14 +244,12 @@ export const DocumentViewerScreen: React.FC<DocumentViewerScreenProps> = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
   },
   centerContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     padding: Spacing.xl,
-    backgroundColor: colors.background,
   },
   webview: {
     flex: 1,
@@ -264,27 +262,22 @@ const styles = StyleSheet.create({
     bottom: 0,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: colors.background,
   },
   loadingText: {
     ...TextStyles.body,
-    color: colors.textSecondary,
     marginTop: Spacing.md,
   },
   errorTitle: {
     ...TextStyles.h3,
-    color: colors.textPrimary,
     marginTop: Spacing.lg,
     marginBottom: Spacing.sm,
   },
   errorMessage: {
     ...TextStyles.body,
-    color: colors.textSecondary,
     textAlign: 'center',
     marginBottom: Spacing.xl,
   },
   retryButton: {
-    backgroundColor: colors.cobalt,
     paddingHorizontal: Spacing.xl,
     paddingVertical: Spacing.md,
     borderRadius: 8,
@@ -292,7 +285,6 @@ const styles = StyleSheet.create({
   },
   retryButtonText: {
     ...TextStyles.body,
-    color: colors.textInverse,
     fontWeight: '600',
   },
   downloadFallbackButton: {
@@ -303,7 +295,6 @@ const styles = StyleSheet.create({
   },
   downloadFallbackText: {
     ...TextStyles.body,
-    color: colors.cobalt,
     marginLeft: Spacing.sm,
     fontWeight: '600',
   },
@@ -315,14 +306,12 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: Spacing.xl,
     right: Spacing.xl,
-    backgroundColor: colors.cobalt,
     width: 56,
     height: 56,
     borderRadius: 28,
     justifyContent: 'center',
     alignItems: 'center',
     elevation: 4,
-    shadowColor: colors.black,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 4,

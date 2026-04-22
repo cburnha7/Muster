@@ -15,7 +15,7 @@ import { ScreenHeader } from '../../components/navigation/ScreenHeader';
 import { matchService } from '../../services/api/MatchService';
 import { courtService } from '../../services/api/CourtService';
 import { selectUser } from '../../store/slices/authSlice';
-import { colors, fonts, Spacing, useTheme } from '../../theme';
+import { fonts, Spacing, useTheme } from '../../theme';
 import { Match } from '../../types';
 
 /** Extended rental type matching the actual API response (court includes nested facility) */
@@ -148,7 +148,7 @@ export const AssignFacilityScreen: React.FC = () => {
         />
         <View style={styles.centered}>
           <ActivityIndicator size="large" color={colors.cobalt} />
-          <Text style={styles.loadingText}>Loading...</Text>
+          <Text style={[styles.loadingText, { color: colors.inkFaint }]}>Loading...</Text>
         </View>
       </View>
     );
@@ -163,9 +163,9 @@ export const AssignFacilityScreen: React.FC = () => {
           onLeftPress={handleCancel}
         />
         <View style={styles.centered}>
-          <Text style={styles.errorText}>{error}</Text>
-          <TouchableOpacity style={styles.retryButton} onPress={loadData}>
-            <Text style={styles.retryButtonText}>Retry</Text>
+          <Text style={[styles.errorText, { color: colors.heart }]}>{error}</Text>
+          <TouchableOpacity style={[styles.retryButton, { backgroundColor: colors.cobalt }]} onPress={loadData}>
+            <Text style={[styles.retryButtonText, { color: colors.white }]}>Retry</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -185,20 +185,20 @@ export const AssignFacilityScreen: React.FC = () => {
       >
         {/* Match info */}
         {match && (
-          <View style={styles.matchInfo}>
-            <Text style={styles.sectionLabel}>GAME DETAILS</Text>
-            <Text style={styles.matchTeams}>
+          <View style={[styles.matchInfo, { backgroundColor: colors.bgCard }]}>
+            <Text style={[styles.sectionLabel, { color: colors.inkFaint }]}>GAME DETAILS</Text>
+            <Text style={[styles.matchTeams, { color: colors.ink }]}>
               {match.homeTeam?.name ?? 'Home'} vs{' '}
               {match.awayTeam?.name ?? 'Away'}
             </Text>
-            <Text style={styles.matchDate}>
+            <Text style={[styles.matchDate, { color: colors.inkFaint }]}>
               {formatDate(String(match.scheduledAt))}
             </Text>
           </View>
         )}
 
         {/* Rental list */}
-        <Text style={styles.sectionLabel}>YOUR CONFIRMED RENTALS</Text>
+        <Text style={[styles.sectionLabel, { color: colors.inkFaint }]}>YOUR CONFIRMED RENTALS</Text>
         {rentals.length === 0 ? (
           <View style={styles.emptyState}>
             <Ionicons
@@ -206,8 +206,8 @@ export const AssignFacilityScreen: React.FC = () => {
               size={40}
               color={colors.inkFaint}
             />
-            <Text style={styles.emptyText}>No available rentals</Text>
-            <Text style={styles.emptySubtext}>
+            <Text style={[styles.emptyText, { color: colors.ink }]}>No available rentals</Text>
+            <Text style={[styles.emptySubtext, { color: colors.inkFaint }]}>
               You don't have any confirmed rentals to assign. Rent a facility
               first.
             </Text>
@@ -238,18 +238,18 @@ export const AssignFacilityScreen: React.FC = () => {
                     size={24}
                     color={isSelected ? colors.cobalt : colors.inkFaint}
                   />
-                  <Text style={styles.facilityName}>
+                  <Text style={[styles.facilityName, { color: colors.ink }]}>
                     {facility?.name ?? 'Unknown Facility'}
                   </Text>
                 </View>
-                <Text style={styles.courtName}>{court?.name ?? 'Court'}</Text>
+                <Text style={[styles.courtName, { color: colors.inkFaint }]}>{court?.name ?? 'Court'}</Text>
                 {slot && (
-                  <Text style={styles.slotDetails}>
+                  <Text style={[styles.slotDetails, { color: colors.inkFaint }]}>
                     {formatDate(slot.date)} · {formatTime(slot.startTime)} –{' '}
                     {formatTime(slot.endTime)}
                   </Text>
                 )}
-                <Text style={styles.rentalPrice}>
+                <Text style={[styles.rentalPrice, { color: colors.cobalt }]}>
                   ${rental.totalPrice.toFixed(2)}
                 </Text>
               </TouchableOpacity>
@@ -265,18 +265,18 @@ export const AssignFacilityScreen: React.FC = () => {
           accessibilityRole="button"
         >
           <Ionicons name="add-circle-outline" size={22} color={colors.ink} />
-          <Text style={styles.bookNewText}>Rent a new facility</Text>
+          <Text style={[styles.bookNewText, { color: colors.ink }]}>Rent a new facility</Text>
         </TouchableOpacity>
       </ScrollView>
 
       {/* Bottom action bar */}
-      <View style={styles.bottomBar}>
+      <View style={[styles.bottomBar, { borderTopColor: colors.border, backgroundColor: colors.bgCard }]}>
         <TouchableOpacity
-          style={styles.cancelButton}
+          style={[styles.cancelButton, { borderColor: colors.inkFaint }]}
           onPress={handleCancel}
           accessibilityRole="button"
         >
-          <Text style={styles.cancelButtonText}>Cancel</Text>
+          <Text style={[styles.cancelButtonText, { color: colors.ink }]}>Cancel</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={[
@@ -292,7 +292,7 @@ export const AssignFacilityScreen: React.FC = () => {
           {assigning ? (
             <ActivityIndicator size="small" color={colors.white} />
           ) : (
-            <Text style={styles.assignButtonText}>Assign Facility</Text>
+            <Text style={[styles.assignButtonText, { color: colors.white }]}>Assign Facility</Text>
           )}
         </TouchableOpacity>
       </View>
@@ -303,7 +303,6 @@ export const AssignFacilityScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.white,
   },
   centered: {
     flex: 1,
@@ -315,25 +314,21 @@ const styles = StyleSheet.create({
     marginTop: Spacing.md,
     fontFamily: fonts.body,
     fontSize: 15,
-    color: colors.inkFaint,
   },
   errorText: {
     fontFamily: fonts.body,
     fontSize: 15,
-    color: colors.heart,
     textAlign: 'center',
     marginBottom: Spacing.lg,
   },
   retryButton: {
     paddingHorizontal: Spacing.xxl,
     paddingVertical: Spacing.md,
-    backgroundColor: colors.cobalt,
     borderRadius: 8,
   },
   retryButtonText: {
     fontFamily: fonts.ui,
     fontSize: 15,
-    color: colors.white,
   },
   scrollView: {
     flex: 1,
@@ -343,7 +338,6 @@ const styles = StyleSheet.create({
     paddingBottom: 100,
   },
   matchInfo: {
-    backgroundColor: colors.white,
     borderRadius: 12,
     padding: Spacing.lg,
     marginBottom: Spacing.xl,
@@ -352,20 +346,17 @@ const styles = StyleSheet.create({
     fontFamily: fonts.label,
     fontSize: 11,
     letterSpacing: 1.6,
-    color: colors.inkFaint,
     marginBottom: Spacing.sm,
     textTransform: 'uppercase',
   },
   matchTeams: {
     fontFamily: fonts.heading,
     fontSize: 20,
-    color: colors.ink,
     marginBottom: Spacing.xs,
   },
   matchDate: {
     fontFamily: fonts.body,
     fontSize: 15,
-    color: colors.inkFaint,
   },
   emptyState: {
     alignItems: 'center',
@@ -374,28 +365,22 @@ const styles = StyleSheet.create({
   emptyText: {
     fontFamily: fonts.semibold,
     fontSize: 17,
-    color: colors.ink,
     marginTop: Spacing.md,
   },
   emptySubtext: {
     fontFamily: fonts.body,
     fontSize: 15,
-    color: colors.inkFaint,
     textAlign: 'center',
     marginTop: Spacing.xs,
     paddingHorizontal: Spacing.xxl,
   },
   rentalCard: {
-    backgroundColor: colors.white,
     borderRadius: 12,
     padding: Spacing.lg,
     marginBottom: Spacing.md,
     borderWidth: 2,
-    borderColor: 'transparent',
   },
-  rentalCardSelected: {
-    borderColor: colors.cobalt,
-  },
+  rentalCardSelected: {},
   rentalCardHeader: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -404,27 +389,23 @@ const styles = StyleSheet.create({
   facilityName: {
     fontFamily: fonts.semibold,
     fontSize: 17,
-    color: colors.ink,
     marginLeft: Spacing.sm,
     flex: 1,
   },
   courtName: {
     fontFamily: fonts.body,
     fontSize: 15,
-    color: colors.inkFaint,
     marginLeft: Spacing.xxxl,
   },
   slotDetails: {
     fontFamily: fonts.body,
     fontSize: 13,
-    color: colors.inkFaint,
     marginLeft: Spacing.xxxl,
     marginTop: Spacing.xs,
   },
   rentalPrice: {
     fontFamily: fonts.semibold,
     fontSize: 15,
-    color: colors.cobalt,
     marginLeft: Spacing.xxxl,
     marginTop: Spacing.xs,
   },
@@ -438,15 +419,12 @@ const styles = StyleSheet.create({
   bookNewText: {
     fontFamily: fonts.ui,
     fontSize: 15,
-    color: colors.ink,
     marginLeft: Spacing.sm,
   },
   bottomBar: {
     flexDirection: 'row',
     padding: Spacing.lg,
     borderTopWidth: 1,
-    borderTopColor: colors.border,
-    backgroundColor: colors.white,
   },
   cancelButton: {
     flex: 1,
@@ -456,12 +434,10 @@ const styles = StyleSheet.create({
     marginRight: Spacing.sm,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: colors.inkFaint,
   },
   cancelButtonText: {
     fontFamily: fonts.ui,
     fontSize: 15,
-    color: colors.ink,
   },
   assignButton: {
     flex: 2,
@@ -469,7 +445,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: Spacing.md,
     borderRadius: 8,
-    backgroundColor: colors.cobalt,
   },
   assignButtonDisabled: {
     opacity: 0.5,
@@ -477,6 +452,5 @@ const styles = StyleSheet.create({
   assignButtonText: {
     fontFamily: fonts.ui,
     fontSize: 15,
-    color: colors.white,
   },
 });

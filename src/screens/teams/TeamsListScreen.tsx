@@ -11,7 +11,7 @@ import {
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { useDispatch } from 'react-redux';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, fonts, Spacing, useTheme } from '../../theme';
+import { fonts, Spacing, useTheme } from '../../theme';
 import { TeamCard } from '../../components/ui/TeamCard';
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
 import { SkeletonRow } from '../../components/ui/SkeletonBox';
@@ -251,12 +251,12 @@ export function TeamsListScreen() {
           const isActive = sportFilter === item.value;
           return (
             <TouchableOpacity
-              style={[styles.chip, isActive && styles.chipActive]}
+              style={[styles.chip, { backgroundColor: colors.surface }, isActive && styles.chipActive]}
               onPress={() => setSportFilter(item.value)}
               activeOpacity={0.8}
             >
               <Text
-                style={[styles.chipText, isActive && styles.chipTextActive]}
+                style={[styles.chipText, { color: colors.inkSecondary }, isActive && styles.chipTextActive]}
               >
                 {item.label}
               </Text>
@@ -267,7 +267,7 @@ export function TeamsListScreen() {
 
       {/* My Teams section */}
       {myTeams.length > 0 && (
-        <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>
+        <Text style={[styles.sectionTitle, { color: colors.ink }, { color: colors.textPrimary }]}>
           My Rosters
         </Text>
       )}
@@ -300,12 +300,12 @@ export function TeamsListScreen() {
 
       {/* Join with code */}
       <TouchableOpacity
-        style={[styles.joinBtn, { backgroundColor: colors.cobaltTint }]}
+        style={[styles.joinBtn, { backgroundColor: colors.cobaltTint, borderColor: colors.cobalt + '30' }, { backgroundColor: colors.cobaltTint }]}
         onPress={handleJoinTeam}
         activeOpacity={0.85}
       >
         <Ionicons name="key-outline" size={18} color={colors.cobalt} />
-        <Text style={styles.joinBtnText}>Join a Roster with Code</Text>
+        <Text style={[styles.joinBtnText, { color: colors.cobalt }]}>Join a Roster with Code</Text>
         <Ionicons name="chevron-forward" size={16} color={colors.border} />
       </TouchableOpacity>
 
@@ -347,10 +347,10 @@ export function TeamsListScreen() {
           myTeams.length === 0 && otherTeams.length === 0 ? (
             <View style={styles.empty}>
               <Ionicons name="people-outline" size={36} color={colors.border} />
-              <Text style={[styles.emptyTitle, { color: colors.textPrimary }]}>
+              <Text style={[styles.emptyTitle, { color: colors.ink }, { color: colors.textPrimary }]}>
                 No rosters yet
               </Text>
-              <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
+              <Text style={[styles.emptyText, { color: colors.inkSecondary }, { color: colors.textSecondary }]}>
                 Create a roster or join one with a code
               </Text>
             </View>
@@ -361,7 +361,7 @@ export function TeamsListScreen() {
       {/* FAB */}
       {!isDependent && (
         <TouchableOpacity
-          style={styles.fab}
+          style={[styles.fab, { backgroundColor: colors.cobalt, shadowColor: colors.cobalt }]}
           onPress={handleCreateTeam}
           activeOpacity={0.85}
         >
@@ -386,7 +386,6 @@ export function TeamsListScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
   },
   listContent: {
     paddingHorizontal: 20,
@@ -404,26 +403,19 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 9999,
-    backgroundColor: colors.surface,
     alignSelf: 'flex-start' as any,
   },
-  chipActive: {
-    backgroundColor: colors.cobalt,
-  },
+  chipActive: {},
   chipText: {
     fontFamily: fonts.headingSemi,
     fontSize: 13,
-    color: colors.inkSecondary,
   },
-  chipTextActive: {
-    color: colors.white,
-  },
+  chipTextActive: {},
 
   // ── Section titles ──────────────────────
   sectionTitle: {
     fontFamily: fonts.heading,
     fontSize: 18,
-    color: colors.ink,
     letterSpacing: -0.3,
     marginBottom: 10,
     marginTop: 8,
@@ -438,33 +430,28 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontFamily: fonts.heading,
     fontSize: 18,
-    color: colors.ink,
     marginTop: 8,
   },
   emptyText: {
     fontFamily: fonts.body,
     fontSize: 15,
-    color: colors.inkSecondary,
   },
 
   // ── Join button ─────────────────────────
   joinBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.cobaltTint,
     marginTop: 20,
     paddingHorizontal: 16,
     paddingVertical: 14,
     borderRadius: 14,
     gap: 10,
     borderWidth: 1,
-    borderColor: colors.cobalt + '30',
   },
   joinBtnText: {
     flex: 1,
     fontFamily: fonts.body,
     fontSize: 14,
-    color: colors.cobalt,
   },
 
   // ── FAB ─────────────────────────────────
@@ -475,10 +462,8 @@ const styles = StyleSheet.create({
     width: 58,
     height: 58,
     borderRadius: 29,
-    backgroundColor: colors.cobalt,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: colors.cobalt,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.38,
     shadowRadius: 12,

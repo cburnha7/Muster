@@ -40,7 +40,7 @@ import {
   selectBookingsError,
 } from '../../store/slices/bookingsSlice';
 import { Booking, BookingStatus } from '../../types';
-import { colors, fonts, Spacing, useTheme } from '../../theme';
+import { fonts, Spacing, useTheme } from '../../theme';
 
 type BookingFilter = 'all' | 'upcoming' | 'past' | 'cancelled';
 
@@ -308,15 +308,15 @@ export function BookingsListScreen(): JSX.Element {
       <View style={[styles.container, { backgroundColor: colors.bgScreen }]}>
         <View style={styles.emptyState}>
           <Ionicons name="log-in-outline" size={64} color={colors.inkFaint} />
-          <Text style={styles.emptyTitle}>Not Logged In</Text>
-          <Text style={styles.emptySubtitle}>
+          <Text style={[styles.emptyTitle, { color: colors.ink }]}>Not Logged In</Text>
+          <Text style={[styles.emptySubtitle, { color: colors.inkFaint }]}>
             Please log in to view your schedule
           </Text>
           <TouchableOpacity
-            style={styles.browseButton}
+            style={[styles.browseButton, { backgroundColor: colors.pine }]}
             onPress={() => navigation.navigate('Auth' as never)}
           >
-            <Text style={styles.browseButtonText}>Log In</Text>
+            <Text style={[styles.browseButtonText, { color: colors.white }]}>Log In</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -359,7 +359,7 @@ export function BookingsListScreen(): JSX.Element {
     ];
 
     return (
-      <View style={styles.filterTabs}>
+      <View style={[styles.filterTabs, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
         {filters.map(filter => (
           <TouchableOpacity
             key={filter.key}
@@ -423,14 +423,14 @@ export function BookingsListScreen(): JSX.Element {
           size={64}
           color={colors.inkFaint}
         />
-        <Text style={styles.emptyTitle}>{emptyState.title}</Text>
-        <Text style={styles.emptySubtitle}>{emptyState.subtitle}</Text>
+        <Text style={[styles.emptyTitle, { color: colors.ink }]}>{emptyState.title}</Text>
+        <Text style={[styles.emptySubtitle, { color: colors.inkFaint }]}>{emptyState.subtitle}</Text>
         {activeFilter === 'upcoming' && (
           <TouchableOpacity
-            style={styles.browseButton}
+            style={[styles.browseButton, { backgroundColor: colors.pine }]}
             onPress={() => navigation.navigate('Home' as never)}
           >
-            <Text style={styles.browseButtonText}>Browse Events</Text>
+            <Text style={[styles.browseButtonText, { color: colors.white }]}>Browse Events</Text>
           </TouchableOpacity>
         )}
       </View>
@@ -508,15 +508,12 @@ export function BookingsListScreen(): JSX.Element {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
   },
   filterTabs: {
     flexDirection: 'row',
-    backgroundColor: colors.surface,
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.sm,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
   },
   filterTab: {
     flex: 1,
@@ -527,16 +524,12 @@ const styles = StyleSheet.create({
     borderRadius: 9999,
     marginHorizontal: 2,
   },
-  activeFilterTab: {
-    backgroundColor: colors.pine,
-  },
+  activeFilterTab: {},
   filterTabText: {
     fontSize: 14,
-    color: colors.inkFaint,
     fontFamily: fonts.label,
   },
   activeFilterTabText: {
-    color: colors.white,
     fontFamily: fonts.headingSemi,
   },
   emptyContainer: {
@@ -555,14 +548,12 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 20,
     fontFamily: fonts.headingSemi,
-    color: colors.ink,
     marginTop: Spacing.lg,
     marginBottom: Spacing.sm,
   },
   emptySubtitle: {
     fontSize: 16,
     fontFamily: fonts.body,
-    color: colors.inkFaint,
     textAlign: 'center',
     lineHeight: 24,
     marginBottom: Spacing.lg,
@@ -570,13 +561,11 @@ const styles = StyleSheet.create({
   browseButton: {
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.md,
-    backgroundColor: colors.pine,
     borderRadius: 9999,
   },
   browseButtonText: {
     fontSize: 16,
     fontFamily: fonts.headingSemi,
-    color: colors.white,
   },
   footer: {
     paddingVertical: Spacing.lg,

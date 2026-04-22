@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, fonts, useTheme } from '../../theme';
+import { fonts, useTheme } from '../../theme';
 import type { OnboardingIntent } from '../../navigation/types';
 
 const TOTAL_STEPS = 5;
@@ -123,8 +123,8 @@ export const IntentSelectionScreen: React.FC = () => {
             showsVerticalScrollIndicator={false}
             contentContainerStyle={styles.scrollContent}
           >
-            <Text style={styles.title}>What brings you to Muster?</Text>
-            <Text style={styles.subtitle}>
+            <Text style={[styles.title, { color: colors.ink }]}>What brings you to Muster?</Text>
+            <Text style={[styles.subtitle, { color: colors.inkSecondary }]}>
               Select all that apply. This shapes your experience.
             </Text>
 
@@ -203,7 +203,7 @@ export const IntentSelectionScreen: React.FC = () => {
             disabled={!canContinue}
             activeOpacity={0.85}
           >
-            <Text style={styles.continueButtonText}>Continue</Text>
+            <Text style={[styles.continueButtonText, { color: colors.white }]}>Continue</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -214,7 +214,6 @@ export const IntentSelectionScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
   },
   content: {
     flex: 1,
@@ -242,10 +241,8 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: colors.border,
   },
   progressDotActive: {
-    backgroundColor: colors.cobalt,
     width: 24,
     borderRadius: 4,
   },
@@ -259,14 +256,12 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontFamily: fonts.heading,
-    color: colors.ink,
     letterSpacing: -0.5,
     marginBottom: 8,
   },
   subtitle: {
     fontSize: 16,
     fontFamily: fonts.body,
-    color: colors.inkSecondary,
     lineHeight: 24,
     marginBottom: 32,
   },
@@ -276,63 +271,47 @@ const styles = StyleSheet.create({
   intentCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.surface,
     borderRadius: 20,
     padding: 20,
     gap: 16,
   },
-  intentCardSelected: {
-    backgroundColor: colors.cobalt,
-  },
+  intentCardSelected: {},
   iconContainer: {
     width: 48,
     height: 48,
     borderRadius: 14,
-    backgroundColor: colors.cobaltLight,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  iconContainerSelected: {
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-  },
+  iconContainerSelected: {},
   cardTextContainer: {
     flex: 1,
   },
   cardTitle: {
     fontSize: 16,
     fontFamily: fonts.headingSemi,
-    color: colors.ink,
     marginBottom: 2,
   },
-  cardTitleSelected: {
-    color: colors.white,
-  },
+  cardTitleSelected: {},
   cardSubtitle: {
     fontSize: 13,
     fontFamily: fonts.body,
-    color: colors.inkSecondary,
     lineHeight: 18,
   },
-  cardSubtitleSelected: {
-    color: 'rgba(255, 255, 255, 0.8)',
-  },
+  cardSubtitleSelected: {},
   checkCircle: {
     width: 28,
     height: 28,
     borderRadius: 14,
-    backgroundColor: colors.border,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  checkCircleSelected: {
-    backgroundColor: 'rgba(255, 255, 255, 0.3)',
-  },
+  checkCircleSelected: {},
   bottomSection: {
     paddingBottom: Platform.OS === 'ios' ? 16 : 24,
     paddingTop: 12,
   },
   continueButton: {
-    backgroundColor: colors.cobalt,
     borderRadius: 9999,
     paddingVertical: 18,
     paddingHorizontal: 32,
@@ -346,7 +325,6 @@ const styles = StyleSheet.create({
   continueButtonText: {
     fontSize: 18,
     fontFamily: fonts.ui,
-    color: colors.white,
     letterSpacing: -0.1,
   },
 });

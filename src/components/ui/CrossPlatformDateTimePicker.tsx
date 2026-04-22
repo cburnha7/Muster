@@ -11,7 +11,7 @@ import {
   StyleSheet,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, fonts } from '../../theme';
+import { fonts, useTheme } from '../../theme';
 
 interface CrossPlatformDateTimePickerProps {
   value: Date;
@@ -24,11 +24,14 @@ interface CrossPlatformDateTimePickerProps {
   minuteInterval?: number;
 }
 
-export default function CrossPlatformDateTimePicker(props: CrossPlatformDateTimePickerProps) {
+export default function CrossPlatformDateTimePicker(
+  props: CrossPlatformDateTimePickerProps
+) {
   if (Platform.OS === 'web') {
     return <WebPicker {...props} />;
   }
-  const NativePicker = require('@react-native-community/datetimepicker').default;
+  const NativePicker =
+    require('@react-native-community/datetimepicker').default;
   return <NativePicker {...props} />;
 }
 
@@ -63,7 +66,15 @@ function formatTimeLabel(date: Date): string {
 
 // ── Web Picker ──
 
-function WebPicker({ value, mode, onChange, minimumDate, maximumDate, minuteInterval }: CrossPlatformDateTimePickerProps) {
+function WebPicker({
+  value,
+  mode,
+  onChange,
+  minimumDate,
+  maximumDate,
+  minuteInterval,
+}: CrossPlatformDateTimePickerProps) {
+  const { colors } = useTheme();
   const [showTimePicker, setShowTimePicker] = useState(false);
 
   if (mode === 'time') {
@@ -81,11 +92,16 @@ function WebPicker({ value, mode, onChange, minimumDate, maximumDate, minuteInte
     return (
       <View style={styles.webContainer}>
         <TouchableOpacity
-          style={styles.timeButton}
+          style={[
+            styles.timeButton,
+            { borderColor: colors.border, backgroundColor: colors.bgCard },
+          ]}
           onPress={() => setShowTimePicker(true)}
           activeOpacity={0.7}
         >
-          <Text style={styles.timeButtonText}>{formatTimeLabel(value)}</Text>
+          <Text style={[styles.timeButtonText, { color: colors.ink }]}>
+            {formatTimeLabel(value)}
+          </Text>
           <Ionicons name="time-outline" size={18} color={colors.inkSoft} />
         </TouchableOpacity>
 
@@ -95,35 +111,76 @@ function WebPicker({ value, mode, onChange, minimumDate, maximumDate, minuteInte
           animationType="slide"
           onRequestClose={() => setShowTimePicker(false)}
         >
-          <SafeAreaView style={styles.modalContainer}>
-            <View style={styles.modalHeader}>
+          <SafeAreaView
+            style={[styles.modalContainer, { backgroundColor: colors.bgCard }]}
+          >
+            <View
+              style={[styles.modalHeader, { borderBottomColor: colors.border }]}
+            >
               <TouchableOpacity onPress={() => setShowTimePicker(false)}>
-                <Text style={styles.modalCancel}>Done</Text>
+                <Text style={[styles.modalCancel, { color: colors.cobalt }]}>
+                  Done
+                </Text>
               </TouchableOpacity>
-              <Text style={styles.modalTitle}>Select Time</Text>
+              <Text style={[styles.modalTitle, { color: colors.ink }]}>
+                Select Time
+              </Text>
               <View style={{ width: 50 }} />
             </View>
             <FlatList
               data={timeOptions}
-              keyExtractor={(item) => `${item.hours}:${item.minutes}`}
+              keyExtractor={item => `${item.hours}:${item.minutes}`}
               renderItem={({ item }) => {
-                const isSelected = item.hours === value.getHours() && item.minutes === value.getMinutes();
+                const isSelected =
+                  item.hours === value.getHours() &&
+                  item.minutes === value.getMinutes();
                 return (
                   <TouchableOpacity
-                    style={[styles.timeOption, isSelected && styles.timeOptionSelected]}
+                    style={[
+                      styles.timeOption,
+                      { borderBottomColor: colors.surface },
+                      isSelected && [
+                        styles.timeOptionSelected,
+                        { backgroundColor: colors.surface },
+                      ],
+                    ]}
                     onPress={() => handleTimeSelect(item)}
                   >
-                    <Text style={[styles.timeOptionText, isSelected && styles.timeOptionTextSelected]}>
+                    <Text
+                      style={[
+                        styles.timeOptionText,
+                        { color: colors.ink },
+                        isSelected && [
+                          styles.timeOptionTextSelected,
+                          { color: colors.cobalt },
+                        ],
+                      ]}
+                    >
                       {item.label}
                     </Text>
-                    {isSelected && <Ionicons name="checkmark" size={20} color={colors.cobalt} />}
+                    {isSelected && (
+                      <Ionicons
+                        name="checkmark"
+                        size={20}
+                        color={colors.cobalt}
+                      />
+                    )}
                   </TouchableOpacity>
                 );
               }}
-              initialScrollIndex={Math.max(0, timeOptions.findIndex(
-                (o) => o.hours === value.getHours() && o.minutes === value.getMinutes()
-              ) - 3)}
-              getItemLayout={(_, index) => ({ length: 48, offset: 48 * index, index })}
+              initialScrollIndex={Math.max(
+                0,
+                timeOptions.findIndex(
+                  o =>
+                    o.hours === value.getHours() &&
+                    o.minutes === value.getMinutes()
+                ) - 3
+              )}
+              getItemLayout={(_, index) => ({
+                length: 48,
+                offset: 48 * index,
+                index,
+              })}
             />
           </SafeAreaView>
         </Modal>
@@ -156,14 +213,23 @@ function WebPicker({ value, mode, onChange, minimumDate, maximumDate, minuteInte
     <View style={styles.webContainer}>
       {/* @ts-ignore — web-only input props */}
       <TextInput
-        style={styles.webInput}
+        style={[
+          styles.webInput,
+          {
+            borderColor: colors.border,
+            color: colors.ink,
+            backgroundColor: colors.bgCard,
+          },
+        ]}
         value={formatValue()}
         onChangeText={handleChange}
-        {...(Platform.OS === 'web' ? {
-          type: inputType,
-          min: formatDate(minimumDate),
-          max: formatDate(maximumDate),
-        } as any : {})}
+        {...(Platform.OS === 'web'
+          ? ({
+              type: inputType,
+              min: formatDate(minimumDate),
+              max: formatDate(maximumDate),
+            } as any)
+          : {})}
       />
     </View>
   );
@@ -173,34 +239,27 @@ const styles = StyleSheet.create({
   webContainer: { marginVertical: 8 },
   webInput: {
     borderWidth: 1,
-    borderColor: colors.border,
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 12,
     fontSize: 16,
     fontFamily: fonts.body,
-    color: colors.ink,
-    backgroundColor: colors.white,
   },
   timeButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     borderWidth: 1,
-    borderColor: colors.border,
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 12,
-    backgroundColor: colors.white,
   },
   timeButtonText: {
     fontSize: 16,
     fontFamily: fonts.body,
-    color: colors.ink,
   },
   modalContainer: {
     flex: 1,
-    backgroundColor: colors.white,
   },
   modalHeader: {
     flexDirection: 'row',
@@ -209,17 +268,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 14,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
   },
   modalCancel: {
     fontFamily: fonts.ui,
     fontSize: 16,
-    color: colors.cobalt,
   },
   modalTitle: {
     fontFamily: fonts.heading,
     fontSize: 18,
-    color: colors.ink,
   },
   timeOption: {
     flexDirection: 'row',
@@ -228,18 +284,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     height: 48,
     borderBottomWidth: 1,
-    borderBottomColor: colors.surface,
   },
-  timeOptionSelected: {
-    backgroundColor: colors.surface,
-  },
+  timeOptionSelected: {},
   timeOptionText: {
     fontFamily: fonts.body,
     fontSize: 16,
-    color: colors.ink,
   },
   timeOptionTextSelected: {
     fontFamily: fonts.ui,
-    color: colors.cobalt,
   },
 });

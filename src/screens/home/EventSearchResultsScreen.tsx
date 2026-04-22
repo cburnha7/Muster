@@ -11,7 +11,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { EventCard } from '../../components/ui/EventCard';
-import { colors, fonts, Spacing, useTheme } from '../../theme';
+import { fonts, Spacing, useTheme } from '../../theme';
 import { useLazySearchEventsQuery } from '../../store/api/eventsApi';
 import { useSelector } from 'react-redux';
 import { selectUser } from '../../store/slices/authSlice';
@@ -83,10 +83,10 @@ export function EventSearchResultsScreen() {
   return (
     <View style={[styles.screen, { backgroundColor: colors.bgScreen }]}>
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
         <View style={styles.headerInfo}>
-          <Text style={styles.headerTitle}>Search Results</Text>
-          <Text style={styles.filterSummary} numberOfLines={1}>
+          <Text style={[styles.headerTitle, { color: colors.ink }]}>Search Results</Text>
+          <Text style={[styles.filterSummary, { color: colors.inkFaint }]} numberOfLines={1}>
             {filterSummary}
           </Text>
         </View>
@@ -99,17 +99,17 @@ export function EventSearchResultsScreen() {
       ) : events.length === 0 ? (
         <View style={styles.centered}>
           <Ionicons name="search-outline" size={56} color={colors.inkFaint} />
-          <Text style={styles.emptyTitle}>No games found</Text>
-          <Text style={styles.emptySubtitle}>
+          <Text style={[styles.emptyTitle, { color: colors.ink }]}>No games found</Text>
+          <Text style={[styles.emptySubtitle, { color: colors.inkFaint }]}>
             Try broadening your search or increasing the distance
           </Text>
           <TouchableOpacity
-            style={styles.backButton}
+            style={[styles.backButton, { backgroundColor: colors.cobalt }]}
             onPress={() => navigation.goBack()}
             accessibilityRole="button"
             activeOpacity={0.75}
           >
-            <Text style={styles.backButtonText}>Adjust Search</Text>
+            <Text style={[styles.backButtonText, { color: colors.white }]}>Adjust Search</Text>
           </TouchableOpacity>
         </View>
       ) : (
@@ -126,7 +126,7 @@ export function EventSearchResultsScreen() {
 
       {/* Floating create button */}
       <TouchableOpacity
-        style={styles.fab}
+        style={[styles.fab, { backgroundColor: colors.cobalt, shadowColor: colors.ink }]}
         onPress={() => navigation.navigate('CreateEvent', {})}
         activeOpacity={0.85}
         accessibilityRole="button"
@@ -141,7 +141,6 @@ export function EventSearchResultsScreen() {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: colors.white,
   },
   header: {
     flexDirection: 'row',
@@ -149,9 +148,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.lg,
     paddingTop: Spacing.xxxl + Spacing.lg,
     paddingBottom: Spacing.md,
-    backgroundColor: colors.surface,
     borderBottomWidth: 1,
-    borderBottomColor: colors.white,
   },
   backBtn: {
     padding: 4,
@@ -163,12 +160,10 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontFamily: fonts.heading,
     fontSize: 20,
-    color: colors.ink,
   },
   filterSummary: {
     fontFamily: fonts.body,
     fontSize: 13,
-    color: colors.inkFaint,
     marginTop: 2,
   },
   centered: {
@@ -180,20 +175,17 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontFamily: fonts.heading,
     fontSize: 20,
-    color: colors.ink,
     marginTop: Spacing.lg,
   },
   emptySubtitle: {
     fontFamily: fonts.body,
     fontSize: 15,
-    color: colors.inkFaint,
     textAlign: 'center',
     marginTop: Spacing.sm,
     lineHeight: 22,
   },
   backButton: {
     marginTop: Spacing.xl,
-    backgroundColor: colors.cobalt,
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 24,
@@ -201,7 +193,6 @@ const styles = StyleSheet.create({
   backButtonText: {
     fontFamily: fonts.ui,
     fontSize: 15,
-    color: colors.white,
   },
   listContent: {
     paddingBottom: Spacing.xxxl + 80,
@@ -213,10 +204,8 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: colors.cobalt,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: colors.ink,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
     shadowRadius: 8,

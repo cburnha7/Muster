@@ -7,7 +7,7 @@ import { FormSelect, SelectOption } from '../../../components/forms/FormSelect';
 import { leagueService } from '../../../services/api/LeagueService';
 import { seasonService } from '../../../services/api/SeasonService';
 import { PlayerRanking, Season } from '../../../types';
-import { colors, useTheme } from '../../../theme';
+import { useTheme } from '../../../theme';
 
 interface PlayersTabProps {
   leagueId: string;
@@ -149,7 +149,7 @@ const PlayerRankingsView: React.FC<{ leagueId: string }> = ({ leagueId }) => {
       style={[rankingsStyles.container, { backgroundColor: colors.bgScreen }]}
     >
       {/* Controls Section */}
-      <View style={rankingsStyles.controls}>
+      <View style={[rankingsStyles.controls, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
         <View style={rankingsStyles.filtersRow}>
           {seasons.length > 0 && (
             <View style={rankingsStyles.filterItem}>
@@ -201,14 +201,11 @@ const PlayerRankingsView: React.FC<{ leagueId: string }> = ({ leagueId }) => {
 const rankingsStyles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.surface,
   },
   controls: {
     paddingHorizontal: 16,
     paddingVertical: 12,
-    backgroundColor: colors.surface,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
   },
   filtersRow: {
     flexDirection: 'row',

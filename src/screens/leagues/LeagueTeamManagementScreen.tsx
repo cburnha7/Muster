@@ -27,7 +27,7 @@ import { userService } from '../../services/api/UserService';
 import { selectUser } from '../../store/slices/authSlice';
 import { isCoachRole } from '../../utils/teamRoles';
 import { LeagueMembership } from '../../types/league';
-import { colors, fonts, useTheme } from '../../theme';
+import { fonts, useTheme } from '../../theme';
 
 interface TeamWithCoach {
   membership: LeagueMembership;
@@ -273,27 +273,27 @@ export const LeagueTeamManagementScreen: React.FC = () => {
   const teamsNeedingCoaches = teams.filter(t => !t.coachName).length;
 
   const renderTeamCard = ({ item }: { item: TeamWithCoach }) => (
-    <View style={styles.teamCard}>
+    <View style={[styles.teamCard, { backgroundColor: colors.surface, shadowColor: colors.ink }]}>
       <View style={styles.teamCardHeader}>
-        <View style={styles.teamLogoPlaceholder}>
+        <View style={[styles.teamLogoPlaceholder, { backgroundColor: colors.bgSubtle }]}>
           <Ionicons name="people" size={20} color={colors.cobalt} />
         </View>
         <View style={styles.teamCardInfo}>
-          <Text style={styles.teamCardName} numberOfLines={1}>
+          <Text style={[styles.teamCardName, { color: colors.ink }]} numberOfLines={1}>
             {item.teamName}
           </Text>
           {item.coachName ? (
             <View style={styles.coachRow}>
               <View style={[styles.statusDot, styles.statusDotGreen]} />
-              <Text style={styles.coachText}>Coach: {item.coachName}</Text>
+              <Text style={[styles.coachText, { color: colors.ink }]}>Coach: {item.coachName}</Text>
             </View>
           ) : (
             <View style={styles.coachRow}>
               <Ionicons name="alert-circle" size={14} color={colors.gold} />
-              <Text style={styles.noCoachText}>No coach assigned</Text>
+              <Text style={[styles.noCoachText, { color: colors.gold }]}>No coach assigned</Text>
             </View>
           )}
-          <Text style={styles.playerCountText}>
+          <Text style={[styles.playerCountText, { color: colors.inkFaint }]}>
             {item.playerCount} {item.playerCount === 1 ? 'player' : 'players'}
             {item.wins + item.losses > 0
               ? ` · ${item.wins}-${item.losses}`
@@ -329,12 +329,12 @@ export const LeagueTeamManagementScreen: React.FC = () => {
 
       {!item.coachName && (
         <TouchableOpacity
-          style={styles.assignCoachButton}
+          style={[styles.assignCoachButton, { backgroundColor: colors.bgSubtle }]}
           onPress={() => openCoachModal(item)}
           activeOpacity={0.75}
         >
           <Ionicons name="person-add-outline" size={16} color={colors.cobalt} />
-          <Text style={styles.assignCoachButtonText}>Assign coach</Text>
+          <Text style={[styles.assignCoachButtonText, { color: colors.cobalt }]}>Assign coach</Text>
         </TouchableOpacity>
       )}
     </View>
@@ -375,11 +375,11 @@ export const LeagueTeamManagementScreen: React.FC = () => {
       />
 
       {/* Summary strip */}
-      <View style={styles.summaryStrip}>
-        <Text style={styles.summaryText}>
+      <View style={[styles.summaryStrip, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
+        <Text style={[styles.summaryText, { color: colors.ink }]}>
           {teams.length} {teams.length === 1 ? 'roster' : 'rosters'}
           {teamsNeedingCoaches > 0 && (
-            <Text style={styles.summaryWarning}>
+            <Text style={[styles.summaryWarning, { color: colors.gold }]}>
               {' '}
               · {teamsNeedingCoaches} need coaches
             </Text>
@@ -402,8 +402,8 @@ export const LeagueTeamManagementScreen: React.FC = () => {
         ListEmptyComponent={
           <View style={styles.emptyState}>
             <Ionicons name="people-outline" size={48} color={colors.inkFaint} />
-            <Text style={styles.emptyTitle}>No rosters yet</Text>
-            <Text style={styles.emptySubtext}>
+            <Text style={[styles.emptyTitle, { color: colors.ink }]}>No rosters yet</Text>
+            <Text style={[styles.emptySubtext, { color: colors.inkFaint }]}>
               Create rosters for your league and assign coaches
             </Text>
           </View>
@@ -427,9 +427,9 @@ export const LeagueTeamManagementScreen: React.FC = () => {
           style={styles.modalOverlay}
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         >
-          <View style={styles.modalContent}>
+          <View style={[styles.modalContent, { backgroundColor: colors.bgCard }]}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Add roster to league</Text>
+              <Text style={[styles.modalTitle, { color: colors.ink }]}>Add roster to league</Text>
               <TouchableOpacity
                 onPress={() => setShowAddModal(false)}
                 activeOpacity={0.75}
@@ -438,9 +438,9 @@ export const LeagueTeamManagementScreen: React.FC = () => {
               </TouchableOpacity>
             </View>
 
-            <Text style={styles.inputLabel}>Roster name *</Text>
+            <Text style={[styles.inputLabel, { color: colors.ink }]}>Roster name *</Text>
             <TextInput
-              style={styles.textInput}
+              style={[styles.textInput, { borderColor: colors.border, color: colors.ink, backgroundColor: colors.bgSubtle }]}
               value={newTeamName}
               onChangeText={setNewTeamName}
               placeholder="e.g. New Gloucester Strikers"
@@ -448,9 +448,9 @@ export const LeagueTeamManagementScreen: React.FC = () => {
               autoFocus
             />
 
-            <Text style={styles.inputLabel}>Max players</Text>
+            <Text style={[styles.inputLabel, { color: colors.ink }]}>Max players</Text>
             <TextInput
-              style={styles.textInput}
+              style={[styles.textInput, { borderColor: colors.border, color: colors.ink, backgroundColor: colors.bgSubtle }]}
               value={newTeamMaxMembers}
               onChangeText={setNewTeamMaxMembers}
               placeholder="15"
@@ -458,9 +458,9 @@ export const LeagueTeamManagementScreen: React.FC = () => {
               keyboardType="number-pad"
             />
 
-            <Text style={styles.inputLabel}>Coach email (optional)</Text>
+            <Text style={[styles.inputLabel, { color: colors.ink }]}>Coach email (optional)</Text>
             <TextInput
-              style={styles.textInput}
+              style={[styles.textInput, { borderColor: colors.border, color: colors.ink, backgroundColor: colors.bgSubtle }]}
               value={newCoachEmail}
               onChangeText={setNewCoachEmail}
               placeholder="coach@email.com"
@@ -468,7 +468,7 @@ export const LeagueTeamManagementScreen: React.FC = () => {
               keyboardType="email-address"
               autoCapitalize="none"
             />
-            <Text style={styles.inputHint}>
+            <Text style={[styles.inputHint, { color: colors.inkFaint }]}>
               If they have a Muster account, they'll be assigned immediately.
             </Text>
 
@@ -490,9 +490,9 @@ export const LeagueTeamManagementScreen: React.FC = () => {
           style={styles.modalOverlay}
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         >
-          <View style={styles.modalContent}>
+          <View style={[styles.modalContent, { backgroundColor: colors.bgCard }]}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>
+              <Text style={[styles.modalTitle, { color: colors.ink }]}>
                 Assign coach
                 {coachTargetTeam ? ` to ${coachTargetTeam.teamName}` : ''}
               </Text>
@@ -505,10 +505,10 @@ export const LeagueTeamManagementScreen: React.FC = () => {
             </View>
 
             {/* Search for existing user */}
-            <Text style={styles.inputLabel}>Search for a Muster user</Text>
+            <Text style={[styles.inputLabel, { color: colors.ink }]}>Search for a Muster user</Text>
             <View style={styles.searchRow}>
               <TextInput
-                style={[styles.textInput, { flex: 1, marginBottom: 0 }]}
+                style={[styles.textInput, { borderColor: colors.border, color: colors.ink, backgroundColor: colors.bgSubtle }, { flex: 1, marginBottom: 0 }]}
                 value={coachSearchQuery}
                 onChangeText={setCoachSearchQuery}
                 placeholder="Search by name or email"
@@ -540,16 +540,16 @@ export const LeagueTeamManagementScreen: React.FC = () => {
                 {coachSearchResults.slice(0, 5).map((u: any) => (
                   <TouchableOpacity
                     key={u.id}
-                    style={styles.searchResultItem}
+                    style={[styles.searchResultItem, { backgroundColor: colors.bgSubtle }]}
                     onPress={() => handleAssignCoachByUser(u.id)}
                     disabled={isAssigningCoach}
                     activeOpacity={0.75}
                   >
                     <View style={styles.searchResultInfo}>
-                      <Text style={styles.searchResultName}>
+                      <Text style={[styles.searchResultName, { color: colors.ink }]}>
                         {u.firstName} {u.lastName}
                       </Text>
-                      <Text style={styles.searchResultEmail}>{u.email}</Text>
+                      <Text style={[styles.searchResultEmail, { color: colors.inkFaint }]}>{u.email}</Text>
                     </View>
                     {isAssigningCoach ? (
                       <ActivityIndicator size="small" color={colors.cobalt} />
@@ -568,18 +568,18 @@ export const LeagueTeamManagementScreen: React.FC = () => {
             {coachSearchResults.length === 0 &&
               coachSearchQuery.trim().length >= 2 &&
               !isSearchingCoach && (
-                <Text style={styles.noResults}>No users found</Text>
+                <Text style={[styles.noResults, { color: colors.inkFaint }]}>No users found</Text>
               )}
 
             {/* Divider */}
             <View style={styles.divider}>
-              <View style={styles.dividerLine} />
-              <Text style={styles.dividerText}>Or assign by email</Text>
-              <View style={styles.dividerLine} />
+              <View style={[styles.dividerLine, { backgroundColor: colors.border }]} />
+              <Text style={[styles.dividerText, { color: colors.inkFaint }]}>Or assign by email</Text>
+              <View style={[styles.dividerLine, { backgroundColor: colors.border }]} />
             </View>
 
             <TextInput
-              style={styles.textInput}
+              style={[styles.textInput, { borderColor: colors.border, color: colors.ink, backgroundColor: colors.bgSubtle }]}
               value={coachEmail}
               onChangeText={setCoachEmail}
               placeholder="coach@email.com"
@@ -606,33 +606,25 @@ export const LeagueTeamManagementScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
   },
   summaryStrip: {
     paddingHorizontal: 16,
     paddingVertical: 10,
-    backgroundColor: colors.surface,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
   },
   summaryText: {
     fontSize: 14,
     fontFamily: fonts.headingSemi,
-    color: colors.ink,
   },
-  summaryWarning: {
-    color: colors.gold,
-  },
+  summaryWarning: {},
   listContent: {
     padding: 16,
     paddingBottom: 32,
   },
   teamCard: {
-    backgroundColor: colors.surface,
     borderRadius: 12,
     padding: 14,
     marginBottom: 10,
-    shadowColor: colors.ink,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.04,
     shadowRadius: 4,
@@ -646,7 +638,6 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: colors.background,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
@@ -657,7 +648,6 @@ const styles = StyleSheet.create({
   teamCardName: {
     fontSize: 16,
     fontFamily: fonts.headingSemi,
-    color: colors.ink,
     marginBottom: 2,
   },
   coachRow: {
@@ -671,23 +661,18 @@ const styles = StyleSheet.create({
     height: 8,
     borderRadius: 4,
   },
-  statusDotGreen: {
-    backgroundColor: colors.success,
-  },
+  statusDotGreen: {},
   coachText: {
     fontSize: 13,
     fontFamily: fonts.body,
-    color: colors.ink,
   },
   noCoachText: {
     fontSize: 13,
     fontFamily: fonts.body,
-    color: colors.gold,
   },
   playerCountText: {
     fontSize: 13,
     fontFamily: fonts.body,
-    color: colors.inkFaint,
   },
   overflowButton: {
     padding: 8,
@@ -700,12 +685,10 @@ const styles = StyleSheet.create({
     marginTop: 10,
     paddingVertical: 8,
     borderRadius: 8,
-    backgroundColor: colors.background,
   },
   assignCoachButtonText: {
     fontSize: 14,
     fontFamily: fonts.headingSemi,
-    color: colors.cobalt,
   },
   emptyState: {
     alignItems: 'center',
@@ -715,13 +698,11 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 18,
     fontFamily: fonts.headingSemi,
-    color: colors.ink,
     marginTop: 16,
   },
   emptySubtext: {
     fontSize: 14,
     fontFamily: fonts.body,
-    color: colors.inkFaint,
     marginTop: 6,
     textAlign: 'center',
   },
@@ -733,10 +714,8 @@ const styles = StyleSheet.create({
   modalOverlay: {
     flex: 1,
     justifyContent: 'flex-end',
-    backgroundColor: 'rgba(0,0,0,0.4)',
   },
   modalContent: {
-    backgroundColor: colors.surface,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     padding: 20,
@@ -752,14 +731,12 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 18,
     fontFamily: fonts.headingSemi,
-    color: colors.ink,
     flex: 1,
     marginRight: 12,
   },
   inputLabel: {
     fontSize: 13,
     fontFamily: fonts.label,
-    color: colors.ink,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
     marginBottom: 6,
@@ -767,20 +744,16 @@ const styles = StyleSheet.create({
   },
   textInput: {
     borderWidth: 1,
-    borderColor: colors.border,
     borderRadius: 10,
     paddingHorizontal: 14,
     paddingVertical: 12,
     fontSize: 15,
     fontFamily: fonts.body,
-    color: colors.ink,
-    backgroundColor: colors.background,
     marginBottom: 12,
   },
   inputHint: {
     fontSize: 12,
     fontFamily: fonts.body,
-    color: colors.inkFaint,
     marginBottom: 16,
     marginTop: -6,
   },
@@ -791,7 +764,6 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   searchButton: {
-    backgroundColor: colors.cobalt,
     borderRadius: 10,
     width: 44,
     height: 44,
@@ -810,7 +782,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingVertical: 10,
     paddingHorizontal: 12,
-    backgroundColor: colors.background,
     borderRadius: 8,
     marginBottom: 6,
   },
@@ -821,18 +792,15 @@ const styles = StyleSheet.create({
   searchResultName: {
     fontSize: 15,
     fontFamily: fonts.headingSemi,
-    color: colors.ink,
   },
   searchResultEmail: {
     fontSize: 13,
     fontFamily: fonts.body,
-    color: colors.inkFaint,
     marginTop: 1,
   },
   noResults: {
     fontSize: 14,
     fontFamily: fonts.body,
-    color: colors.inkFaint,
     textAlign: 'center',
     paddingVertical: 8,
   },
@@ -845,12 +813,10 @@ const styles = StyleSheet.create({
   dividerLine: {
     flex: 1,
     height: 1,
-    backgroundColor: colors.border,
   },
   dividerText: {
     fontSize: 12,
     fontFamily: fonts.body,
-    color: colors.inkFaint,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },

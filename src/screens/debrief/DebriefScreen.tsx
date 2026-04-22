@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, fonts, useTheme } from '../../theme';
+import { fonts, useTheme } from '../../theme';
 import { salute as saluteConstants } from '../../theme/brand';
 import {
   debriefService,
@@ -158,7 +158,7 @@ export function DebriefScreen() {
 
   if (loading) {
     return (
-      <SafeAreaView style={styles.centered}>
+      <SafeAreaView style={[styles.centered, { backgroundColor: colors.bgScreen }]}>
         <ActivityIndicator size="large" color={colors.pine} />
       </SafeAreaView>
     );
@@ -174,8 +174,8 @@ export function DebriefScreen() {
       style={[styles.container, { backgroundColor: colors.bgScreen }]}
     >
       {/* Header — event name only */}
-      <View style={styles.header}>
-        <Text style={styles.title} numberOfLines={1}>
+      <View style={[styles.header, { borderBottomColor: colors.border }]}>
+        <Text style={[styles.title, { color: colors.ink }]} numberOfLines={1}>
           {details.event.title}
         </Text>
       </View>
@@ -185,7 +185,7 @@ export function DebriefScreen() {
         contentContainerStyle={styles.scrollContent}
       >
         {/* Participants */}
-        <Text style={styles.sectionTitle}>
+        <Text style={[styles.sectionTitle, { color: colors.ink }]}>
           {isReadonly
             ? `Players (${salutedIds.size} saluted)`
             : `Salute your fellow players (${salutedIds.size}/${minSalutes} min)`}
@@ -194,7 +194,7 @@ export function DebriefScreen() {
         {details.participants.length === 0 ? (
           <View style={styles.emptyState}>
             <Ionicons name="people-outline" size={32} color={colors.inkFaint} />
-            <Text style={styles.emptyText}>
+            <Text style={[styles.emptyText, { color: colors.inkSoft }]}>
               No other players found for this event.
             </Text>
           </View>
@@ -220,14 +220,14 @@ export function DebriefScreen() {
                         style={styles.avatar}
                       />
                     ) : (
-                      <View style={styles.avatarPlaceholder}>
-                        <Text style={styles.avatarInitials}>
+                      <View style={[styles.avatarPlaceholder, { backgroundColor: colors.pine }]}>
+                        <Text style={[styles.avatarInitials, { color: colors.white }]}>
                           {getInitials(p)}
                         </Text>
                       </View>
                     )}
                   </SaluteOverlay>
-                  <Text style={styles.participantName} numberOfLines={1}>
+                  <Text style={[styles.participantName, { color: colors.ink }]} numberOfLines={1}>
                     {p.firstName} {p.lastName?.[0]}.
                   </Text>
                 </TouchableOpacity>
@@ -239,12 +239,12 @@ export function DebriefScreen() {
         {/* Facility Rating */}
         {details.event.facilityId && details.event.facility && (
           <View style={styles.ratingSection}>
-            <Text style={styles.sectionTitle}>
+            <Text style={[styles.sectionTitle, { color: colors.ink }]}>
               {isReadonly
                 ? `${details.event.facility.name || 'the venue'}`
                 : `Rate ${details.event.facility.name || 'the venue'}`}
             </Text>
-            {!isReadonly && <Text style={styles.ratingHint}>Optional</Text>}
+            {!isReadonly && <Text style={[styles.ratingHint, { color: colors.inkFaint }]}>Optional</Text>}
             <View style={styles.starsRow}>
               {[1, 2, 3, 4, 5].map(star => (
                 <TouchableOpacity
@@ -267,7 +267,7 @@ export function DebriefScreen() {
               ))}
             </View>
             {isReadonly && facilityRating === 0 && (
-              <Text style={styles.ratingHint}>No rating submitted</Text>
+              <Text style={[styles.ratingHint, { color: colors.inkFaint }]}>No rating submitted</Text>
             )}
           </View>
         )}
@@ -275,13 +275,13 @@ export function DebriefScreen() {
 
       {/* Footer button */}
       {hasSubmitted ? (
-        <View style={styles.footer}>
-          <View style={[styles.submitButton, styles.submitButtonDisabled]}>
-            <Text style={styles.submitButtonText}>Submitted</Text>
+        <View style={[styles.footer, { backgroundColor: colors.bgCard, borderTopColor: colors.border }]}>
+          <View style={[styles.submitButton, { backgroundColor: colors.pine }, styles.submitButtonDisabled]}>
+            <Text style={[styles.submitButtonText, { color: colors.white }]}>Submitted</Text>
           </View>
         </View>
       ) : !isReadonly ? (
-        <View style={styles.footer}>
+        <View style={[styles.footer, { backgroundColor: colors.bgCard, borderTopColor: colors.border }]}>
           <TouchableOpacity
             style={[
               styles.submitButton,
@@ -300,7 +300,7 @@ export function DebriefScreen() {
             {submitting ? (
               <ActivityIndicator color={colors.white} />
             ) : (
-              <Text style={styles.submitButtonText}>
+              <Text style={[styles.submitButtonText, { color: colors.white }]}>
                 {canSubmit ? 'Submit Debrief' : `Salute ${salutesNeeded} more`}
               </Text>
             )}
@@ -312,30 +312,26 @@ export function DebriefScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.white },
+  container: { flex: 1 },
   centered: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: colors.white,
   },
   header: {
     paddingHorizontal: 20,
     paddingVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
   },
   title: {
     fontFamily: fonts.heading,
     fontSize: 22,
-    color: colors.ink,
   },
   scroll: { flex: 1 },
   scrollContent: { padding: 20, paddingBottom: 120 },
   sectionTitle: {
     fontFamily: fonts.headingSemi || fonts.heading,
     fontSize: 16,
-    color: colors.ink,
     marginBottom: 16,
     textAlign: 'center',
   },
@@ -347,7 +343,6 @@ const styles = StyleSheet.create({
   emptyText: {
     fontFamily: fonts.body,
     fontSize: 15,
-    color: colors.inkSoft,
     textAlign: 'center',
   },
   participantsGrid: {
@@ -362,32 +357,24 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 12,
     borderRadius: 14,
-    backgroundColor: colors.surface,
     borderWidth: 2,
-    borderColor: 'transparent',
   },
-  participantCardSaluted: {
-    borderColor: colors.gold,
-    backgroundColor: colors.goldTint,
-  },
+  participantCardSaluted: {},
   avatar: { width: 56, height: 56, borderRadius: 28 },
   avatarPlaceholder: {
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: colors.pine,
     justifyContent: 'center',
     alignItems: 'center',
   },
   avatarInitials: {
     fontFamily: fonts.ui,
     fontSize: 18,
-    color: colors.white,
   },
   participantName: {
     fontFamily: fonts.body,
     fontSize: 13,
-    color: colors.ink,
     textAlign: 'center',
     marginTop: 8,
   },
@@ -395,7 +382,6 @@ const styles = StyleSheet.create({
   ratingHint: {
     fontFamily: fonts.body,
     fontSize: 13,
-    color: colors.inkFaint,
     marginBottom: 12,
     textAlign: 'center',
   },
@@ -406,20 +392,16 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     padding: 20,
-    backgroundColor: colors.white,
     borderTopWidth: 1,
-    borderTopColor: colors.border,
   },
   submitButton: {
-    backgroundColor: colors.pine,
     borderRadius: 12,
     paddingVertical: 16,
     alignItems: 'center',
   },
-  submitButtonDisabled: { backgroundColor: colors.inkFaint },
+  submitButtonDisabled: {},
   submitButtonText: {
     fontFamily: fonts.ui,
     fontSize: 16,
-    color: colors.white,
   },
 });

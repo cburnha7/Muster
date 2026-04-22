@@ -17,7 +17,7 @@ import { FormSelect, SelectOption } from '../../../components/forms/FormSelect';
 import { matchService } from '../../../services/api/MatchService';
 import { seasonService } from '../../../services/api/SeasonService';
 import { Match, MatchStatus, Season } from '../../../types';
-import { colors, useTheme } from '../../../theme';
+import { useTheme } from '../../../theme';
 import { LeaguesStackParamList } from '../../../navigation/types';
 
 interface MatchesTabProps {
@@ -187,19 +187,19 @@ export const MatchesTab: React.FC<MatchesTabProps> = ({
     return (
       <View style={styles.emptyState}>
         <Ionicons name="calendar-outline" size={64} color={colors.inkMuted} />
-        <Text style={styles.emptyText}>No matches found</Text>
-        <Text style={styles.emptySubtext}>
+        <Text style={[styles.emptyText, { color: colors.inkSecondary }]}>No matches found</Text>
+        <Text style={[styles.emptySubtext, { color: colors.inkMuted }]}>
           {statusFilter !== 'all'
             ? `No ${statusFilter} matches available`
             : 'Matches will appear once they are scheduled'}
         </Text>
         {isOperator && (
           <TouchableOpacity
-            style={styles.emptyActionButton}
+            style={[styles.emptyActionButton, { backgroundColor: colors.bgCard, borderColor: colors.cobalt }]}
             onPress={handleCreateMatch}
           >
             <Ionicons name="add-circle" size={20} color={colors.cobalt} />
-            <Text style={styles.emptyActionText}>Create First Match</Text>
+            <Text style={[styles.emptyActionText, { color: colors.cobalt }]}>Create First Match</Text>
           </TouchableOpacity>
         )}
       </View>
@@ -226,7 +226,7 @@ export const MatchesTab: React.FC<MatchesTabProps> = ({
   return (
     <View style={[styles.container, { backgroundColor: colors.bgScreen }]}>
       {/* Controls Section */}
-      <View style={styles.controls}>
+      <View style={[styles.controls, { backgroundColor: colors.bgScreen, borderBottomColor: colors.border }]}>
         <View style={styles.filtersRow}>
           {seasons.length > 0 && (
             <View style={styles.filterItem}>
@@ -253,7 +253,7 @@ export const MatchesTab: React.FC<MatchesTabProps> = ({
 
         <View style={styles.actionsRow}>
           <TouchableOpacity
-            style={styles.sortButton}
+            style={[styles.sortButton, { backgroundColor: colors.bgCard, borderColor: colors.cobalt }]}
             onPress={handleSortToggle}
           >
             <Ionicons
@@ -261,18 +261,18 @@ export const MatchesTab: React.FC<MatchesTabProps> = ({
               size={18}
               color={colors.cobalt}
             />
-            <Text style={styles.sortText}>
+            <Text style={[styles.sortText, { color: colors.cobalt }]}>
               {sortOrder === 'asc' ? 'Oldest First' : 'Newest First'}
             </Text>
           </TouchableOpacity>
 
           {isOperator && (
             <TouchableOpacity
-              style={styles.createButton}
+              style={[styles.createButton, { backgroundColor: colors.cobalt }]}
               onPress={handleCreateMatch}
             >
               <Ionicons name="add-circle" size={20} color={colors.white} />
-              <Text style={styles.createButtonText}>Create Match</Text>
+              <Text style={[styles.createButtonText, { color: colors.white }]}>Create Match</Text>
             </TouchableOpacity>
           )}
         </View>
@@ -305,14 +305,11 @@ export const MatchesTab: React.FC<MatchesTabProps> = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.white,
   },
   controls: {
     paddingHorizontal: 16,
     paddingVertical: 12,
-    backgroundColor: colors.background,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
     gap: 12,
   },
   filtersRow: {
@@ -335,31 +332,26 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 16,
     paddingVertical: 10,
-    backgroundColor: colors.white,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: colors.cobalt,
     gap: 6,
     flex: 1,
   },
   sortText: {
     fontSize: 14,
     fontWeight: '600',
-    color: colors.cobalt,
   },
   createButton: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 16,
     paddingVertical: 10,
-    backgroundColor: colors.cobalt,
     borderRadius: 8,
     gap: 6,
   },
   createButtonText: {
     fontSize: 14,
     fontWeight: '600',
-    color: colors.white,
   },
   listContent: {
     paddingVertical: 8,
@@ -379,13 +371,11 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: 18,
     fontWeight: '600',
-    color: colors.inkSecondary,
     marginTop: 16,
     textAlign: 'center',
   },
   emptySubtext: {
     fontSize: 14,
-    color: colors.inkMuted,
     marginTop: 8,
     textAlign: 'center',
   },
@@ -394,16 +384,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 20,
     paddingVertical: 12,
-    backgroundColor: colors.white,
     borderRadius: 8,
     borderWidth: 2,
-    borderColor: colors.cobalt,
     gap: 8,
     marginTop: 24,
   },
   emptyActionText: {
     fontSize: 15,
     fontWeight: '600',
-    color: colors.cobalt,
   },
 });

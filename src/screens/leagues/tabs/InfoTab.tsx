@@ -14,7 +14,7 @@ import { LoadingSpinner } from '../../../components/ui/LoadingSpinner';
 import { ErrorDisplay } from '../../../components/ui/ErrorDisplay';
 import { leagueService } from '../../../services/api/LeagueService';
 import { League, LeagueDocument } from '../../../types/league';
-import { colors, Spacing, useTheme } from '../../../theme';
+import { Spacing, useTheme } from '../../../theme';
 
 interface InfoTabProps {
   league: League;
@@ -105,20 +105,20 @@ export const InfoTab: React.FC<InfoTabProps> = ({ league }) => {
       {/* Description Section */}
       {league.description && (
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>About</Text>
-          <Text style={styles.description}>{league.description}</Text>
+          <Text style={[styles.sectionTitle, { color: colors.ink }]}>About</Text>
+          <Text style={[styles.description, { color: colors.inkSecondary }]}>{league.description}</Text>
         </View>
       )}
 
       {/* Points System Section */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Points System</Text>
-        <View style={styles.pointsContainer}>
+        <Text style={[styles.sectionTitle, { color: colors.ink }]}>Points System</Text>
+        <View style={[styles.pointsContainer, { backgroundColor: colors.bgSubtle }]}>
           <View style={styles.pointsRow}>
             <View style={styles.pointsItem}>
               <Ionicons name="trophy" size={20} color={colors.cobalt} />
-              <Text style={styles.pointsLabel}>Win</Text>
-              <Text style={styles.pointsValue}>
+              <Text style={[styles.pointsLabel, { color: colors.inkFaint }]}>Win</Text>
+              <Text style={[styles.pointsValue, { color: colors.ink }]}>
                 {league.pointsConfig.win} pts
               </Text>
             </View>
@@ -128,15 +128,15 @@ export const InfoTab: React.FC<InfoTabProps> = ({ league }) => {
                 size={20}
                 color={colors.inkFaint}
               />
-              <Text style={styles.pointsLabel}>Draw</Text>
-              <Text style={styles.pointsValue}>
+              <Text style={[styles.pointsLabel, { color: colors.inkFaint }]}>Draw</Text>
+              <Text style={[styles.pointsValue, { color: colors.ink }]}>
                 {league.pointsConfig.draw} pts
               </Text>
             </View>
             <View style={styles.pointsItem}>
               <Ionicons name="close-circle" size={20} color={colors.heart} />
-              <Text style={styles.pointsLabel}>Loss</Text>
-              <Text style={styles.pointsValue}>
+              <Text style={[styles.pointsLabel, { color: colors.inkFaint }]}>Loss</Text>
+              <Text style={[styles.pointsValue, { color: colors.ink }]}>
                 {league.pointsConfig.loss} pts
               </Text>
             </View>
@@ -147,7 +147,7 @@ export const InfoTab: React.FC<InfoTabProps> = ({ league }) => {
       {/* League Documents Section */}
       {documents.length > 0 && (
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>League Documents</Text>
+          <Text style={[styles.sectionTitle, { color: colors.ink }]}>League Documents</Text>
           {documents.map(doc => {
             const categoryLabel =
               doc.documentType === 'rules'
@@ -156,7 +156,7 @@ export const InfoTab: React.FC<InfoTabProps> = ({ league }) => {
                   ? 'Insurance Policy'
                   : 'Other';
             return (
-              <View key={doc.id} style={styles.documentCard}>
+              <View key={doc.id} style={[styles.documentCard, { backgroundColor: colors.bgSubtle }]}>
                 <View style={styles.documentInfo}>
                   <View style={styles.documentHeader}>
                     <Ionicons
@@ -165,17 +165,17 @@ export const InfoTab: React.FC<InfoTabProps> = ({ league }) => {
                       color={colors.cobalt}
                     />
                     <View style={styles.documentDetails}>
-                      <Text style={styles.documentName}>{doc.fileName}</Text>
+                      <Text style={[styles.documentName, { color: colors.ink }]}>{doc.fileName}</Text>
                       <View style={styles.documentMeta}>
-                        <Text style={styles.documentCategoryLabel}>
+                        <Text style={[styles.documentCategoryLabel, { color: colors.cobalt }]}>
                           {categoryLabel}
                         </Text>
-                        <Text style={styles.documentMetaText}> • </Text>
-                        <Text style={styles.documentMetaText}>
+                        <Text style={[styles.documentMetaText, { color: colors.inkFaint }]}> • </Text>
+                        <Text style={[styles.documentMetaText, { color: colors.inkFaint }]}>
                           {formatFileSize(doc.fileSize)}
                         </Text>
-                        <Text style={styles.documentMetaText}> • </Text>
-                        <Text style={styles.documentMetaText}>
+                        <Text style={[styles.documentMetaText, { color: colors.inkFaint }]}> • </Text>
+                        <Text style={[styles.documentMetaText, { color: colors.inkFaint }]}>
                           {formatDate(doc.uploadedAt)}
                         </Text>
                       </View>
@@ -183,10 +183,10 @@ export const InfoTab: React.FC<InfoTabProps> = ({ league }) => {
                   </View>
                 </View>
                 <TouchableOpacity
-                  style={styles.viewButton}
+                  style={[styles.viewButton, { backgroundColor: colors.surface, borderColor: colors.cobalt }]}
                   onPress={() => handleViewDocument(doc)}
                 >
-                  <Text style={styles.viewButtonText}>View</Text>
+                  <Text style={[styles.viewButtonText, { color: colors.cobalt }]}>View</Text>
                   <Ionicons
                     name="chevron-forward"
                     size={16}
@@ -207,7 +207,7 @@ export const InfoTab: React.FC<InfoTabProps> = ({ league }) => {
             size={64}
             color={colors.inkMuted}
           />
-          <Text style={styles.emptyText}>
+          <Text style={[styles.emptyText, { color: colors.inkSecondary }]}>
             No additional information available
           </Text>
         </View>
@@ -219,7 +219,6 @@ export const InfoTab: React.FC<InfoTabProps> = ({ league }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.white,
   },
   content: {
     paddingVertical: Spacing.lg,
@@ -231,16 +230,13 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: colors.ink,
     marginBottom: Spacing.md,
   },
   description: {
     fontSize: 15,
     lineHeight: 22,
-    color: colors.mid,
   },
   pointsContainer: {
-    backgroundColor: colors.background,
     borderRadius: 12,
     padding: Spacing.lg,
   },
@@ -254,19 +250,16 @@ const styles = StyleSheet.create({
   },
   pointsLabel: {
     fontSize: 14,
-    color: colors.inkFaint,
     fontWeight: '500',
   },
   pointsValue: {
     fontSize: 16,
     fontWeight: '700',
-    color: colors.ink,
   },
   documentCard: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: colors.background,
     borderRadius: 12,
     padding: Spacing.md,
     marginBottom: Spacing.md,
@@ -285,7 +278,6 @@ const styles = StyleSheet.create({
   documentName: {
     fontSize: 15,
     fontWeight: '600',
-    color: colors.ink,
     marginBottom: 4,
   },
   documentMeta: {
@@ -294,28 +286,23 @@ const styles = StyleSheet.create({
   },
   documentMetaText: {
     fontSize: 13,
-    color: colors.inkFaint,
   },
   documentCategoryLabel: {
     fontSize: 13,
     fontWeight: '600',
-    color: colors.cobalt,
   },
   viewButton: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.sm,
-    backgroundColor: colors.surface,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: colors.cobalt,
     gap: 4,
   },
   viewButtonText: {
     fontSize: 14,
     fontWeight: '600',
-    color: colors.cobalt,
   },
   emptyState: {
     flex: 1,
@@ -326,7 +313,6 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: 16,
-    color: colors.inkSecondary,
     marginTop: 16,
     textAlign: 'center',
   },
