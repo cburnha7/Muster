@@ -370,7 +370,7 @@ export function FacilitiesListScreen() {
                 </Text>
               )}
               <View style={{ flex: 1 }} />
-              {item.rating && item.rating > 0 && (
+              {item.rating != null && item.rating > 0 ? (
                 <View style={styles.rating}>
                   <Ionicons name="star" size={14} color={colors.gold} />
                   <Text
@@ -379,7 +379,7 @@ export function FacilitiesListScreen() {
                     {item.rating.toFixed(1)}
                   </Text>
                 </View>
-              )}
+              ) : null}
             </View>
           )}
         </View>
