@@ -142,7 +142,7 @@ export function AddressAutocomplete({
       <View
         style={[
           styles.inputRow,
-          { backgroundColor: colors.white, borderColor: colors.border },
+          { backgroundColor: colors.bgInput, borderColor: colors.border },
         ]}
       >
         <Ionicons
@@ -173,9 +173,9 @@ export function AddressAutocomplete({
           style={[
             styles.suggestionsContainer,
             {
-              backgroundColor: colors.white,
+              backgroundColor: colors.bgCard,
               borderColor: colors.border,
-              shadowColor: colors.black,
+              shadowColor: colors.ink,
             },
           ]}
         >

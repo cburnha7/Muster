@@ -36,6 +36,8 @@ export interface FacilityWizardState {
   state: string;
   zipCode: string;
   country: string;
+  latitude: number;
+  longitude: number;
   // Step 2: Contact
   contactName: string;
   contactPhone: string;
@@ -96,6 +98,8 @@ export function createInitialFacilityState(): FacilityWizardState {
     state: '',
     zipCode: '',
     country: 'USA',
+    latitude: 0,
+    longitude: 0,
     contactName: '',
     contactPhone: '',
     contactEmail: '',

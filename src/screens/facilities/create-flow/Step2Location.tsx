@@ -28,6 +28,20 @@ export function Step2Location() {
           setField('city', addr.city);
           setField('state', addr.state);
           setField('zipCode', addr.zipCode);
+          if (addr.latitude != null) {
+            dispatch({
+              type: 'SET_FIELD',
+              field: 'latitude',
+              value: addr.latitude,
+            });
+          }
+          if (addr.longitude != null) {
+            dispatch({
+              type: 'SET_FIELD',
+              field: 'longitude',
+              value: addr.longitude,
+            });
+          }
         }}
         label="Address"
         placeholder="Search address..."

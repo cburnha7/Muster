@@ -23,6 +23,7 @@ import { FormInput } from '../../components/forms/FormInput';
 import { FormButton } from '../../components/forms/FormButton';
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
 import { ErrorDisplay } from '../../components/ui/ErrorDisplay';
+import { AddressAutocomplete } from '../../components/forms/AddressAutocomplete';
 import { OptimizedImage } from '../../components/ui/OptimizedImage';
 import { HoursOfOperationSection } from '../../components/facilities/HoursOfOperationSection';
 import { CancellationPolicyPicker } from '../../components/facilities/CancellationPolicyPicker';
@@ -849,140 +850,23 @@ export function EditFacilityScreen({
               </View>
             </View>
 
-            <Text style={[s.sectionLabel, { color: colors.inkSoft }]}>
-              SEARCH ADDRESS
-            </Text>
-            <View
-              style={[
-                s.card,
-                { backgroundColor: colors.bgCard, shadowColor: colors.black },
-              ]}
-            >
-              <View style={{ padding: 16 }}>
-                <TextInput
-                  style={[
-                    s.addressSearchInput,
-                    {
-                      backgroundColor: colors.surface,
-                      borderColor: colors.border,
-                      color: colors.ink,
-                    },
-                  ]}
-                  placeholder="Start typing an address..."
-                  placeholderTextColor={colors.inkSoft}
-                  value={addressQuery}
-                  onChangeText={text => {
-                    setAddressQuery(text);
-                    if (text.length >= 3) {
-                      const apiKey =
-                        process.env.EXPO_PUBLIC_GOOGLE_PLACES_API_KEY;
-                      if (apiKey) {
-                        fetch(
-                          `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodeURIComponent(text)}&types=address&key=${apiKey}`
-                        )
-                          .then(r => r.json())
-                          .then(data =>
-                            setAddressSuggestions(data.predictions || [])
-                          )
-                          .catch(() => setAddressSuggestions([]));
-                      }
-                    } else {
-                      setAddressSuggestions([]);
-                    }
-                  }}
-                />
-                {addressSuggestions.length > 0 && (
-                  <View
-                    style={[
-                      s.suggestionsContainer,
-                      {
-                        backgroundColor: colors.bgCard,
-                        borderColor: colors.border,
-                      },
-                    ]}
-                  >
-                    {addressSuggestions
-                      .slice(0, 5)
-                      .map((suggestion: any, idx: number) => (
-                        <TouchableOpacity
-                          key={suggestion.place_id || idx}
-                          style={[
-                            s.suggestionItem,
-                            idx < 4 && [
-                              s.suggestionBorder,
-                              { borderBottomColor: colors.border },
-                            ],
-                          ]}
-                          onPress={() => {
-                            const apiKey =
-                              process.env.EXPO_PUBLIC_GOOGLE_PLACES_API_KEY;
-                            if (apiKey && suggestion.place_id) {
-                              fetch(
-                                `https://maps.googleapis.com/maps/api/place/details/json?place_id=${suggestion.place_id}&fields=address_components&key=${apiKey}`
-                              )
-                                .then(r => r.json())
-                                .then(data => {
-                                  const components =
-                                    data.result?.address_components || [];
-                                  let street = '',
-                                    city = '',
-                                    st = '',
-                                    zip = '';
-                                  for (const c of components) {
-                                    if (c.types.includes('street_number'))
-                                      street = c.long_name + ' ';
-                                    if (c.types.includes('route'))
-                                      street += c.long_name;
-                                    if (c.types.includes('locality'))
-                                      city = c.long_name;
-                                    if (
-                                      c.types.includes(
-                                        'administrative_area_level_1'
-                                      )
-                                    )
-                                      st = c.short_name;
-                                    if (c.types.includes('postal_code'))
-                                      zip = c.long_name;
-                                  }
-                                  updateNestedField(
-                                    'address',
-                                    'street',
-                                    street.trim()
-                                  );
-                                  updateNestedField('address', 'city', city);
-                                  updateNestedField('address', 'state', st);
-                                  updateNestedField('address', 'zipCode', zip);
-                                  setAddressQuery(suggestion.description);
-                                  setAddressSuggestions([]);
-                                })
-                                .catch(() => {
-                                  setAddressQuery(suggestion.description);
-                                  setAddressSuggestions([]);
-                                });
-                            } else {
-                              setAddressQuery(suggestion.description);
-                              setAddressSuggestions([]);
-                            }
-                          }}
-                        >
-                          <Ionicons
-                            name="location-outline"
-                            size={16}
-                            color={colors.inkSoft}
-                            style={{ marginRight: 8 }}
-                          />
-                          <Text
-                            style={[s.suggestionText, { color: colors.ink }]}
-                            numberOfLines={1}
-                          >
-                            {suggestion.description}
-                          </Text>
-                        </TouchableOpacity>
-                      ))}
-                  </View>
-                )}
-              </View>
-            </View>
+            <AddressAutocomplete
+              value={addressQuery}
+              onChangeText={setAddressQuery}
+              onAddressSelected={addr => {
+                updateNestedField(
+                  'address',
+                  'street',
+                  addr.street || addr.formatted
+                );
+                updateNestedField('address', 'city', addr.city);
+                updateNestedField('address', 'state', addr.state);
+                updateNestedField('address', 'zipCode', addr.zipCode);
+                setAddressQuery(addr.formatted || addr.street);
+              }}
+              label="Search Address"
+              placeholder="Start typing an address..."
+            />
 
             <Text style={[s.sectionLabel, { color: colors.inkSoft }]}>
               ADDRESS DETAILS
