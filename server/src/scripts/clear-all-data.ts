@@ -1,9 +1,9 @@
 /**
  * Clear All Data Script
- * 
+ *
  * Wipes all events, teams/rosters, leagues, facilities/grounds, bookings, and related data
  * while preserving users and database structure.
- * 
+ *
  * Usage: npx tsx src/scripts/clear-all-data.ts
  */
 
@@ -16,14 +16,10 @@ async function clearAllData() {
 
   try {
     // Delete in order to respect foreign key constraints
-    
+
     console.log('Deleting salutes...');
     const salutes = await prisma.salute.deleteMany({});
     console.log(`✅ Deleted ${salutes.count} salutes`);
-
-    console.log('Deleting player votes...');
-    const votes = await prisma.playerVote.deleteMany({});
-    console.log(`✅ Deleted ${votes.count} player votes`);
 
     console.log('Deleting game participations...');
     const participations = await prisma.gameParticipation.deleteMany({});
@@ -50,8 +46,12 @@ async function clearAllData() {
     console.log(`✅ Deleted ${timeSlots.count} time slots`);
 
     console.log('Deleting court availability...');
-    const courtAvailability = await prisma.facilityCourtAvailability.deleteMany({});
-    console.log(`✅ Deleted ${courtAvailability.count} court availability records`);
+    const courtAvailability = await prisma.facilityCourtAvailability.deleteMany(
+      {}
+    );
+    console.log(
+      `✅ Deleted ${courtAvailability.count} court availability records`
+    );
 
     console.log('Deleting facility courts...');
     const courts = await prisma.facilityCourt.deleteMany({});
@@ -62,8 +62,12 @@ async function clearAllData() {
     console.log(`✅ Deleted ${accessImages.count} access images`);
 
     console.log('Deleting facility availability...');
-    const facilityAvailability = await prisma.facilityAvailability.deleteMany({});
-    console.log(`✅ Deleted ${facilityAvailability.count} facility availability records`);
+    const facilityAvailability = await prisma.facilityAvailability.deleteMany(
+      {}
+    );
+    console.log(
+      `✅ Deleted ${facilityAvailability.count} facility availability records`
+    );
 
     console.log('Deleting facility rate schedules...');
     const rateSchedules = await prisma.facilityRateSchedule.deleteMany({});
@@ -123,7 +127,6 @@ async function clearAllData() {
     console.log(`   Rentals: ${rentals.count}`);
     console.log(`   Time Slots: ${timeSlots.count}`);
     console.log('\n🔐 Users preserved for fresh start!');
-
   } catch (error) {
     console.error('❌ Error during cleanup:', error);
     throw error;
@@ -138,7 +141,7 @@ clearAllData()
     console.log('\n✅ Ready for production walkthrough!');
     process.exit(0);
   })
-  .catch((error) => {
+  .catch(error => {
     console.error('Failed to clear data:', error);
     process.exit(1);
   });

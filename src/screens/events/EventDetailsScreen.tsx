@@ -8,7 +8,6 @@ import {
   TouchableOpacity,
   RefreshControl,
   Modal,
-  Image,
 } from 'react-native';
 import {
   useFocusEffect,
@@ -114,14 +113,7 @@ export function EventDetailsScreen() {
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [rosters, setRosters] = useState<RosterInfo[]>([]);
   const [participantsLoaded, setParticipantsLoaded] = useState(false);
-  const [selectedParticipant, setSelectedParticipant] =
-    useState<Participant | null>(null);
-  const [salutedParticipants, setSalutedParticipants] = useState<Set<string>>(
-    new Set()
-  );
-  const [showSaluteModal, setShowSaluteModal] = useState(false);
-  const [isSubmittingSalutes, setIsSubmittingSalutes] = useState(false);
-  const [salutesSubmitted, setSalutesSubmitted] = useState(false);
+  const [debriefCompleted, setDebriefCompleted] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [showStepOutModal, setShowStepOutModal] = useState(false);
   const [selectedPlayer, setSelectedPlayer] = useState<any>(null);
@@ -157,11 +149,18 @@ export function EventDetailsScreen() {
           skipCache
         );
 
-        // Check if event is in the past and if salutes have been submitted
-        const isPastEvent = new Date(eventResponse.endTime) < new Date();
-        if (isPastEvent) {
-          const saluteStatus = await eventService.checkSaluteStatus(eventId);
-          setSalutesSubmitted(saluteStatus.hasSubmitted);
+        // Check debrief window for game events
+        const endTime = new Date(eventResponse.endTime).getTime();
+        const hoursSinceEnd = (Date.now() - endTime) / (1000 * 60 * 60);
+        const inDebriefWindow =
+          eventResponse.eventType === 'game' &&
+          hoursSinceEnd > 0 &&
+          hoursSinceEnd < 24;
+        if (inDebriefWindow) {
+          try {
+            const saluteStatus = await eventService.checkSaluteStatus(eventId);
+            setDebriefCompleted(saluteStatus.hasSubmitted);
+          } catch {}
         }
 
         setEvent(eventResponse);
@@ -226,6 +225,15 @@ export function EventDetailsScreen() {
   // Only upcoming events allow edit/delete/join/leave actions
   const isUpcoming =
     event && !isPastEvent && !isLive && event.status !== EventStatus.CANCELLED;
+
+  // Debrief window: 0–24 hours after game end
+  const eventEndTime = new Date(event?.endTime ?? 0).getTime();
+  const hoursSinceEnd = (Date.now() - eventEndTime) / (1000 * 60 * 60);
+  const isInDebriefWindow =
+    event?.eventType === EventType.GAME &&
+    hoursSinceEnd > 0 &&
+    hoursSinceEnd < 24;
+  const hoursRemaining = Math.max(1, Math.floor(24 - hoursSinceEnd));
 
   // Check if user is already booked
   const isUserBooked = participants.some(
@@ -467,297 +475,6 @@ export function EventDetailsScreen() {
       screen: 'LeagueDetails',
       params: { leagueId },
     });
-  };
-
-  // Handle participant click
-  const handleParticipantClick = (participant: Participant) => {
-    // Don't allow saluting yourself
-    if (participant.userId === currentUser?.id) {
-      return;
-    }
-
-    // Only allow saluting in past events
-    if (!isPastEvent) {
-      return;
-    }
-
-    // Check if already saluted 3 participants
-    if (
-      salutedParticipants.size >= 3 &&
-      !salutedParticipants.has(participant.userId)
-    ) {
-      Alert.alert(
-        'Salute Limit Reached',
-        'You can only salute up to 3 participants per event.'
-      );
-      return;
-    }
-
-    setSelectedParticipant(participant);
-    setShowSaluteModal(true);
-  };
-
-  // Handle salute
-  const handleSalute = () => {
-    if (!selectedParticipant) return;
-
-    // Add to saluted participants
-    const newSaluted = new Set(salutedParticipants);
-    newSaluted.add(selectedParticipant.userId);
-    setSalutedParticipants(newSaluted);
-
-    // Close modal
-    setShowSaluteModal(false);
-    setSelectedParticipant(null);
-
-    // Show success message
-    Alert.alert(
-      '≡ƒÖî Salute Sent!',
-      `You saluted ${selectedParticipant.user?.firstName} ${selectedParticipant.user?.lastName}`,
-      [{ text: 'OK' }]
-    );
-
-    // TODO: wire to API when endpoint exists
-    // await eventService.saluteParticipant(event.id, selectedParticipant.userId);
-  };
-
-  // Handle unsalute
-  const handleUnsalute = () => {
-    if (!selectedParticipant) return;
-
-    // Remove from saluted participants
-    const newSaluted = new Set(salutedParticipants);
-    newSaluted.delete(selectedParticipant.userId);
-    setSalutedParticipants(newSaluted);
-
-    // Close modal
-    setShowSaluteModal(false);
-    setSelectedParticipant(null);
-
-    // Show success message
-    Alert.alert('Salute Removed', 'You can salute someone else now.');
-
-    // TODO: wire to API when endpoint exists
-    // await eventService.unsaluteParticipant(event.id, selectedParticipant.userId);
-  };
-
-  // Handle submit salutes
-  const handleSubmitSalutes = async () => {
-    if (!event || salutedParticipants.size === 0) return;
-    loggingService.logButton('Submit Salutes', 'EventDetailsScreen', {
-      eventId: event.id,
-    });
-
-    Alert.alert(
-      'Submit Salutes',
-      `Submit ${salutedParticipants.size} salute${salutedParticipants.size > 1 ? 's' : ''}? This will update player ratings and cannot be undone.`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Submit',
-          onPress: async () => {
-            try {
-              setIsSubmittingSalutes(true);
-
-              // Convert Set to array for API call
-              const salutedUserIds = Array.from(salutedParticipants);
-
-              // Call API to submit salutes and recalculate ratings
-              const result = await eventService.submitSalutes(
-                event.id,
-                salutedUserIds
-              );
-
-              // Mark as submitted
-              setSalutesSubmitted(true);
-
-              Alert.alert(
-                '≡ƒÖî Salutes Submitted!',
-                `Your salutes have been recorded and ${result.ratingsUpdated} player rating${result.ratingsUpdated > 1 ? 's have' : ' has'} been updated.`,
-                [{ text: 'OK' }]
-              );
-            } catch (error) {
-              const errorMessage =
-                error instanceof Error
-                  ? error.message
-                  : 'Failed to submit salutes';
-              Alert.alert('Submission Failed', errorMessage);
-            } finally {
-              setIsSubmittingSalutes(false);
-            }
-          },
-        },
-      ]
-    );
-  };
-
-  // Render a single salute participant card (reused in flat and roster-grouped views)
-  const renderSaluteCard = (participant: Participant) => {
-    const isSaluted = salutedParticipants.has(participant.userId);
-    const isCurrentUser = participant.userId === currentUser?.id;
-
-    return (
-      <TouchableOpacity
-        key={participant.userId}
-        style={[
-          styles.participantCard,
-          { backgroundColor: colors.bgScreen },
-          isSaluted && [
-            styles.participantCardSaluted,
-            {
-              borderColor: colors.gold,
-              backgroundColor: colors.goldLight + '10',
-            },
-          ],
-          isCurrentUser && styles.participantCardDisabled,
-        ]}
-        onPress={() => handleParticipantClick(participant)}
-        disabled={isCurrentUser}
-        activeOpacity={0.7}
-      >
-        {participant.user?.profileImage ? (
-          <Image
-            source={{ uri: participant.user.profileImage }}
-            style={styles.participantAvatar}
-          />
-        ) : (
-          <View
-            style={[
-              styles.participantAvatarPlaceholder,
-              { backgroundColor: colors.cobalt },
-            ]}
-          >
-            <Text
-              style={[styles.participantAvatarText, { color: colors.white }]}
-            >
-              {participant.user?.firstName?.[0] || '?'}
-              {participant.user?.lastName?.[0] || ''}
-            </Text>
-          </View>
-        )}
-        <Text
-          style={[styles.participantCardName, { color: colors.ink }]}
-          numberOfLines={2}
-        >
-          {participant.user
-            ? `${participant.user.firstName} ${participant.user.lastName}`
-            : 'Unknown Player'}
-        </Text>
-        {isSaluted && (
-          <View style={[styles.saluteBadge, { backgroundColor: colors.gold }]}>
-            <Text style={styles.saluteBadgeText}>≡ƒÖî</Text>
-          </View>
-        )}
-        {isCurrentUser && (
-          <View style={[styles.youBadge, { backgroundColor: colors.ink }]}>
-            <Text style={[styles.youBadgeText, { color: colors.white }]}>
-              You
-            </Text>
-          </View>
-        )}
-      </TouchableOpacity>
-    );
-  };
-
-  // Render the salute grid — roster-grouped for game events, flat otherwise
-  const renderSaluteGrid = () => {
-    const isGame = event?.eventType === EventType.GAME && rosters.length > 0;
-
-    if (!isGame) {
-      return (
-        <View style={styles.participantsGrid}>
-          {participants.map(renderSaluteCard)}
-        </View>
-      );
-    }
-
-    // Sort rosters: home first, then alphabetical
-    const sortedRosters = [...rosters].sort((a, b) => {
-      if (a.isHome && !b.isHome) return -1;
-      if (!a.isHome && b.isHome) return 1;
-      return a.name.localeCompare(b.name);
-    });
-
-    const byRoster = new Map<string, Participant[]>();
-    const unassigned: Participant[] = [];
-    for (const p of participants) {
-      if (p.teamId) {
-        const list = byRoster.get(p.teamId) ?? [];
-        list.push(p);
-        byRoster.set(p.teamId, list);
-      } else {
-        unassigned.push(p);
-      }
-    }
-
-    return (
-      <View>
-        {sortedRosters.map(roster => {
-          const rosterParticipants = byRoster.get(roster.id) ?? [];
-          return (
-            <View key={roster.id} style={{ marginBottom: 16 }}>
-              <View
-                style={[
-                  styles.rosterSaluteHeader,
-                  { borderBottomColor: colors.surface },
-                ]}
-              >
-                <Ionicons
-                  name="shield-outline"
-                  size={14}
-                  color={colors.cobalt}
-                />
-                <Text style={[styles.rosterSaluteLabel, { color: colors.ink }]}>
-                  {roster.name}
-                </Text>
-                {roster.isHome && (
-                  <View
-                    style={[
-                      styles.rosterSaluteHomeBadge,
-                      { backgroundColor: colors.cobalt + '20' },
-                    ]}
-                  >
-                    <Text
-                      style={[
-                        styles.rosterSaluteHomeBadgeText,
-                        { color: colors.cobalt },
-                      ]}
-                    >
-                      HOME
-                    </Text>
-                  </View>
-                )}
-              </View>
-              <View style={styles.participantsGrid}>
-                {rosterParticipants.map(renderSaluteCard)}
-              </View>
-            </View>
-          );
-        })}
-        {unassigned.length > 0 && (
-          <View style={{ marginBottom: 16 }}>
-            <View
-              style={[
-                styles.rosterSaluteHeader,
-                { borderBottomColor: colors.surface },
-              ]}
-            >
-              <Ionicons
-                name="people-outline"
-                size={14}
-                color={colors.inkFaint}
-              />
-              <Text style={[styles.rosterSaluteLabel, { color: colors.ink }]}>
-                Other Players
-              </Text>
-            </View>
-            <View style={styles.participantsGrid}>
-              {unassigned.map(renderSaluteCard)}
-            </View>
-          </View>
-        )}
-      </View>
-    );
   };
 
   if (isLoading && !event) {
@@ -1192,177 +909,83 @@ export function EventDetailsScreen() {
           title={`Players (${event.currentParticipants}/${event.maxParticipants})`}
           delay={100}
         >
-          {/* Past GAME events: salute grid */}
-          {isPastEvent &&
-          participants.length > 0 &&
-          event.eventType === EventType.GAME ? (
-            <>
-              <View style={styles.participantsHeader}>
-                {salutedParticipants.size > 0 && !salutesSubmitted && (
-                  <Text style={[styles.saluteCount, { color: colors.gold }]}>
-                    ≡ƒÖî {salutedParticipants.size}/3 saluted
-                  </Text>
-                )}
-                {salutesSubmitted && (
+          {participants.map((p, index) => {
+            const pressHandler = p.user
+              ? () =>
+                  setSelectedPlayer({
+                    id: p.userId,
+                    firstName: p.user!.firstName,
+                    lastName: p.user!.lastName,
+                    profileImage: p.user!.profileImage,
+                    dateOfBirth: (p.user as any).dateOfBirth,
+                    gender: (p.user as any).gender,
+                  })
+              : null;
+            const personRowProps = {
+              name: p.user
+                ? `${p.user.firstName} ${p.user.lastName}`
+                : 'Unknown Player',
+              ...(p.userId === event.organizerId
+                ? { role: 'Organizer' as const }
+                : {}),
+              ...(pressHandler ? { onPress: pressHandler } : {}),
+            };
+            return (
+              <React.Fragment key={p.userId}>
+                <PersonRow {...personRowProps} />
+                {index < participants.length - 1 && (
                   <View
                     style={[
-                      styles.submittedBadge,
-                      { backgroundColor: colors.cobaltLight + '20' },
+                      styles.personRowDivider,
+                      { backgroundColor: colors.border },
                     ]}
-                  >
-                    <Ionicons
-                      name="checkmark-circle"
-                      size={16}
-                      color={colors.cobalt}
-                    />
-                    <Text
-                      style={[styles.submittedText, { color: colors.cobalt }]}
-                    >
-                      Submitted
-                    </Text>
-                  </View>
-                )}
-              </View>
-              {!salutesSubmitted ? (
-                <>
-                  <Text
-                    style={[
-                      styles.saluteInstructions,
-                      { color: colors.inkSecondary },
-                    ]}
-                  >
-                    Tap a participant to salute them (max 3 per event)
-                  </Text>
-                  {renderSaluteGrid()}
-                  {salutedParticipants.size > 0 && (
-                    <View style={styles.submitSalutesContainer}>
-                      <TouchableOpacity
-                        style={[
-                          styles.submitSalutesButton,
-                          { backgroundColor: colors.gold },
-                        ]}
-                        onPress={handleSubmitSalutes}
-                        disabled={isSubmittingSalutes}
-                      >
-                        {isSubmittingSalutes ? (
-                          <Text
-                            style={[
-                              styles.submitSalutesButtonText,
-                              { color: colors.white },
-                            ]}
-                          >
-                            Submitting...
-                          </Text>
-                        ) : (
-                          <>
-                            <Ionicons
-                              name="send"
-                              size={20}
-                              color={colors.white}
-                            />
-                            <Text
-                              style={[
-                                styles.submitSalutesButtonText,
-                                { color: colors.white },
-                              ]}
-                            >
-                              Submit {salutedParticipants.size} Salute
-                              {salutedParticipants.size > 1 ? 's' : ''}
-                            </Text>
-                          </>
-                        )}
-                      </TouchableOpacity>
-                      <Text
-                        style={[
-                          styles.submitSalutesHint,
-                          { color: colors.inkSecondary },
-                        ]}
-                      >
-                        This will update player ratings
-                      </Text>
-                    </View>
-                  )}
-                </>
-              ) : (
-                <View style={styles.salutesSubmittedContainer}>
-                  <Ionicons
-                    name="checkmark-circle"
-                    size={48}
-                    color={colors.cobalt}
                   />
-                  <Text
-                    style={[
-                      styles.salutesSubmittedTitle,
-                      { color: colors.cobalt },
-                    ]}
-                  >
-                    Salutes Submitted!
-                  </Text>
-                  <Text
-                    style={[
-                      styles.salutesSubmittedDescription,
-                      { color: colors.inkSecondary },
-                    ]}
-                  >
-                    You saluted {salutedParticipants.size} player
-                    {salutedParticipants.size > 1 ? 's' : ''} and their ratings
-                    have been updated.
-                  </Text>
-                </View>
-              )}
-            </>
-          ) : (
-            /* Upcoming events and past non-game events: list as PersonRows */
-            <>
-              {participants.map((p, index) => {
-                const pressHandler =
-                  isPastEvent && p.userId !== currentUser?.id
-                    ? () => handleParticipantClick(p)
-                    : p.user
-                      ? () =>
-                          setSelectedPlayer({
-                            id: p.userId,
-                            firstName: p.user!.firstName,
-                            lastName: p.user!.lastName,
-                            profileImage: p.user!.profileImage,
-                            dateOfBirth: (p.user as any).dateOfBirth,
-                            gender: (p.user as any).gender,
-                          })
-                      : null;
-                const personRowProps = {
-                  name: p.user
-                    ? `${p.user.firstName} ${p.user.lastName}`
-                    : 'Unknown Player',
-                  ...(p.userId === event.organizerId
-                    ? { role: 'Organizer' as const }
-                    : {}),
-                  ...(pressHandler ? { onPress: pressHandler } : {}),
-                };
-                return (
-                  <React.Fragment key={p.userId}>
-                    <PersonRow {...personRowProps} />
-                    {index < participants.length - 1 && (
-                      <View
-                        style={[
-                          styles.personRowDivider,
-                          { backgroundColor: colors.border },
-                        ]}
-                      />
-                    )}
-                  </React.Fragment>
-                );
-              })}
-              {participants.length === 0 && (
+                )}
+              </React.Fragment>
+            );
+          })}
+          {participants.length === 0 && (
+            <Text
+              style={[styles.emptyParticipantsText, { color: colors.inkFaint }]}
+            >
+              No players yet — be the first!
+            </Text>
+          )}
+          {isInDebriefWindow && !debriefCompleted && (
+            <TouchableOpacity
+              style={[
+                styles.debriefBanner,
+                {
+                  backgroundColor: colors.cobaltLight + '15',
+                  borderColor: colors.cobalt + '40',
+                },
+              ]}
+              onPress={() =>
+                (navigation as any).navigate('Debrief', { eventId: event.id })
+              }
+            >
+              <Ionicons name="star-outline" size={20} color={colors.cobalt} />
+              <View style={{ flex: 1, marginLeft: 10 }}>
+                <Text
+                  style={[styles.debriefBannerTitle, { color: colors.cobalt }]}
+                >
+                  Post-Game Debrief
+                </Text>
                 <Text
                   style={[
-                    styles.emptyParticipantsText,
-                    { color: colors.inkFaint },
+                    styles.debriefBannerSubtitle,
+                    { color: colors.inkSecondary },
                   ]}
                 >
-                  No players yet — be the first!
+                  Recognize your teammates — window closes in {hoursRemaining}h
                 </Text>
-              )}
-            </>
+              </View>
+              <Ionicons
+                name="chevron-forward"
+                size={18}
+                color={colors.cobalt}
+              />
+            </TouchableOpacity>
           )}
         </DetailCard>
 
@@ -1772,150 +1395,6 @@ export function EventDetailsScreen() {
           </View>
         </View>
       </Modal>
-
-      {/* Salute Modal */}
-      <Modal
-        visible={showSaluteModal}
-        transparent={true}
-        animationType="fade"
-        onRequestClose={() => setShowSaluteModal(false)}
-      >
-        <TouchableOpacity
-          style={[styles.modalOverlay, { backgroundColor: colors.overlay }]}
-          activeOpacity={1}
-          onPress={() => setShowSaluteModal(false)}
-        >
-          <View
-            style={[styles.modalContent, { backgroundColor: colors.bgCard }]}
-            onStartShouldSetResponder={() => true}
-          >
-            {selectedParticipant && (
-              <>
-                {/* Participant Avatar */}
-                {selectedParticipant.user?.profileImage ? (
-                  <Image
-                    source={{ uri: selectedParticipant.user.profileImage }}
-                    style={styles.modalAvatar}
-                  />
-                ) : (
-                  <View
-                    style={[
-                      styles.modalAvatarPlaceholder,
-                      { backgroundColor: colors.cobalt },
-                    ]}
-                  >
-                    <Text
-                      style={[styles.modalAvatarText, { color: colors.white }]}
-                    >
-                      {selectedParticipant.user?.firstName?.[0] || '?'}
-                      {selectedParticipant.user?.lastName?.[0] || ''}
-                    </Text>
-                  </View>
-                )}
-
-                {/* Participant Name */}
-                <Text style={[styles.modalName, { color: colors.ink }]}>
-                  {selectedParticipant.user
-                    ? `${selectedParticipant.user.firstName} ${selectedParticipant.user.lastName}`
-                    : 'Unknown User'}
-                </Text>
-
-                {/* Salute Status */}
-                {salutedParticipants.has(selectedParticipant.userId) ? (
-                  <>
-                    <View
-                      style={[
-                        styles.modalSalutedBadge,
-                        { backgroundColor: colors.goldLight + '20' },
-                      ]}
-                    >
-                      <Text
-                        style={[
-                          styles.modalSalutedText,
-                          { color: colors.gold },
-                        ]}
-                      >
-                        ≡ƒÖî Saluted
-                      </Text>
-                    </View>
-                    <Text
-                      style={[
-                        styles.modalDescription,
-                        { color: colors.inkSecondary },
-                      ]}
-                    >
-                      You've already saluted this player. You can remove your
-                      salute if you'd like.
-                    </Text>
-                    <TouchableOpacity
-                      style={[
-                        styles.modalButtonSecondary,
-                        {
-                          backgroundColor: colors.bgScreen,
-                          borderColor: colors.border,
-                        },
-                      ]}
-                      onPress={handleUnsalute}
-                    >
-                      <Text
-                        style={[
-                          styles.modalButtonSecondaryText,
-                          { color: colors.inkSecondary },
-                        ]}
-                      >
-                        Remove Salute
-                      </Text>
-                    </TouchableOpacity>
-                  </>
-                ) : (
-                  <>
-                    <Text
-                      style={[
-                        styles.modalDescription,
-                        { color: colors.inkSecondary },
-                      ]}
-                    >
-                      Give this player a salute to recognize their great
-                      sportsmanship and skills!
-                    </Text>
-                    <TouchableOpacity
-                      style={[
-                        styles.modalButtonPrimary,
-                        { backgroundColor: colors.gold },
-                      ]}
-                      onPress={handleSalute}
-                    >
-                      <Text
-                        style={[
-                          styles.modalButtonPrimaryText,
-                          { color: colors.white },
-                        ]}
-                      >
-                        ≡ƒÖî Salute Player
-                      </Text>
-                    </TouchableOpacity>
-                  </>
-                )}
-
-                {/* Close Button */}
-                <TouchableOpacity
-                  style={styles.modalButtonClose}
-                  onPress={() => setShowSaluteModal(false)}
-                >
-                  <Text
-                    style={[
-                      styles.modalButtonCloseText,
-                      { color: colors.inkSecondary },
-                    ]}
-                  >
-                    Close
-                  </Text>
-                </TouchableOpacity>
-              </>
-            )}
-          </View>
-        </TouchableOpacity>
-      </Modal>
     </View>
   );
 }
@@ -2135,244 +1614,23 @@ const styles = StyleSheet.create({
     fontFamily: fonts.ui,
     fontSize: 16,
   },
-  // Participants Grid Styles (salute grid — kept exactly as-is)
-  participantsHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  saluteCount: {
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  saluteInstructions: {
-    fontSize: 14,
-    marginBottom: 16,
-  },
-  participantsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 12,
-  },
-  rosterSaluteHeader: {
+  // Debrief banner
+  debriefBanner: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    marginBottom: 8,
-    paddingBottom: 6,
-    borderBottomWidth: 1,
-  },
-  rosterSaluteLabel: {
-    fontFamily: fonts.label,
-    fontSize: 13,
-    textTransform: 'uppercase',
-    flex: 1,
-  },
-  rosterSaluteHomeBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 8,
-  },
-  rosterSaluteHomeBadgeText: {
-    fontFamily: fonts.label,
-    fontSize: 10,
-  },
-  participantCard: {
-    width: '30%',
-    aspectRatio: 0.75,
-    borderRadius: 12,
-    padding: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 2,
-    borderColor: 'transparent',
-  },
-  participantCardSaluted: {},
-  participantCardDisabled: {
-    opacity: 0.5,
-  },
-  participantAvatar: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    marginBottom: 8,
-  },
-  participantAvatarPlaceholder: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 8,
-  },
-  participantAvatarText: {
-    fontSize: 24,
-    fontWeight: '700',
-  },
-  participantCardName: {
-    fontSize: 13,
-    fontWeight: '500',
-    textAlign: 'center',
-  },
-  saluteBadge: {
-    position: 'absolute',
-    top: 8,
-    right: 8,
-    borderRadius: 12,
-    width: 24,
-    height: 24,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  saluteBadgeText: {
-    fontSize: 14,
-  },
-  youBadge: {
-    position: 'absolute',
-    bottom: 8,
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 8,
-  },
-  youBadgeText: {
-    fontSize: 10,
-    fontWeight: '600',
-  },
-  submittedBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
-    gap: 4,
-  },
-  submittedText: {
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  submitSalutesContainer: {
-    marginTop: 20,
-    alignItems: 'center',
-  },
-  submitSalutesButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 24,
-    paddingVertical: 14,
-    borderRadius: 12,
-    gap: 8,
-    width: '100%',
-  },
-  submitSalutesButtonText: {
-    fontSize: 18,
-    fontWeight: '600',
-  },
-  submitSalutesHint: {
-    fontSize: 13,
-    marginTop: 8,
-    textAlign: 'center',
-  },
-  salutesSubmittedContainer: {
-    alignItems: 'center',
-    paddingVertical: 32,
-  },
-  salutesSubmittedTitle: {
-    fontSize: 22,
-    fontWeight: '700',
-    marginTop: 16,
-    marginBottom: 8,
-  },
-  salutesSubmittedDescription: {
-    fontSize: 16,
-    textAlign: 'center',
-    lineHeight: 22,
-  },
-  // Modal Styles
-  modalOverlay: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-  },
-  modalContent: {
-    borderRadius: 20,
-    padding: 24,
-    width: '100%',
-    maxWidth: 400,
-    alignItems: 'center',
-  },
-  modalAvatar: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    marginBottom: 16,
-  },
-  modalAvatarPlaceholder: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 16,
-  },
-  modalAvatarText: {
-    fontSize: 40,
-    fontWeight: '700',
-  },
-  modalName: {
-    fontSize: 22,
-    fontWeight: '700',
-    marginBottom: 16,
-    textAlign: 'center',
-  },
-  modalSalutedBadge: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-    marginBottom: 16,
-  },
-  modalSalutedText: {
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  modalDescription: {
-    fontSize: 16,
-    textAlign: 'center',
-    marginBottom: 24,
-    lineHeight: 22,
-  },
-  modalButtonPrimary: {
-    paddingHorizontal: 32,
-    paddingVertical: 14,
-    borderRadius: 12,
-    width: '100%',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  modalButtonPrimaryText: {
-    fontSize: 18,
-    fontWeight: '600',
-  },
-  modalButtonSecondary: {
-    paddingHorizontal: 32,
-    paddingVertical: 14,
-    borderRadius: 12,
-    width: '100%',
-    alignItems: 'center',
-    marginBottom: 12,
+    padding: 14,
+    borderRadius: 10,
     borderWidth: 1,
+    marginTop: 12,
   },
-  modalButtonSecondaryText: {
-    fontSize: 16,
-    fontWeight: '600',
+  debriefBannerTitle: {
+    fontSize: 14,
+    fontFamily: fonts.ui,
   },
-  modalButtonClose: {
-    paddingVertical: 12,
-  },
-  modalButtonCloseText: {
-    fontSize: 16,
+  debriefBannerSubtitle: {
+    fontSize: 12,
+    fontFamily: fonts.body,
+    marginTop: 2,
   },
   chatBtn: {
     flexDirection: 'row',

@@ -1,6 +1,6 @@
 /**
  * Player Rating System Types
- * 
+ *
  * Formula:
  * - game_rating = 1 + mean(rating of all participants)
  * - vote_share = votes_received / votes_actually_cast
@@ -48,14 +48,6 @@ export interface GameParticipation {
   playedAt: Date;
   eventType: 'game' | 'practice' | 'pickup' | 'tournament'; // Game/Practice use season-based, Pickup uses last 20
   seasonId?: string; // For game/practice events
-}
-
-export interface PlayerVote {
-  id: string;
-  eventId: string;
-  voterId: string; // User who cast the vote
-  votedForId: string; // User who received the vote
-  createdAt: Date;
 }
 
 export interface GameRatingCalculation {

@@ -71,8 +71,6 @@ model User {
   reviews                Review[]
   organizedLeagues       League[]                @relation("LeagueOrganizer")
   gameParticipations     GameParticipation[]
-  votesGiven             PlayerVote[]            @relation("VoterVotes")
-  votesReceived          PlayerVote[]            @relation("ReceivedVotes")
   salutesGiven           Salute[]                @relation("SalutesGiven")
   salutesReceived        Salute[]                @relation("SalutesReceived")
   uploadedDocuments      LeagueDocument[]        @relation("DocumentUploader")
@@ -185,7 +183,6 @@ model Event {
   rentalsUsedForThisEvent FacilityRental[]    @relation("RentalUsedForEvent")
   bookings                Booking[]
   gameParticipations      GameParticipation[]
-  playerVotes             PlayerVote[]
   salutes                 Salute[]
   matches                 Match[]
 
@@ -703,27 +700,6 @@ model GameParticipation {
   @@index([userId, sportType])
   @@index([userId, leagueId])
   @@map("game_participations")
-}
-
-model PlayerVote {
-  id        String   @id @default(uuid())
-  createdAt DateTime @default(now())
-
-  // Foreign Keys
-  eventId    String
-  voterId    String
-  votedForId String
-
-  // Relations
-  event    Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  voter    User  @relation("VoterVotes", fields: [voterId], references: [id], onDelete: Cascade)
-  votedFor User  @relation("ReceivedVotes", fields: [votedForId], references: [id], onDelete: Cascade)
-
-  @@unique([eventId, voterId, votedForId])
-  @@index([eventId])
-  @@index([voterId])
-  @@index([votedForId])
-  @@map("player_votes")
 }
 
 model Salute {
