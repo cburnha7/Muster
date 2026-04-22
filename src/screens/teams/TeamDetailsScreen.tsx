@@ -554,12 +554,7 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps) {
   const handleImportSchedule = async () => {
     try {
       const result = await DocumentPicker.getDocumentAsync({
-        type: [
-          'text/csv',
-          'application/vnd.ms-excel',
-          'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-          'application/pdf',
-        ],
+        type: ['text/csv', 'application/pdf'],
         copyToCacheDirectory: true,
       });
 
@@ -568,10 +563,10 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps) {
       const file = result.assets[0];
       const ext = file.name?.toLowerCase().split('.').pop() || '';
 
-      if (!['csv', 'xlsx', 'xls', 'pdf'].includes(ext)) {
+      if (!['csv', 'pdf'].includes(ext)) {
         Alert.alert(
           'Unsupported File',
-          'Please select a CSV, Excel (.xlsx, .xls), or PDF file.'
+          'Please select a CSV or PDF file. If you have an Excel file, export it as CSV first.'
         );
         return;
       }
@@ -602,37 +597,21 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps) {
           team,
         });
       } else {
-        // CSV or Excel — parse on frontend
+        // CSV — parse on frontend
         const fileResponse = await fetch(file.uri);
-        if (ext === 'csv') {
-          const text = await fileResponse.text();
-          const parsed = scheduleParserService.parseCSV(text);
-          if (!parsed.success || parsed.gameRows.length === 0) {
-            Alert.alert(
-              'Parse Error',
-              parsed.errors?.[0] || 'Could not extract games from this file.'
-            );
-            return;
-          }
-          (navigation as any).navigate('ScheduleReview', {
-            gameRows: parsed.gameRows,
-            team,
-          });
-        } else {
-          const buffer = await fileResponse.arrayBuffer();
-          const parsed = scheduleParserService.parseExcel(buffer);
-          if (!parsed.success || parsed.gameRows.length === 0) {
-            Alert.alert(
-              'Parse Error',
-              parsed.errors?.[0] || 'Could not extract games from this file.'
-            );
-            return;
-          }
-          (navigation as any).navigate('ScheduleReview', {
-            gameRows: parsed.gameRows,
-            team,
-          });
+        const text = await fileResponse.text();
+        const parsed = scheduleParserService.parseCSV(text);
+        if (!parsed.success || parsed.gameRows.length === 0) {
+          Alert.alert(
+            'Parse Error',
+            parsed.errors?.[0] || 'Could not extract games from this file.'
+          );
+          return;
         }
+        (navigation as any).navigate('ScheduleReview', {
+          gameRows: parsed.gameRows,
+          team,
+        });
       }
     } catch (err: any) {
       Alert.alert('Error', err.message || 'Failed to import schedule');
