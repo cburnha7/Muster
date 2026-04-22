@@ -104,15 +104,24 @@ setupListeners(store.dispatch);
 
 // Reset all RTK Query caches on every successful login so stale error
 // states from the previous session don't persist across re-logins.
+// The resets are deferred via queueMicrotask to avoid a synchronous
+// dispatch → subscriber → dispatch infinite loop (resetApiState
+// triggers middleware that dispatches more actions, re-entering the
+// subscriber before it returns).
 let previousIsAuthenticated = false;
+let resetScheduled = false;
 store.subscribe(() => {
   const state = store.getState();
   const isNowAuthenticated = !!state.auth.user;
-  if (isNowAuthenticated && !previousIsAuthenticated) {
-    store.dispatch(api.util.resetApiState());
-    store.dispatch(eventsApi.util.resetApiState());
-    store.dispatch(cancelRequestsApi.util.resetApiState());
-    store.dispatch(insuranceDocumentsApi.util.resetApiState());
+  if (isNowAuthenticated && !previousIsAuthenticated && !resetScheduled) {
+    resetScheduled = true;
+    queueMicrotask(() => {
+      store.dispatch(api.util.resetApiState());
+      store.dispatch(eventsApi.util.resetApiState());
+      store.dispatch(cancelRequestsApi.util.resetApiState());
+      store.dispatch(insuranceDocumentsApi.util.resetApiState());
+      resetScheduled = false;
+    });
   }
   previousIsAuthenticated = isNowAuthenticated;
 });
