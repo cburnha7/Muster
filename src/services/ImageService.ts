@@ -2,6 +2,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { Platform } from 'react-native';
 import { API_BASE_URL } from './api/config';
 import TokenStorage from './auth/TokenStorage';
+import { acquireRefresh, performTokenRefresh } from './auth/tokenRefreshLock';
 
 export type ImageContext =
   | 'profiles'
@@ -59,15 +60,36 @@ export class ImageService {
     fileName: string,
     contentType: string
   ): Promise<UploadResult> {
-    const token = await TokenStorage.getAccessToken();
-    const presignRes = await fetch(`${API_BASE_URL}/uploads/presign`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      },
-      body: JSON.stringify({ context, fileName, contentType }),
-    });
+    let token = await TokenStorage.getAccessToken();
+
+    const doPresign = async (authToken: string | null) => {
+      return fetch(`${API_BASE_URL}/uploads/presign`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
+        },
+        body: JSON.stringify({ context, fileName, contentType }),
+      });
+    };
+
+    let presignRes = await doPresign(token);
+
+    // If 401, refresh the token and retry once
+    if (presignRes.status === 401) {
+      const refreshToken = await TokenStorage.getRefreshToken();
+      if (refreshToken) {
+        try {
+          const refreshed = await acquireRefresh(() =>
+            performTokenRefresh(refreshToken)
+          );
+          token = refreshed.accessToken;
+          presignRes = await doPresign(token);
+        } catch {
+          // Refresh failed — throw the original 401
+        }
+      }
+    }
 
     if (!presignRes.ok) {
       const err = await presignRes.json().catch(() => ({}));
