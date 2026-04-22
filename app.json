@@ -12,7 +12,9 @@
       "resizeMode": "contain",
       "backgroundColor": "#0052FF"
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.muster.app",
@@ -65,7 +67,9 @@
         {
           "icon": "./assets/notification-icon.png",
           "color": "#0052FF",
-          "sounds": ["./assets/sounds/notification.wav"]
+          "sounds": [
+            "./assets/sounds/notification.wav"
+          ]
         }
       ],
       [
@@ -74,7 +78,8 @@
           "photosPermission": "The app needs access to your photos to upload profile pictures."
         }
       ],
-      "expo-font"
+      "expo-font",
+      "@sentry/react-native"
     ],
     "scheme": "muster",
     "extra": {

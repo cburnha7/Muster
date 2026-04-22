@@ -13,6 +13,7 @@
 import { useEffect, useRef } from 'react';
 import { Platform } from 'react-native';
 import { useSelector, useDispatch } from 'react-redux';
+import * as Sentry from '@sentry/react-native';
 import {
   selectUser,
   loadCachedUser,
@@ -39,6 +40,13 @@ export function useAuthSync() {
   // ── Sync side effects when user changes ──
   useEffect(() => {
     loggingService.setUserId(user?.id ?? null);
+
+    // Sentry user context — tags every error with who experienced it
+    if (user?.id) {
+      Sentry.setUser({ id: user.id, email: user.email ?? undefined });
+    } else {
+      Sentry.setUser(null);
+    }
 
     if (!user?.id) {
       lastRefreshedUserId.current = null;

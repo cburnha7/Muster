@@ -5,22 +5,24 @@ import { ApiServiceConfig } from './BaseApiService';
  */
 const getBaseURL = () => {
   const envURL = process.env.EXPO_PUBLIC_API_URL;
-  
+
   // If environment variable is set, use it
   if (envURL) {
     return envURL;
   }
-  
+
   // Default to localhost for development
   if (__DEV__) {
     return 'http://localhost:3000/api';
   }
-  
+
   // Production fallback — should be overridden by EXPO_PUBLIC_API_URL in .env.production
   return 'https://muster-production.up.railway.app/api';
 };
 
 export const API_BASE_URL = getBaseURL();
+
+export const SENTRY_DSN = process.env.EXPO_PUBLIC_SENTRY_DSN ?? '';
 
 export const apiConfig: ApiServiceConfig = {
   baseURL: API_BASE_URL,
@@ -58,10 +60,14 @@ export const API_ENDPOINTS = {
     BASE: '/facilities',
     BY_ID: (id: string) => `/facilities/${id}`,
     EVENTS: (id: string) => `/facilities/${id}/events`,
-    CANCELLATION_POLICY: (id: string) => `/facilities/${id}/cancellation-policy`,
-    COURTS_FOR_EVENT: (facilityId: string) => `/facilities/${facilityId}/courts-for-event`,
-    COURT_DATES: (facilityId: string, courtId: string) => `/facilities/${facilityId}/courts/${courtId}/dates`,
-    COURT_SLOTS: (facilityId: string, courtId: string) => `/facilities/${facilityId}/courts/${courtId}/slots`,
+    CANCELLATION_POLICY: (id: string) =>
+      `/facilities/${id}/cancellation-policy`,
+    COURTS_FOR_EVENT: (facilityId: string) =>
+      `/facilities/${facilityId}/courts-for-event`,
+    COURT_DATES: (facilityId: string, courtId: string) =>
+      `/facilities/${facilityId}/courts/${courtId}/dates`,
+    COURT_SLOTS: (facilityId: string, courtId: string) =>
+      `/facilities/${facilityId}/courts/${courtId}/slots`,
   },
 
   // Users
@@ -84,7 +90,8 @@ export const API_ENDPOINTS = {
     JOIN: (id: string) => `/teams/${id}/join`,
     LEAVE: (id: string) => `/teams/${id}/leave`,
     ADD_MEMBER: (id: string) => `/teams/${id}/add-member`,
-    REMOVE_MEMBER: (teamId: string, userId: string) => `/teams/${teamId}/members/${userId}`,
+    REMOVE_MEMBER: (teamId: string, userId: string) =>
+      `/teams/${teamId}/members/${userId}`,
     EVENTS: (id: string) => `/teams/${id}/events`,
     INVITE_LINK: (id: string) => `/teams/${id}/invite-link`,
     VALIDATE_INVITE: '/teams/validate-invite',
@@ -114,20 +121,23 @@ export const API_ENDPOINTS = {
     BY_ID: (id: string) => `/conversations/${id}`,
     GET_OR_CREATE_TEAM: (teamId: string) => `/conversations/team/${teamId}`,
     GET_OR_CREATE_EVENT: (eventId: string) => `/conversations/event/${eventId}`,
-    GET_OR_CREATE_LEAGUE: (leagueId: string) => `/conversations/league/${leagueId}`,
+    GET_OR_CREATE_LEAGUE: (leagueId: string) =>
+      `/conversations/league/${leagueId}`,
     MESSAGES: (id: string) => `/conversations/${id}/messages`,
     SEND_MESSAGE: (id: string) => `/conversations/${id}/messages`,
     READ: (id: string) => `/conversations/${id}/read`,
     MUTE: (id: string) => `/conversations/${id}/mute`,
     ARCHIVE: (id: string) => `/conversations/${id}/archive`,
-    PIN: (id: string, messageId: string) => `/conversations/${id}/pin/${messageId}`,
+    PIN: (id: string, messageId: string) =>
+      `/conversations/${id}/pin/${messageId}`,
     UNPIN: (id: string) => `/conversations/${id}/pin`,
     UNREAD_COUNT: '/conversations/unread-count',
     DM: (userId: string) => `/conversations/dm/${userId}`,
   },
   MESSAGES: {
     REACTIONS: (messageId: string) => `/messages/${messageId}/reactions`,
-    REMOVE_REACTION: (messageId: string, emoji: string) => `/messages/${messageId}/reactions/${encodeURIComponent(emoji)}`,
+    REMOVE_REACTION: (messageId: string, emoji: string) =>
+      `/messages/${messageId}/reactions/${encodeURIComponent(emoji)}`,
   },
 };
 
@@ -189,10 +199,10 @@ export const ERROR_CODES = {
  * Request timeout configurations for different types of operations
  */
 export const TIMEOUT_CONFIG = {
-  FAST: 5000,      // 5 seconds - for quick operations
-  NORMAL: 15000,   // 15 seconds - for normal operations
-  SLOW: 30000,     // 30 seconds - for slow operations like file uploads
-  UPLOAD: 60000,   // 60 seconds - for file uploads
+  FAST: 5000, // 5 seconds - for quick operations
+  NORMAL: 15000, // 15 seconds - for normal operations
+  SLOW: 30000, // 30 seconds - for slow operations like file uploads
+  UPLOAD: 60000, // 60 seconds - for file uploads
 } as const;
 
 /**
