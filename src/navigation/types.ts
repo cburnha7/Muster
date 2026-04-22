@@ -182,6 +182,7 @@ export type FacilitiesStackParamList = {
     returnParams?: Record<string, any>;
   };
   CancellationPolicy: { facilityId: string };
+  FacilityRentals: { facilityId: string; facilityName: string };
   MyRentals: undefined;
 };
 

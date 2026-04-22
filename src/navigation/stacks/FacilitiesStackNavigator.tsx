@@ -12,6 +12,7 @@ import { GroundAvailabilityScreen } from '../../screens/facilities/GroundAvailab
 import { CourtAvailabilityScreen } from '../../screens/facilities/CourtAvailabilityScreen';
 import { MyRentalsScreen } from '../../screens/facilities/MyRentalsScreen';
 import { CancellationPolicyScreen } from '../../screens/facilities/CancellationPolicyScreen';
+import { FacilityRentalsScreen } from '../../screens/facilities/FacilityRentalsScreen';
 import { lightColors, fonts } from '../../theme';
 
 const Stack = createNativeStackNavigator<FacilitiesStackParamList>();
@@ -86,6 +87,11 @@ export function FacilitiesStackNavigator(): JSX.Element {
       <Stack.Screen
         name="CancellationPolicy"
         component={CancellationPolicyScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="FacilityRentals"
+        component={FacilityRentalsScreen}
         options={{ headerShown: false }}
       />
     </Stack.Navigator>

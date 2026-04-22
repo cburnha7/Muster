@@ -95,8 +95,7 @@ export function ManageGroundScreen() {
   };
 
   const handleViewRentals = () => {
-    // TODO: Implement when FacilityRentals screen is created
-    Alert.alert('Coming Soon', 'Rental management will be available soon');
+    navigation.navigate('FacilityRentals', { facilityId, facilityName });
   };
 
   const handleEditMap = () => {
@@ -112,16 +111,21 @@ export function ManageGroundScreen() {
   };
 
   const handleViewEscrowLog = () => {
-    // TODO: Navigate to rental selection then show EscrowTransactionLog
     Alert.alert(
       'Coming Soon',
-      'Escrow transaction logs will be available when rental management is implemented'
+      'Payment history will be available in a future update.'
     );
   };
 
   if (loading) {
     return (
-      <View style={[styles.container, { backgroundColor: colors.white }, { backgroundColor: colors.bgScreen }]}>
+      <View
+        style={[
+          styles.container,
+          { backgroundColor: colors.white },
+          { backgroundColor: colors.bgScreen },
+        ]}
+      >
         <ScreenHeader
           title="Manage Ground"
           leftIcon="arrow-back"
@@ -133,7 +137,13 @@ export function ManageGroundScreen() {
   }
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.white }, { backgroundColor: colors.bgScreen }]}>
+    <View
+      style={[
+        styles.container,
+        { backgroundColor: colors.white },
+        { backgroundColor: colors.bgScreen },
+      ]}
+    >
       <ScreenHeader
         title={facilityName}
         leftIcon="arrow-back"
@@ -149,13 +159,23 @@ export function ManageGroundScreen() {
       >
         {/* Quick Actions */}
         <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: colors.ink }]}>Quick Actions</Text>
+          <Text style={[styles.sectionTitle, { color: colors.ink }]}>
+            Quick Actions
+          </Text>
 
           <TouchableOpacity
-            style={[styles.actionCard, { backgroundColor: colors.background, borderColor: colors.border }]}
+            style={[
+              styles.actionCard,
+              {
+                backgroundColor: colors.background,
+                borderColor: colors.border,
+              },
+            ]}
             onPress={handleManageAvailability}
           >
-            <View style={[styles.actionIcon, { backgroundColor: colors.white }]}>
+            <View
+              style={[styles.actionIcon, { backgroundColor: colors.white }]}
+            >
               <Ionicons
                 name="calendar-outline"
                 size={24}
@@ -163,8 +183,12 @@ export function ManageGroundScreen() {
               />
             </View>
             <View style={styles.actionContent}>
-              <Text style={[styles.actionTitle, { color: colors.ink }]}>Manage Availability</Text>
-              <Text style={[styles.actionDescription, { color: colors.inkFaint }]}>
+              <Text style={[styles.actionTitle, { color: colors.ink }]}>
+                Manage Availability
+              </Text>
+              <Text
+                style={[styles.actionDescription, { color: colors.inkFaint }]}
+              >
                 Set availability and block time slots
               </Text>
             </View>
@@ -176,15 +200,27 @@ export function ManageGroundScreen() {
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.actionCard, { backgroundColor: colors.background, borderColor: colors.border }]}
+            style={[
+              styles.actionCard,
+              {
+                backgroundColor: colors.background,
+                borderColor: colors.border,
+              },
+            ]}
             onPress={handleViewRentals}
           >
-            <View style={[styles.actionIcon, { backgroundColor: colors.white }]}>
+            <View
+              style={[styles.actionIcon, { backgroundColor: colors.white }]}
+            >
               <Ionicons name="list-outline" size={24} color={colors.ink} />
             </View>
             <View style={styles.actionContent}>
-              <Text style={[styles.actionTitle, { color: colors.ink }]}>View Rentals</Text>
-              <Text style={[styles.actionDescription, { color: colors.inkFaint }]}>
+              <Text style={[styles.actionTitle, { color: colors.ink }]}>
+                View Rentals
+              </Text>
+              <Text
+                style={[styles.actionDescription, { color: colors.inkFaint }]}
+              >
                 See all upcoming rentals
               </Text>
             </View>
@@ -195,13 +231,28 @@ export function ManageGroundScreen() {
             />
           </TouchableOpacity>
 
-          <TouchableOpacity style={[styles.actionCard, { backgroundColor: colors.background, borderColor: colors.border }]} onPress={handleEditMap}>
-            <View style={[styles.actionIcon, { backgroundColor: colors.white }]}>
+          <TouchableOpacity
+            style={[
+              styles.actionCard,
+              {
+                backgroundColor: colors.background,
+                borderColor: colors.border,
+              },
+            ]}
+            onPress={handleEditMap}
+          >
+            <View
+              style={[styles.actionIcon, { backgroundColor: colors.white }]}
+            >
               <Ionicons name="map-outline" size={24} color={colors.gold} />
             </View>
             <View style={styles.actionContent}>
-              <Text style={[styles.actionTitle, { color: colors.ink }]}>Edit Facility Map</Text>
-              <Text style={[styles.actionDescription, { color: colors.inkFaint }]}>
+              <Text style={[styles.actionTitle, { color: colors.ink }]}>
+                Edit Facility Map
+              </Text>
+              <Text
+                style={[styles.actionDescription, { color: colors.inkFaint }]}
+              >
                 Upload or update facility layout map
               </Text>
             </View>
@@ -213,10 +264,18 @@ export function ManageGroundScreen() {
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.actionCard, { backgroundColor: colors.background, borderColor: colors.border }]}
+            style={[
+              styles.actionCard,
+              {
+                backgroundColor: colors.background,
+                borderColor: colors.border,
+              },
+            ]}
             onPress={handleCancellationPolicy}
           >
-            <View style={[styles.actionIcon, { backgroundColor: colors.white }]}>
+            <View
+              style={[styles.actionIcon, { backgroundColor: colors.white }]}
+            >
               <Ionicons
                 name="shield-checkmark-outline"
                 size={24}
@@ -224,8 +283,12 @@ export function ManageGroundScreen() {
               />
             </View>
             <View style={styles.actionContent}>
-              <Text style={[styles.actionTitle, { color: colors.ink }]}>Cancellation Policy</Text>
-              <Text style={[styles.actionDescription, { color: colors.inkFaint }]}>
+              <Text style={[styles.actionTitle, { color: colors.ink }]}>
+                Cancellation Policy
+              </Text>
+              <Text
+                style={[styles.actionDescription, { color: colors.inkFaint }]}
+              >
                 Required before your ground can accept bookings
               </Text>
             </View>
@@ -237,15 +300,27 @@ export function ManageGroundScreen() {
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.actionCard, { backgroundColor: colors.background, borderColor: colors.border }]}
+            style={[
+              styles.actionCard,
+              {
+                backgroundColor: colors.background,
+                borderColor: colors.border,
+              },
+            ]}
             onPress={handleViewEscrowLog}
           >
-            <View style={[styles.actionIcon, { backgroundColor: colors.white }]}>
+            <View
+              style={[styles.actionIcon, { backgroundColor: colors.white }]}
+            >
               <Ionicons name="cash-outline" size={24} color={colors.cobalt} />
             </View>
             <View style={styles.actionContent}>
-              <Text style={[styles.actionTitle, { color: colors.ink }]}>Escrow Transactions</Text>
-              <Text style={[styles.actionDescription, { color: colors.inkFaint }]}>
+              <Text style={[styles.actionTitle, { color: colors.ink }]}>
+                Escrow Transactions
+              </Text>
+              <Text
+                style={[styles.actionDescription, { color: colors.inkFaint }]}
+              >
                 View escrow transaction logs for rentals
               </Text>
             </View>
@@ -260,10 +335,14 @@ export function ManageGroundScreen() {
         {/* Courts List */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Text style={[styles.sectionTitle, { color: colors.ink }]}>Courts & Fields</Text>
+            <Text style={[styles.sectionTitle, { color: colors.ink }]}>
+              Courts & Fields
+            </Text>
             <TouchableOpacity style={styles.addButton} onPress={handleAddCourt}>
               <Ionicons name="add-circle" size={24} color={colors.cobalt} />
-              <Text style={[styles.addButtonText, { color: colors.cobalt }]}>Add Court</Text>
+              <Text style={[styles.addButtonText, { color: colors.cobalt }]}>
+                Add Court
+              </Text>
             </TouchableOpacity>
           </View>
 
