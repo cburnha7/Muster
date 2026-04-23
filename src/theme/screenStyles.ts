@@ -14,7 +14,7 @@ export const ScreenStyles = StyleSheet.create({
   sectionTitle: {
     fontFamily: fonts.heading,
     fontSize: 18,
-    color: (colors as any).onSurface,
+    color: colors.ink,
     letterSpacing: -0.3,
   },
 
@@ -39,7 +39,7 @@ export const ScreenStyles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 9999,
-    backgroundColor: (colors as any).surfaceContainerLowest,
+    backgroundColor: colors.bgCard,
   },
 
   /* ── Sport filter pill (selected) ── */
@@ -51,7 +51,7 @@ export const ScreenStyles = StyleSheet.create({
   chipText: {
     fontFamily: fonts.headingSemi,
     fontSize: 13,
-    color: (colors as any).onSurfaceVariant,
+    color: colors.inkSecondary,
   },
 
   /* ── Chip label (selected) ── */
@@ -79,7 +79,7 @@ export const ScreenStyles = StyleSheet.create({
   emptyTitle: {
     fontFamily: fonts.heading,
     fontSize: 18,
-    color: (colors as any).onSurface,
+    color: colors.ink,
     textAlign: 'center',
     marginTop: 12,
   },
@@ -88,7 +88,7 @@ export const ScreenStyles = StyleSheet.create({
   emptySubtitle: {
     fontFamily: fonts.body,
     fontSize: 15,
-    color: (colors as any).onSurfaceVariant,
+    color: colors.inkSecondary,
     textAlign: 'center',
     lineHeight: 22,
     marginTop: 6,
@@ -114,13 +114,13 @@ export const ScreenStyles = StyleSheet.create({
   cardTitle: {
     fontFamily: fonts.headingSemi,
     fontSize: 15,
-    color: (colors as any).onSurface,
+    color: colors.ink,
   },
 
   /* ── Card secondary / meta line ── */
   cardMeta: {
     fontFamily: fonts.body,
     fontSize: 13,
-    color: (colors as any).onSurfaceVariant,
+    color: colors.inkSecondary,
   },
 });
