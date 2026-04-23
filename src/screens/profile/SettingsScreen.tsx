@@ -1090,7 +1090,9 @@ function AboutTab() {
           icon="document-text-outline"
           iconBg={colors.surface}
           label="Terms of Service"
-          onPress={() => Linking.openURL('https://muster.app/terms')}
+          onPress={() =>
+            Linking.openURL(`${API_BASE_URL.replace('/api', '')}/terms`)
+          }
         />
         <MenuRow
           icon="help-circle-outline"

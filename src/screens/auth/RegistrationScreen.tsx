@@ -12,6 +12,7 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import { useDispatch } from 'react-redux';
 import { Ionicons } from '@expo/vector-icons';
+import * as WebBrowser from 'expo-web-browser';
 import { FormInput } from '../../components/forms/FormInput';
 import { FormButton } from '../../components/forms/FormButton';
 import { Checkbox } from '../../components/forms/Checkbox';
@@ -208,12 +209,15 @@ export const RegistrationScreen: React.FC = () => {
     }
   };
 
+  const PRIVACY_URL = 'https://muster-production.up.railway.app/privacy';
+  const TERMS_URL = 'https://muster-production.up.railway.app/terms';
+
   const handleOpenTerms = () => {
-    Alert.alert('Terms of Service', 'Terms of Service will be displayed here');
+    WebBrowser.openBrowserAsync(TERMS_URL);
   };
 
   const handleOpenPrivacy = () => {
-    Alert.alert('Privacy Policy', 'Privacy Policy will be displayed here');
+    WebBrowser.openBrowserAsync(PRIVACY_URL);
   };
 
   // ── Step content ────────────────────────
@@ -241,7 +245,11 @@ export const RegistrationScreen: React.FC = () => {
 
   return (
     <KeyboardAvoidingView
-      style={[styles.container, { backgroundColor: colors.background }, { backgroundColor: colors.bgScreen }]}
+      style={[
+        styles.container,
+        { backgroundColor: colors.background },
+        { backgroundColor: colors.bgScreen },
+      ]}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <View style={styles.content}>
@@ -261,8 +269,11 @@ export const RegistrationScreen: React.FC = () => {
               <View
                 key={i}
                 style={[
-                  styles.progressDot, { backgroundColor: colors.border },
-                  i <= step && styles.progressDotActive, i <= step && { backgroundColor: colors.cobalt }]}
+                  styles.progressDot,
+                  { backgroundColor: colors.border },
+                  i <= step && styles.progressDotActive,
+                  i <= step && { backgroundColor: colors.cobalt },
+                ]}
               />
             ))}
           </View>
@@ -275,12 +286,21 @@ export const RegistrationScreen: React.FC = () => {
         <Animated.View style={[styles.inner, { opacity: fadeAnim }]}>
           {/* Header */}
           <Text style={[styles.title, { color: colors.ink }]}>{title}</Text>
-          <Text style={[styles.subtitle, { color: colors.inkSecondary }]}>{subtitle}</Text>
+          <Text style={[styles.subtitle, { color: colors.inkSecondary }]}>
+            {subtitle}
+          </Text>
 
           {/* General error */}
           {errors.general && (
-            <View style={[styles.errorBanner, { backgroundColor: colors.errorLight }]}>
-              <Text style={[styles.errorText, { color: colors.error }]}>{errors.general}</Text>
+            <View
+              style={[
+                styles.errorBanner,
+                { backgroundColor: colors.errorLight },
+              ]}
+            >
+              <Text style={[styles.errorText, { color: colors.error }]}>
+                {errors.general}
+              </Text>
             </View>
           )}
 
@@ -303,9 +323,26 @@ export const RegistrationScreen: React.FC = () => {
                     disabled={isLoading || ssoLoading !== null}
                   />
                   <View style={styles.divider}>
-                    <View style={[styles.dividerLine, { backgroundColor: colors.border }]} />
-                    <Text style={[styles.dividerText, { color: colors.inkSecondary }]}>or</Text>
-                    <View style={[styles.dividerLine, { backgroundColor: colors.border }]} />
+                    <View
+                      style={[
+                        styles.dividerLine,
+                        { backgroundColor: colors.border },
+                      ]}
+                    />
+                    <Text
+                      style={[
+                        styles.dividerText,
+                        { color: colors.inkSecondary },
+                      ]}
+                    >
+                      or
+                    </Text>
+                    <View
+                      style={[
+                        styles.dividerLine,
+                        { backgroundColor: colors.border },
+                      ]}
+                    />
                   </View>
                 </>
               )}
@@ -388,13 +425,24 @@ export const RegistrationScreen: React.FC = () => {
               <View style={styles.termsSection}>
                 <Checkbox
                   label={
-                    <Text style={[styles.checkboxLabel, { color: colors.inkSecondary }]}>
+                    <Text
+                      style={[
+                        styles.checkboxLabel,
+                        { color: colors.inkSecondary },
+                      ]}
+                    >
                       I agree to the{' '}
-                      <Text style={[styles.link, { color: colors.cobalt }]} onPress={handleOpenTerms}>
+                      <Text
+                        style={[styles.link, { color: colors.cobalt }]}
+                        onPress={handleOpenTerms}
+                      >
                         Terms of Service
                       </Text>{' '}
                       and{' '}
-                      <Text style={[styles.link, { color: colors.cobalt }]} onPress={handleOpenPrivacy}>
+                      <Text
+                        style={[styles.link, { color: colors.cobalt }]}
+                        onPress={handleOpenPrivacy}
+                      >
                         Privacy Policy
                       </Text>
                     </Text>
@@ -427,8 +475,13 @@ export const RegistrationScreen: React.FC = () => {
               onPress={() => navigation.navigate('Login' as never)}
               activeOpacity={0.75}
             >
-              <Text style={[styles.loginLinkText, { color: colors.inkSecondary }]}>
-                Already have an account? <Text style={[styles.link, { color: colors.cobalt }]}>Log In</Text>
+              <Text
+                style={[styles.loginLinkText, { color: colors.inkSecondary }]}
+              >
+                Already have an account?{' '}
+                <Text style={[styles.link, { color: colors.cobalt }]}>
+                  Log In
+                </Text>
               </Text>
             </TouchableOpacity>
           )}
