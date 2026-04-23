@@ -2,11 +2,11 @@ import React from 'react';
 import {
   View,
   Text,
-  Image,
   ScrollView,
   TouchableOpacity,
   StyleSheet,
 } from 'react-native';
+import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
 import { fonts, useTheme } from '../../theme';
 
@@ -30,7 +30,13 @@ export function MyCrewRow({ members, selectedId, onSelect }: MyCrewRowProps) {
 
   return (
     <View style={styles.container}>
-      <Text style={[styles.title, { color: colors.ink }, { color: colors.textPrimary }]}>
+      <Text
+        style={[
+          styles.title,
+          { color: colors.ink },
+          { color: colors.textPrimary },
+        ]}
+      >
         The Family
       </Text>
       <ScrollView
@@ -77,13 +83,14 @@ export function MyCrewRow({ members, selectedId, onSelect }: MyCrewRowProps) {
               </View>
               <Text
                 style={[
-                  styles.name, { color: colors.inkSoft },
-                  active && styles.nameActive, active && { color: colors.ink },
+                  styles.name,
+                  { color: colors.inkSoft },
+                  active && styles.nameActive,
+                  active && { color: colors.ink },
                   {
-                    color: active
-                      ? colors.textPrimary
-                      : colors.textSecondary,
-                  }]}
+                    color: active ? colors.textPrimary : colors.textSecondary,
+                  },
+                ]}
                 numberOfLines={1}
               >
                 {m.firstName}
@@ -105,22 +112,21 @@ export function MyCrewRow({ members, selectedId, onSelect }: MyCrewRowProps) {
             ]}
           >
             <View
-              style={[
-                styles.circle,
-                { backgroundColor: colors.textPrimary },
-              ]}
+              style={[styles.circle, { backgroundColor: colors.textPrimary }]}
             >
               <Ionicons name="people" size={20} color={colors.white} />
             </View>
           </View>
           <Text
             style={[
-              styles.name, { color: colors.inkSoft },
+              styles.name,
+              { color: colors.inkSoft },
               { color: colors.textSecondary },
               allActive && {
                 fontFamily: fonts.label,
                 color: colors.textPrimary,
-              }]}
+              },
+            ]}
             numberOfLines={1}
           >
             All

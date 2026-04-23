@@ -3,11 +3,11 @@ import {
   View,
   Text,
   TouchableOpacity,
-  Image,
   StyleSheet,
   Alert,
   Platform,
 } from 'react-native';
+import { Image } from 'expo-image';
 import BottomSheet, {
   BottomSheetScrollView,
   BottomSheetBackdrop,

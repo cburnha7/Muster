@@ -5,10 +5,10 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  Image,
   ActivityIndicator,
   StyleSheet,
 } from 'react-native';
+import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
 import { useCreateEvent } from './CreateEventContext';
 import { AvailabilityIndicator } from '../../../components/ui/AvailabilityIndicator';

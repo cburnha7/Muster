@@ -14,12 +14,12 @@ import React, { useState } from 'react';
 import {
   View,
   Text,
-  Image,
   TouchableOpacity,
   ActivityIndicator,
   StyleSheet,
   Alert,
 } from 'react-native';
+import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
 import { ImageService, ImageContext } from '../../services/ImageService';
 import { fonts, useTheme } from '../../theme';

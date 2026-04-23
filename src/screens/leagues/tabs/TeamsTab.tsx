@@ -6,8 +6,8 @@ import {
   RefreshControl,
   Text,
   TouchableOpacity,
-  Image,
 } from 'react-native';
+import { Image } from 'expo-image';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
@@ -118,14 +118,22 @@ export const TeamsTab: React.FC<TeamsTabProps> = ({ leagueId }) => {
         {item.team.logo ? (
           <Image source={{ uri: item.team.logo }} style={styles.rosterLogo} />
         ) : (
-          <View style={[styles.rosterLogoPlaceholder, { backgroundColor: colors.bgCard }]}>
+          <View
+            style={[
+              styles.rosterLogoPlaceholder,
+              { backgroundColor: colors.bgCard },
+            ]}
+          >
             <Ionicons name="people" size={20} color={colors.cobalt} />
           </View>
         )}
 
         {/* Name + player count */}
         <View style={styles.rosterInfo}>
-          <Text style={[styles.rosterName, { color: colors.ink }]} numberOfLines={1}>
+          <Text
+            style={[styles.rosterName, { color: colors.ink }]}
+            numberOfLines={1}
+          >
             {item.team.name}
           </Text>
           <Text style={[styles.playerCount, { color: colors.inkFaint }]}>
@@ -146,7 +154,9 @@ export const TeamsTab: React.FC<TeamsTabProps> = ({ leagueId }) => {
 
     return (
       <View style={styles.emptyState}>
-        <Text style={[styles.emptyText, { color: colors.inkFaint }]}>No rosters in this league yet</Text>
+        <Text style={[styles.emptyText, { color: colors.inkFaint }]}>
+          No rosters in this league yet
+        </Text>
       </View>
     );
   };

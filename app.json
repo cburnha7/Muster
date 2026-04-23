@@ -79,7 +79,8 @@
         }
       ],
       "expo-font",
-      "@sentry/react-native"
+      "@sentry/react-native",
+      "expo-image"
     ],
     "scheme": "muster",
     "extra": {

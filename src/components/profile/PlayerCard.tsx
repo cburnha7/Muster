@@ -2,12 +2,12 @@ import React from 'react';
 import {
   View,
   Text,
-  Image,
   Modal,
   TouchableOpacity,
   StyleSheet,
   Pressable,
 } from 'react-native';
+import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
 import { fonts, useTheme } from '../../theme';
 import { SportRatingsSection } from './SportRatingsSection';
@@ -51,8 +51,17 @@ export function PlayerCard({
       animationType="fade"
       onRequestClose={onClose}
     >
-      <Pressable style={[styles.backdrop, { backgroundColor: colors.overlay }]} onPress={onClose}>
-        <Pressable style={[styles.card, { backgroundColor: colors.white, shadowColor: colors.black }]} onPress={() => {}}>
+      <Pressable
+        style={[styles.backdrop, { backgroundColor: colors.overlay }]}
+        onPress={onClose}
+      >
+        <Pressable
+          style={[
+            styles.card,
+            { backgroundColor: colors.white, shadowColor: colors.black },
+          ]}
+          onPress={() => {}}
+        >
           {/* Close button */}
           <TouchableOpacity
             style={[styles.closeButton, { backgroundColor: colors.border }]}
@@ -72,7 +81,13 @@ export function PlayerCard({
             {profileImage ? (
               <Image source={{ uri: profileImage }} style={styles.avatar} />
             ) : (
-              <View style={[styles.avatar, styles.avatarPlaceholder, { backgroundColor: colors.border }]}>
+              <View
+                style={[
+                  styles.avatar,
+                  styles.avatarPlaceholder,
+                  { backgroundColor: colors.border },
+                ]}
+              >
                 <Ionicons name="person" size={34} color={colors.inkSecondary} />
               </View>
             )}

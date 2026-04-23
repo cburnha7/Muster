@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Text, Image, ViewStyle } from 'react-native';
+import { View, Text, ViewStyle } from 'react-native';
+import { Image } from 'expo-image';
 import { tokenType, getAvatarColor } from '../../theme/tokens';
 import { useTheme } from '../../theme';
 

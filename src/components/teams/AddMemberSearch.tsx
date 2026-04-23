@@ -6,9 +6,9 @@ import {
   StyleSheet,
   FlatList,
   TouchableOpacity,
-  Image,
   ActivityIndicator,
 } from 'react-native';
+import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../theme';
 import { User } from '../../types';
@@ -83,7 +83,10 @@ export const AddMemberSearch: React.FC<AddMemberSearchProps> = ({
 
     return (
       <TouchableOpacity
-        style={[styles.userItem, { backgroundColor: colors.surface, borderColor: colors.border }]}
+        style={[
+          styles.userItem,
+          { backgroundColor: colors.surface, borderColor: colors.border },
+        ]}
         onPress={() => handleAddMember(item)}
         disabled={isAdding}
         activeOpacity={0.75}
@@ -95,7 +98,13 @@ export const AddMemberSearch: React.FC<AddMemberSearchProps> = ({
               style={styles.userAvatar}
             />
           ) : (
-            <View style={[styles.userAvatar, styles.userAvatarPlaceholder, { backgroundColor: colors.cobalt }]}>
+            <View
+              style={[
+                styles.userAvatar,
+                styles.userAvatarPlaceholder,
+                { backgroundColor: colors.cobalt },
+              ]}
+            >
               <Text style={[styles.userAvatarText, { color: colors.white }]}>
                 {(item.firstName && item.firstName[0]) ||
                   item.email?.[0]?.toUpperCase() ||
@@ -107,7 +116,9 @@ export const AddMemberSearch: React.FC<AddMemberSearchProps> = ({
             <Text style={[styles.userName, { color: colors.ink }]}>
               {item.firstName} {item.lastName}
             </Text>
-            <Text style={[styles.userEmail, { color: colors.inkFaint }]}>{item.email}</Text>
+            <Text style={[styles.userEmail, { color: colors.inkFaint }]}>
+              {item.email}
+            </Text>
           </View>
         </View>
 
@@ -124,7 +135,12 @@ export const AddMemberSearch: React.FC<AddMemberSearchProps> = ({
 
   return (
     <View style={styles.container}>
-      <View style={[styles.searchContainer, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+      <View
+        style={[
+          styles.searchContainer,
+          { backgroundColor: colors.surface, borderColor: colors.border },
+        ]}
+      >
         <Ionicons
           name="search"
           size={20}
@@ -149,7 +165,9 @@ export const AddMemberSearch: React.FC<AddMemberSearchProps> = ({
       </View>
 
       {searchQuery.trim().length > 0 && searchQuery.trim().length < 2 && (
-        <Text style={[styles.hint, { color: colors.inkFaint }]}>Type at least 2 characters to search</Text>
+        <Text style={[styles.hint, { color: colors.inkFaint }]}>
+          Type at least 2 characters to search
+        </Text>
       )}
 
       {searchResults.length > 0 && (
@@ -173,7 +191,9 @@ export const AddMemberSearch: React.FC<AddMemberSearchProps> = ({
         searchResults.length === 0 && (
           <View style={styles.noResults}>
             <Ionicons name="search-outline" size={48} color={colors.inkFaint} />
-            <Text style={[styles.noResultsText, { color: colors.inkFaint }]}>No members found</Text>
+            <Text style={[styles.noResultsText, { color: colors.inkFaint }]}>
+              No members found
+            </Text>
             <Text style={[styles.noResultsHint, { color: colors.inkFaint }]}>
               Try searching by first name, last name, or email
             </Text>
