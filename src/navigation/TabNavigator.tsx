@@ -78,12 +78,23 @@ function CustomHeader({ routeName }: { routeName: string }) {
 }
 
 function withErrorBoundary(Screen: React.ComponentType<any>) {
-  return (props: any) => (
+  const Wrapped = (props: any) => (
     <ErrorBoundary>
       <Screen {...props} />
     </ErrorBoundary>
   );
+  Wrapped.displayName = `WithErrorBoundary(${Screen.displayName || Screen.name || 'Component'})`;
+  return Wrapped;
 }
+
+// Stable references — must be created once at module scope, not inline in JSX.
+// Calling withErrorBoundary() inside render creates a new component on every
+// render, which causes React Navigation to unmount and remount the entire stack.
+const HomeWithBoundary = withErrorBoundary(HomeStackNavigator);
+const TeamsWithBoundary = withErrorBoundary(TeamsStackNavigator);
+const MessagesWithBoundary = withErrorBoundary(MessagesStackNavigator);
+const LeaguesWithBoundary = withErrorBoundary(LeaguesStackNavigator);
+const FacilitiesWithBoundary = withErrorBoundary(FacilitiesStackNavigator);
 
 export function TabNavigator() {
   const { colors, type, spacing } = useTheme();
@@ -179,7 +190,7 @@ export function TabNavigator() {
         >
           <Tab.Screen
             name="Home"
-            component={withErrorBoundary(HomeStackNavigator)}
+            component={HomeWithBoundary}
             options={{ tabBarLabel: 'Home' }}
             listeners={({ navigation }) => ({
               tabPress: e => {
@@ -191,7 +202,7 @@ export function TabNavigator() {
           />
           <Tab.Screen
             name="Teams"
-            component={withErrorBoundary(TeamsStackNavigator)}
+            component={TeamsWithBoundary}
             options={{ tabBarLabel: 'Rosters' }}
             listeners={({ navigation }) => ({
               tabPress: e => {
@@ -203,7 +214,7 @@ export function TabNavigator() {
           />
           <Tab.Screen
             name="Messages"
-            component={withErrorBoundary(MessagesStackNavigator)}
+            component={MessagesWithBoundary}
             options={{ tabBarLabel: 'Messages' }}
             listeners={({ navigation }) => ({
               tabPress: e => {
@@ -215,7 +226,7 @@ export function TabNavigator() {
           />
           <Tab.Screen
             name="Leagues"
-            component={withErrorBoundary(LeaguesStackNavigator)}
+            component={LeaguesWithBoundary}
             options={{ tabBarLabel: 'Leagues' }}
             listeners={({ navigation }) => ({
               tabPress: e => {
@@ -227,7 +238,7 @@ export function TabNavigator() {
           />
           <Tab.Screen
             name="Facilities"
-            component={withErrorBoundary(FacilitiesStackNavigator)}
+            component={FacilitiesWithBoundary}
             options={{ tabBarLabel: 'Grounds' }}
             listeners={({ navigation }) => ({
               tabPress: e => {
