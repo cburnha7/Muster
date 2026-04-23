@@ -9,6 +9,9 @@ yarn-error.log*
 dist/
 web-build/
 
+# Sentry (contains auth token)
+sentry.properties
+
 # Native
 *.orig.*
 *.jks
