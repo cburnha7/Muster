@@ -82,7 +82,9 @@ conversationsRouter.get('/dm/:userId', async (req, res) => {
     ]);
 
     if (!sharedTeam && !sharedEvent) {
-      return res.status(403).json({ error: 'No shared context with this user' });
+      return res
+        .status(403)
+        .json({ error: 'No shared context with this user' });
     }
 
     // Find existing DM
@@ -96,12 +98,23 @@ conversationsRouter.get('/dm/:userId', async (req, res) => {
       },
       include: {
         participants: {
-          include: { user: { select: { id: true, firstName: true, lastName: true, profileImage: true } } },
+          include: {
+            user: {
+              select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+                profileImage: true,
+              },
+            },
+          },
         },
         messages: {
           orderBy: { createdAt: 'desc' },
           take: 1,
-          include: { sender: { select: { id: true, firstName: true, lastName: true } } },
+          include: {
+            sender: { select: { id: true, firstName: true, lastName: true } },
+          },
         },
       },
     });
@@ -120,7 +133,16 @@ conversationsRouter.get('/dm/:userId', async (req, res) => {
       },
       include: {
         participants: {
-          include: { user: { select: { id: true, firstName: true, lastName: true, profileImage: true } } },
+          include: {
+            user: {
+              select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+                profileImage: true,
+              },
+            },
+          },
         },
         messages: {
           orderBy: { createdAt: 'desc' },
@@ -148,16 +170,32 @@ conversationsRouter.post('/team/:teamId', async (req, res) => {
     const membership = await prisma.teamMember.findFirst({
       where: { teamId, userId, status: 'active' },
     });
-    if (!membership) return res.status(403).json({ error: 'Not a team member' });
+    if (!membership)
+      return res.status(403).json({ error: 'Not a team member' });
 
     // Check for existing conversation
     let conversation = await prisma.conversation.findFirst({
       where: { type: 'TEAM_CHAT', entityId: teamId },
       include: {
         participants: {
-          include: { user: { select: { id: true, firstName: true, lastName: true, profileImage: true } } },
+          include: {
+            user: {
+              select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+                profileImage: true,
+              },
+            },
+          },
         },
-        messages: { orderBy: { createdAt: 'desc' }, take: 1, include: { sender: { select: { id: true, firstName: true, lastName: true } } } },
+        messages: {
+          orderBy: { createdAt: 'desc' },
+          take: 1,
+          include: {
+            sender: { select: { id: true, firstName: true, lastName: true } },
+          },
+        },
       },
     });
 
@@ -165,7 +203,12 @@ conversationsRouter.post('/team/:teamId', async (req, res) => {
       // Create conversation and add ALL current team members
       const team = await prisma.team.findUnique({
         where: { id: teamId },
-        include: { members: { where: { status: 'active' }, select: { userId: true, role: true } } },
+        include: {
+          members: {
+            where: { status: 'active' },
+            select: { userId: true, role: true },
+          },
+        },
       });
       if (!team) return res.status(404).json({ error: 'Team not found' });
 
@@ -175,26 +218,49 @@ conversationsRouter.post('/team/:teamId', async (req, res) => {
           entityId: teamId,
           name: team.name,
           participants: {
-            create: team.members.map((m) => ({
+            create: team.members.map(m => ({
               userId: m.userId,
-              role: m.role === 'captain' || m.role === 'manager' ? 'ADMIN' : 'MEMBER',
+              role:
+                m.role === 'captain' || m.role === 'manager'
+                  ? 'ADMIN'
+                  : 'MEMBER',
             })),
           },
         },
         include: {
           participants: {
-            include: { user: { select: { id: true, firstName: true, lastName: true, profileImage: true } } },
+            include: {
+              user: {
+                select: {
+                  id: true,
+                  firstName: true,
+                  lastName: true,
+                  profileImage: true,
+                },
+              },
+            },
           },
-          messages: { orderBy: { createdAt: 'desc' }, take: 1, include: { sender: { select: { id: true, firstName: true, lastName: true } } } },
+          messages: {
+            orderBy: { createdAt: 'desc' },
+            take: 1,
+            include: {
+              sender: { select: { id: true, firstName: true, lastName: true } },
+            },
+          },
         },
       });
 
       // Post welcome system message
       const { MessagingService } = await import('../services/MessagingService');
-      await MessagingService.postSystemMessage(conversation.id, `Team chat created for ${team.name}`);
+      await MessagingService.postSystemMessage(
+        conversation.id,
+        `Team chat created for ${team.name}`
+      );
     } else {
       // Ensure current user is a participant (they may have joined after conversation was created)
-      const isParticipant = conversation.participants.some((p) => p.userId === userId);
+      const isParticipant = conversation.participants.some(
+        p => p.userId === userId
+      );
       if (!isParticipant) {
         await prisma.conversationParticipant.create({
           data: { conversationId: conversation.id, userId, role: 'MEMBER' },
@@ -205,7 +271,9 @@ conversationsRouter.post('/team/:teamId', async (req, res) => {
     res.json(conversation);
   } catch (error) {
     console.error('Get/create team conversation error:', error);
-    res.status(500).json({ error: 'Failed to get or create team conversation' });
+    res
+      .status(500)
+      .json({ error: 'Failed to get or create team conversation' });
   }
 });
 
@@ -222,14 +290,32 @@ conversationsRouter.post('/event/:eventId', async (req, res) => {
       where: { type: 'GAME_THREAD', entityId: eventId },
       include: {
         participants: {
-          include: { user: { select: { id: true, firstName: true, lastName: true, profileImage: true } } },
+          include: {
+            user: {
+              select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+                profileImage: true,
+              },
+            },
+          },
         },
-        messages: { orderBy: { createdAt: 'desc' }, take: 1, include: { sender: { select: { id: true, firstName: true, lastName: true } } } },
+        messages: {
+          orderBy: { createdAt: 'desc' },
+          take: 1,
+          include: {
+            sender: { select: { id: true, firstName: true, lastName: true } },
+          },
+        },
       },
     });
 
     if (!conversation) {
-      const event = await prisma.event.findUnique({ where: { id: eventId }, select: { title: true, organizerId: true } });
+      const event = await prisma.event.findUnique({
+        where: { id: eventId },
+        select: { title: true, organizerId: true },
+      });
       if (!event) return res.status(404).json({ error: 'Event not found' });
 
       conversation = await prisma.conversation.create({
@@ -237,22 +323,44 @@ conversationsRouter.post('/event/:eventId', async (req, res) => {
           type: 'GAME_THREAD',
           entityId: eventId,
           name: event.title,
-          participants: { create: { userId: event.organizerId, role: 'ADMIN' } },
+          participants: {
+            create: { userId: event.organizerId, role: 'ADMIN' },
+          },
         },
         include: {
           participants: {
-            include: { user: { select: { id: true, firstName: true, lastName: true, profileImage: true } } },
+            include: {
+              user: {
+                select: {
+                  id: true,
+                  firstName: true,
+                  lastName: true,
+                  profileImage: true,
+                },
+              },
+            },
           },
-          messages: { orderBy: { createdAt: 'desc' }, take: 1, include: { sender: { select: { id: true, firstName: true, lastName: true } } } },
+          messages: {
+            orderBy: { createdAt: 'desc' },
+            take: 1,
+            include: {
+              sender: { select: { id: true, firstName: true, lastName: true } },
+            },
+          },
         },
       });
 
       const { MessagingService } = await import('../services/MessagingService');
-      await MessagingService.postSystemMessage(conversation.id, `Game thread created for ${event.title}`);
+      await MessagingService.postSystemMessage(
+        conversation.id,
+        `Game thread created for ${event.title}`
+      );
     }
 
     // Ensure current user is a participant
-    const isParticipant = conversation.participants.some((p) => p.userId === userId);
+    const isParticipant = conversation.participants.some(
+      p => p.userId === userId
+    );
     if (!isParticipant) {
       await prisma.conversationParticipant.create({
         data: { conversationId: conversation.id, userId, role: 'MEMBER' },
@@ -276,20 +384,35 @@ conversationsRouter.post('/league/:leagueId', async (req, res) => {
 
     // Find existing General channel (no parentConversationId)
     let conversation = await prisma.conversation.findFirst({
-      where: { type: 'LEAGUE_CHANNEL', entityId: leagueId, parentConversationId: null },
+      where: {
+        type: 'LEAGUE_CHANNEL',
+        entityId: leagueId,
+        parentConversationId: null,
+      },
       include: { participants: true },
     });
 
     if (!conversation) {
       // Create league channels if they don't exist
-      const league = await prisma.league.findUnique({ where: { id: leagueId }, select: { name: true, organizerId: true } });
+      const league = await prisma.league.findUnique({
+        where: { id: leagueId },
+        select: { name: true, organizerId: true },
+      });
       if (!league) return res.status(404).json({ error: 'League not found' });
 
       const { MessagingService } = await import('../services/MessagingService');
-      await MessagingService.createLeagueChannels(leagueId, league.organizerId, league.name || 'League');
+      await MessagingService.createLeagueChannels(
+        leagueId,
+        league.organizerId,
+        league.name || 'League'
+      );
 
       conversation = await prisma.conversation.findFirst({
-        where: { type: 'LEAGUE_CHANNEL', entityId: leagueId, parentConversationId: null },
+        where: {
+          type: 'LEAGUE_CHANNEL',
+          entityId: leagueId,
+          parentConversationId: null,
+        },
         include: { participants: true },
       });
     }
@@ -299,7 +422,9 @@ conversationsRouter.post('/league/:leagueId', async (req, res) => {
     }
 
     // Add current user as participant if not already
-    const isParticipant = conversation.participants.some((p) => p.userId === userId);
+    const isParticipant = conversation.participants.some(
+      p => p.userId === userId
+    );
     if (!isParticipant) {
       await prisma.conversationParticipant.create({
         data: { conversationId: conversation.id, userId, role: 'MEMBER' },
@@ -318,7 +443,19 @@ conversationsRouter.post('/league/:leagueId', async (req, res) => {
 // ─────────────────────────────────────────────────────────────────────────────
 conversationsRouter.get('/', async (req, res) => {
   try {
-    const userId = req.user!.userId;
+    const requesterId = req.user!.userId;
+    const activeUserId = req.headers['x-active-user-id'] as string | undefined;
+
+    // Validate the active user is actually a dependent of the requester
+    let userId = requesterId;
+    if (activeUserId && activeUserId !== requesterId) {
+      const dependent = await prisma.user.findFirst({
+        where: { id: activeUserId, guardianId: requesterId },
+        select: { id: true },
+      });
+      if (dependent) userId = dependent.id;
+    }
+
     const { type } = req.query;
 
     const typeFilter = type && type !== 'ALL' ? { type: type as any } : {};
@@ -330,20 +467,32 @@ conversationsRouter.get('/', async (req, res) => {
           include: {
             participants: {
               include: {
-                user: { select: { id: true, firstName: true, lastName: true, profileImage: true } },
+                user: {
+                  select: {
+                    id: true,
+                    firstName: true,
+                    lastName: true,
+                    profileImage: true,
+                  },
+                },
               },
             },
             messages: {
               orderBy: { createdAt: 'desc' },
               take: 1,
               include: {
-                sender: { select: { id: true, firstName: true, lastName: true } },
+                sender: {
+                  select: { id: true, firstName: true, lastName: true },
+                },
               },
             },
             subChannels: {
               where: { isArchived: false },
               include: {
-                participants: { where: { userId }, select: { lastReadAt: true, isMuted: true } },
+                participants: {
+                  where: { userId },
+                  select: { lastReadAt: true, isMuted: true },
+                },
                 messages: { orderBy: { createdAt: 'desc' }, take: 1 },
               },
             },
@@ -356,8 +505,8 @@ conversationsRouter.get('/', async (req, res) => {
     // Calculate unread counts and shape response
     const conversations = await Promise.all(
       participations
-        .filter((p) => !p.conversation.parentConversationId) // only top-level
-        .map(async (p) => {
+        .filter(p => !p.conversation.parentConversationId) // only top-level
+        .map(async p => {
           const lastMsg = p.conversation.messages[0];
           const unreadCount = lastMsg
             ? await prisma.message.count({
@@ -396,23 +545,37 @@ conversationsRouter.get('/:id', async (req, res) => {
       include: {
         participants: {
           include: {
-            user: { select: { id: true, firstName: true, lastName: true, profileImage: true } },
+            user: {
+              select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+                profileImage: true,
+              },
+            },
           },
         },
         subChannels: {
           where: { isArchived: false },
           include: {
-            participants: { where: { userId }, select: { lastReadAt: true, isMuted: true, role: true } },
+            participants: {
+              where: { userId },
+              select: { lastReadAt: true, isMuted: true, role: true },
+            },
             messages: { orderBy: { createdAt: 'desc' }, take: 1 },
           },
         },
       },
     });
 
-    if (!conversation) return res.status(404).json({ error: 'Conversation not found' });
+    if (!conversation)
+      return res.status(404).json({ error: 'Conversation not found' });
 
-    const isParticipant = conversation.participants.some((p) => p.userId === userId);
-    if (!isParticipant) return res.status(403).json({ error: 'Not a participant' });
+    const isParticipant = conversation.participants.some(
+      p => p.userId === userId
+    );
+    if (!isParticipant)
+      return res.status(403).json({ error: 'Not a participant' });
 
     res.json(conversation);
   } catch (error) {
@@ -435,7 +598,8 @@ conversationsRouter.get('/:id/messages', async (req, res) => {
     const participant = await prisma.conversationParticipant.findUnique({
       where: { conversationId_userId: { conversationId: id, userId } },
     });
-    if (!participant) return res.status(403).json({ error: 'Not a participant' });
+    if (!participant)
+      return res.status(403).json({ error: 'Not a participant' });
 
     const messages = await prisma.message.findMany({
       where: {
@@ -445,9 +609,18 @@ conversationsRouter.get('/:id/messages', async (req, res) => {
       orderBy: { createdAt: 'desc' },
       take,
       include: {
-        sender: { select: { id: true, firstName: true, lastName: true, profileImage: true } },
+        sender: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            profileImage: true,
+          },
+        },
         reactions: {
-          include: { user: { select: { id: true, firstName: true, lastName: true } } },
+          include: {
+            user: { select: { id: true, firstName: true, lastName: true } },
+          },
         },
         replyTo: {
           select: {
@@ -459,7 +632,10 @@ conversationsRouter.get('/:id/messages', async (req, res) => {
       },
     });
 
-    const nextCursor = messages.length === take ? messages[messages.length - 1].createdAt.toISOString() : null;
+    const nextCursor =
+      messages.length === take
+        ? messages[messages.length - 1].createdAt.toISOString()
+        : null;
 
     res.json({ messages: messages.reverse(), nextCursor });
   } catch (error) {
@@ -477,13 +653,15 @@ conversationsRouter.post('/:id/messages', async (req, res) => {
     const { id } = req.params;
     const { content, replyToId } = req.body;
 
-    if (!content?.trim()) return res.status(400).json({ error: 'Content is required' });
+    if (!content?.trim())
+      return res.status(400).json({ error: 'Content is required' });
 
     // Verify participation
     const participant = await prisma.conversationParticipant.findUnique({
       where: { conversationId_userId: { conversationId: id, userId } },
     });
-    if (!participant) return res.status(403).json({ error: 'Not a participant' });
+    if (!participant)
+      return res.status(403).json({ error: 'Not a participant' });
 
     const message = await prisma.message.create({
       data: {
@@ -494,7 +672,14 @@ conversationsRouter.post('/:id/messages', async (req, res) => {
         ...(replyToId ? { replyToId } : {}),
       },
       include: {
-        sender: { select: { id: true, firstName: true, lastName: true, profileImage: true } },
+        sender: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            profileImage: true,
+          },
+        },
         reactions: true,
         replyTo: {
           select: {
@@ -577,9 +762,12 @@ conversationsRouter.put('/:id/archive', async (req, res) => {
     const participant = await prisma.conversationParticipant.findUnique({
       where: { conversationId_userId: { conversationId: id, userId } },
     });
-    if (!participant) return res.status(403).json({ error: 'Not a participant' });
+    if (!participant)
+      return res.status(403).json({ error: 'Not a participant' });
 
-    const conversation = await prisma.conversation.findUnique({ where: { id } });
+    const conversation = await prisma.conversation.findUnique({
+      where: { id },
+    });
     if (!conversation) return res.status(404).json({ error: 'Not found' });
 
     await prisma.conversation.update({
@@ -670,15 +858,23 @@ messagesRouter.post('/:id/reactions', async (req, res) => {
     if (!message) return res.status(404).json({ error: 'Message not found' });
 
     const participant = await prisma.conversationParticipant.findUnique({
-      where: { conversationId_userId: { conversationId: message.conversationId, userId } },
+      where: {
+        conversationId_userId: {
+          conversationId: message.conversationId,
+          userId,
+        },
+      },
     });
-    if (!participant) return res.status(403).json({ error: 'Not a participant' });
+    if (!participant)
+      return res.status(403).json({ error: 'Not a participant' });
 
     const reaction = await prisma.messageReaction.upsert({
       where: { messageId_userId_emoji: { messageId, userId, emoji } },
       update: {},
       create: { messageId, userId, emoji },
-      include: { user: { select: { id: true, firstName: true, lastName: true } } },
+      include: {
+        user: { select: { id: true, firstName: true, lastName: true } },
+      },
     });
 
     res.status(201).json(reaction);

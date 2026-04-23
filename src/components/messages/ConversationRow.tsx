@@ -2,6 +2,7 @@ import React, { useRef } from 'react';
 import {
   View,
   Text,
+  Image,
   TouchableOpacity,
   StyleSheet,
   Animated,
@@ -16,7 +17,7 @@ interface ConversationRowProps {
   conversation: Conversation;
   onPress: (conversation: Conversation) => void;
   onMute?: (conversation: Conversation) => void;
-  onPin?: (conversation: Conversation) => void;
+  onDelete?: (conversation: Conversation) => void;
 }
 
 function getConversationIcon(
@@ -80,7 +81,7 @@ function ConversationRowInner({
   conversation,
   onPress,
   onMute,
-  onPin,
+  onDelete,
 }: ConversationRowProps) {
   const { colors } = useTheme();
   const lastMsg = conversation.messages[0];
@@ -140,19 +141,19 @@ function ConversationRowInner({
     });
     return (
       <TouchableOpacity
-        style={[styles.swipeActionRight, { backgroundColor: colors.cobalt }]}
+        style={[styles.swipeActionRight, { backgroundColor: colors.heart }]}
         onPress={() => {
           swipeableRef.current?.close();
-          onPin?.(conversation);
+          onDelete?.(conversation);
         }}
         activeOpacity={0.8}
       >
         <Animated.View
           style={[styles.swipeActionContent, { transform: [{ scale }] }]}
         >
-          <Ionicons name="pin" size={22} color={colors.white} />
+          <Ionicons name="trash" size={22} color={colors.white} />
           <Text style={[styles.swipeActionText, { color: colors.white }]}>
-            Pin
+            Delete
           </Text>
         </Animated.View>
       </TouchableOpacity>
@@ -180,7 +181,9 @@ function ConversationRowInner({
           const initial =
             other?.user?.firstName?.charAt(0)?.toUpperCase() ?? '?';
           const profileImg = other?.user?.profileImage;
-          return (
+          return profileImg ? (
+            <Image source={{ uri: profileImg }} style={styles.avatarPhoto} />
+          ) : (
             <View
               style={[styles.iconCircle, { backgroundColor: iconColor + '18' }]}
             >
@@ -268,13 +271,13 @@ function ConversationRowInner({
     </TouchableOpacity>
   );
 
-  if (!onMute && !onPin) return rowContent;
+  if (!onMute && !onDelete) return rowContent;
 
   return (
     <Swipeable
       ref={swipeableRef}
       {...(onMute ? { renderLeftActions } : {})}
-      {...(onPin ? { renderRightActions } : {})}
+      {...(onDelete ? { renderRightActions } : {})}
       overshootLeft={false}
       overshootRight={false}
       friction={2}
@@ -304,6 +307,12 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
+    flexShrink: 0,
+  },
+  avatarPhoto: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     flexShrink: 0,
   },
   dmInitial: {

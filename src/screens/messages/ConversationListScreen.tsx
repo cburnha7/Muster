@@ -40,8 +40,8 @@ type FilterType =
 
 const FILTERS: Array<{ key: FilterType; label: string }> = [
   { key: 'ALL', label: 'All' },
-  { key: 'TEAM_CHAT', label: 'Teams' },
-  { key: 'GAME_THREAD', label: 'Games' },
+  { key: 'GAME_THREAD', label: 'Events' },
+  { key: 'TEAM_CHAT', label: 'Rosters' },
   { key: 'LEAGUE_CHANNEL', label: 'Leagues' },
   { key: 'DIRECT_MESSAGE', label: 'DMs' },
 ];
@@ -116,7 +116,10 @@ export function ConversationListScreen() {
   const loadConversations = useCallback(async () => {
     dispatch(setLoadingConversations(true));
     try {
-      const data = await conversationService.getConversations(activeFilter);
+      const data = await conversationService.getConversations(
+        activeFilter,
+        selectedCrewId ?? undefined
+      );
       dispatch(setConversations(data));
       const total = data.reduce(
         (sum, c) => sum + (c.myParticipant?.isMuted ? 0 : c.unreadCount),
@@ -126,7 +129,7 @@ export function ConversationListScreen() {
     } catch (err: any) {
       dispatch(setError(err.message ?? 'Failed to load conversations'));
     }
-  }, [dispatch, activeFilter]);
+  }, [dispatch, activeFilter, selectedCrewId]);
 
   useEffect(() => {
     loadConversations();
@@ -147,6 +150,15 @@ export function ConversationListScreen() {
       await loadConversations();
     } catch (err: any) {
       console.error('Mute error:', err);
+    }
+  };
+
+  const handleDelete = async (conversation: Conversation) => {
+    try {
+      await conversationService.setArchived(conversation.id);
+      await loadConversations();
+    } catch (err: any) {
+      console.error('Archive error:', err);
     }
   };
 
@@ -286,6 +298,7 @@ export function ConversationListScreen() {
             conversation={item}
             onPress={handlePress}
             onMute={handleMute}
+            onDelete={handleDelete}
           />
         )}
         ItemSeparatorComponent={() => (
