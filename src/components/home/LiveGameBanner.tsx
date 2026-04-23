@@ -6,6 +6,7 @@ import {
   StyleSheet,
   Animated,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { fonts, useTheme } from '../../theme';
 import { getSportEmoji } from '../../constants/sports';
 import type { Booking } from '../../types';
@@ -50,30 +51,39 @@ export function LiveGameBanner({ booking, onPress }: LiveGameBannerProps) {
 
   return (
     <TouchableOpacity
-      style={[styles.container, { backgroundColor: colors.errorLight, borderColor: colors.error }]}
+      style={[
+        styles.container,
+        { backgroundColor: colors.errorLight, borderColor: colors.error },
+      ]}
       onPress={() => onPress(booking)}
       activeOpacity={0.85}
     >
       <View style={[styles.liveLabel, { backgroundColor: colors.error }]}>
-        <Animated.View style={[styles.liveDot, { backgroundColor: colors.white }, { opacity: pulseAnim }]} />
+        <Animated.View
+          style={[
+            styles.liveDot,
+            { backgroundColor: colors.white },
+            { opacity: pulseAnim },
+          ]}
+        />
         <Text style={[styles.liveText, { color: colors.white }]}>LIVE</Text>
       </View>
       <View style={styles.info}>
         <Text
-          style={[styles.title, { color: colors.ink }, { color: colors.textPrimary }]}
+          style={[styles.title, { color: colors.textPrimary }]}
           numberOfLines={1}
         >
           {emoji} {event.title}
         </Text>
         <Text
-          style={[styles.meta, { color: colors.inkSecondary }, { color: colors.textSecondary }]}
+          style={[styles.meta, { color: colors.textSecondary }]}
           numberOfLines={1}
         >
           {event.facility?.name || event.locationName || 'Game'} · Started{' '}
           {mins}m ago
         </Text>
       </View>
-      <Text style={[styles.arrow, { color: colors.inkSecondary }]}>â†’</Text>
+      <Ionicons name="chevron-forward" size={18} color={colors.inkSecondary} />
     </TouchableOpacity>
   );
 }
@@ -118,9 +128,5 @@ const styles = StyleSheet.create({
   meta: {
     fontFamily: fonts.body,
     fontSize: 12,
-  },
-  arrow: {
-    fontFamily: fonts.body,
-    fontSize: 18,
   },
 });
