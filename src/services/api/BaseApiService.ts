@@ -13,7 +13,7 @@
  * subclass.
  */
 
-import { Platform } from 'react-native';
+import { Platform, Alert } from 'react-native';
 import TokenStorage from '../auth/TokenStorage';
 import { acquireRefresh, performTokenRefresh } from '../auth/tokenRefreshLock';
 import { cacheService, CacheService } from './CacheService';
@@ -144,10 +144,13 @@ export class BaseApiService {
           // Refresh failed — clear session and signal the app
           await TokenStorage.clearAll();
           store.dispatch(clearAuth());
-          if (
-            Platform.OS === 'web' &&
-            typeof window?.dispatchEvent === 'function'
-          ) {
+          if (Platform.OS !== 'web') {
+            Alert.alert(
+              'Session Expired',
+              'Please sign in again to continue.',
+              [{ text: 'OK' }]
+            );
+          } else if (typeof window?.dispatchEvent === 'function') {
             window.dispatchEvent(new CustomEvent('auth:sessionExpired'));
           }
           // fall through to throw the 401 error
