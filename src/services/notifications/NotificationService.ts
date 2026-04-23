@@ -20,7 +20,12 @@ export interface NotificationPreferences {
 }
 
 export interface NotificationData {
-  type: 'booking_confirmation' | 'booking_reminder' | 'event_update' | 'event_cancelled' | 'discovery';
+  type:
+    | 'booking_confirmation'
+    | 'booking_reminder'
+    | 'event_update'
+    | 'event_cancelled'
+    | 'discovery';
   eventId?: string;
   bookingId?: string;
   teamId?: string;
@@ -39,16 +44,16 @@ class NotificationServiceClass {
     try {
       // Request permissions
       const token = await this.registerForPushNotifications();
-      
+
       if (token) {
         this.expoPushToken = token;
-        
+
         // Set up notification listeners
         this.setupNotificationListeners();
-        
+
         return token;
       }
-      
+
       return null;
     } catch (error) {
       console.error('Failed to initialize notifications:', error);
@@ -62,7 +67,7 @@ class NotificationServiceClass {
   async registerForPushNotifications(): Promise<string | null> {
     // Check if running on a physical device
     const isDevice = Constants.isDevice;
-    
+
     if (!isDevice) {
       console.warn('Push notifications only work on physical devices');
       return null;
@@ -70,7 +75,8 @@ class NotificationServiceClass {
 
     try {
       // Check existing permissions
-      const { status: existingStatus } = await Notifications.getPermissionsAsync();
+      const { status: existingStatus } =
+        await Notifications.getPermissionsAsync();
       let finalStatus = existingStatus;
 
       // Request permissions if not granted
@@ -86,7 +92,7 @@ class NotificationServiceClass {
 
       // Get Expo push token
       const tokenData = await Notifications.getExpoPushTokenAsync({
-        projectId: process.env.EXPO_PROJECT_ID || 'your-project-id',
+        projectId: Constants.expoConfig?.extra?.eas?.projectId,
       });
 
       // Configure notification channel for Android
@@ -112,7 +118,7 @@ class NotificationServiceClass {
   private setupNotificationListeners(): void {
     // Listener for notifications received while app is foregrounded
     this.notificationListener = Notifications.addNotificationReceivedListener(
-      (notification) => {
+      notification => {
         console.log('Notification received:', notification);
         // Handle notification received in foreground
         this.handleNotificationReceived(notification);
@@ -120,21 +126,22 @@ class NotificationServiceClass {
     );
 
     // Listener for user interactions with notifications
-    this.responseListener = Notifications.addNotificationResponseReceivedListener(
-      (response) => {
+    this.responseListener =
+      Notifications.addNotificationResponseReceivedListener(response => {
         console.log('Notification response:', response);
         // Handle notification tap/interaction
         this.handleNotificationResponse(response);
-      }
-    );
+      });
   }
 
   /**
    * Handle notification received while app is in foreground
    */
-  private handleNotificationReceived(notification: Notifications.Notification): void {
+  private handleNotificationReceived(
+    notification: Notifications.Notification
+  ): void {
     const data = notification.request.content.data as NotificationData;
-    
+
     // Custom handling based on notification type
     switch (data.type) {
       case 'booking_confirmation':
@@ -152,9 +159,11 @@ class NotificationServiceClass {
   /**
    * Handle user interaction with notification
    */
-  private handleNotificationResponse(response: Notifications.NotificationResponse): void {
+  private handleNotificationResponse(
+    response: Notifications.NotificationResponse
+  ): void {
     const data = response.notification.request.content.data as NotificationData;
-    
+
     // Navigate to appropriate screen based on notification type
     switch (data.type) {
       case 'booking_confirmation':
@@ -230,7 +239,9 @@ class NotificationServiceClass {
   /**
    * Get all scheduled notifications
    */
-  async getScheduledNotifications(): Promise<Notifications.NotificationRequest[]> {
+  async getScheduledNotifications(): Promise<
+    Notifications.NotificationRequest[]
+  > {
     try {
       return await Notifications.getAllScheduledNotificationsAsync();
     } catch (error) {
