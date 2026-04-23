@@ -347,6 +347,18 @@ const authSlice = createSlice({
     },
   },
   extraReducers: builder => {
+    // After redux-persist rehydrates, force isBootLoading back to true.
+    // Rehydration restores the persisted value (false), but we need the
+    // loading gate to stay up until loadCachedUser completes — otherwise
+    // RTK Query hooks fire with a potentially expired persisted token
+    // before the boot thunk can validate/refresh it.
+    builder.addMatcher(
+      action => action.type === 'persist/REHYDRATE',
+      state => {
+        state.isBootLoading = true;
+      }
+    );
+
     // Register user
     builder
       .addCase(registerUser.pending, state => {
