@@ -4,7 +4,6 @@ import {
   FlatList,
   Text,
   TouchableOpacity,
-  TextInput,
   StyleSheet,
   ScrollView,
   RefreshControl,
@@ -108,7 +107,6 @@ export function ConversationListScreen() {
   );
 
   const [activeFilter, setActiveFilter] = useState<FilterType>('ALL');
-  const [searchQuery, setSearchQuery] = useState('');
   const [refreshing, setRefreshing] = useState(false);
   const { crewMembers, selectedCrewId, onSelectCrew, hasDependents } =
     useCrewSelector();
@@ -177,19 +175,8 @@ export function ConversationListScreen() {
     });
   };
 
-  // Filter by search query
-  const filtered = conversations.filter(c => {
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase();
-      const name = (c.name ?? '').toLowerCase();
-      const lastMsg = c.messages?.[0]?.content?.toLowerCase() ?? '';
-      if (!name.includes(q) && !lastMsg.includes(q)) return false;
-    }
-    return true;
-  });
-
   // Sort: unreads (non-muted) first, then by most recent message/update
-  const sorted = [...filtered].sort((a, b) => {
+  const sorted = [...conversations].sort((a, b) => {
     const aUnread = a.unreadCount > 0 && !a.myParticipant?.isMuted ? 1 : 0;
     const bUnread = b.unreadCount > 0 && !b.myParticipant?.isMuted ? 1 : 0;
     if (aUnread !== bUnread) return bUnread - aUnread;
@@ -334,21 +321,6 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   centered: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   list: { flex: 1 },
-  searchRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginHorizontal: 16,
-    marginVertical: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 12,
-    gap: 8,
-  },
-  searchInput: {
-    flex: 1,
-    fontFamily: fonts.body,
-    fontSize: 15,
-  },
   filterScroll: { flexGrow: 0, flexShrink: 0 },
   filterRow: {
     flexDirection: 'row',
