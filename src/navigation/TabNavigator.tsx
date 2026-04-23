@@ -20,6 +20,7 @@ import { FacilitiesStackNavigator } from './stacks/FacilitiesStackNavigator';
 import { TeamsStackNavigator } from './stacks/TeamsStackNavigator';
 import { MessagesStackNavigator } from './stacks/MessagesStackNavigator';
 import { LeaguesStackNavigator } from './stacks/LeaguesStackNavigator';
+import { ErrorBoundary } from '../components/error/ErrorBoundary';
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
@@ -73,6 +74,14 @@ function CustomHeader({ routeName }: { routeName: string }) {
       )}
       <HeaderUserSelector />
     </View>
+  );
+}
+
+function withErrorBoundary(Screen: React.ComponentType<any>) {
+  return (props: any) => (
+    <ErrorBoundary>
+      <Screen {...props} />
+    </ErrorBoundary>
   );
 }
 
@@ -170,7 +179,7 @@ export function TabNavigator() {
         >
           <Tab.Screen
             name="Home"
-            component={HomeStackNavigator}
+            component={withErrorBoundary(HomeStackNavigator)}
             options={{ tabBarLabel: 'Home' }}
             listeners={({ navigation }) => ({
               tabPress: e => {
@@ -182,7 +191,7 @@ export function TabNavigator() {
           />
           <Tab.Screen
             name="Teams"
-            component={TeamsStackNavigator}
+            component={withErrorBoundary(TeamsStackNavigator)}
             options={{ tabBarLabel: 'Rosters' }}
             listeners={({ navigation }) => ({
               tabPress: e => {
@@ -194,7 +203,7 @@ export function TabNavigator() {
           />
           <Tab.Screen
             name="Messages"
-            component={MessagesStackNavigator}
+            component={withErrorBoundary(MessagesStackNavigator)}
             options={{ tabBarLabel: 'Messages' }}
             listeners={({ navigation }) => ({
               tabPress: e => {
@@ -206,7 +215,7 @@ export function TabNavigator() {
           />
           <Tab.Screen
             name="Leagues"
-            component={LeaguesStackNavigator}
+            component={withErrorBoundary(LeaguesStackNavigator)}
             options={{ tabBarLabel: 'Leagues' }}
             listeners={({ navigation }) => ({
               tabPress: e => {
@@ -218,7 +227,7 @@ export function TabNavigator() {
           />
           <Tab.Screen
             name="Facilities"
-            component={FacilitiesStackNavigator}
+            component={withErrorBoundary(FacilitiesStackNavigator)}
             options={{ tabBarLabel: 'Grounds' }}
             listeners={({ navigation }) => ({
               tabPress: e => {
