@@ -577,10 +577,176 @@ async function testConversations() {
   }
 }
 
-// ── 17. Dashboard + Inbox ────────────────────────────────────────────────────
+// ── 18. Dependents (Family / Crew) ───────────────────────────────────────────
+
+let dependentId = '';
+
+async function testDependents() {
+  console.log('\n── 18. Dependents ──');
+
+  // Create a dependent (child) under User A
+  const dob = new Date();
+  dob.setFullYear(dob.getFullYear() - 10); // 10 years old
+  // Format as YYYY-MM-DD to avoid timezone parsing issues
+  const dobStr = `${dob.getFullYear()}-${String(dob.getMonth() + 1).padStart(2, '0')}-${String(dob.getDate()).padStart(2, '0')}`;
+
+  const create = await api(
+    'POST',
+    '/dependents',
+    {
+      firstName: `${PREFIX} Junior`,
+      lastName: 'Tester',
+      dateOfBirth: dobStr,
+      gender: 'male',
+    },
+    userAToken
+  );
+  assert(
+    'Create dependent',
+    create.status === 201 && !!create.data?.id,
+    create.ms,
+    `status=${create.status} ${create.data?.error || ''}`
+  );
+  if (create.data?.id) dependentId = create.data.id;
+
+  // List dependents
+  const list = await api('GET', '/dependents', undefined, userAToken);
+  assert(
+    'List dependents',
+    list.status === 200 && Array.isArray(list.data) && list.data.length > 0,
+    list.ms,
+    `status=${list.status}`
+  );
+
+  // Get dependent profile
+  if (dependentId) {
+    const get = await api(
+      'GET',
+      `/dependents/${dependentId}`,
+      undefined,
+      userAToken
+    );
+    assert(
+      'Get dependent profile',
+      get.status === 200 && get.data?.firstName?.includes('Junior'),
+      get.ms,
+      `status=${get.status}`
+    );
+  }
+
+  // Book event for dependent (User A books on behalf of child)
+  if (dependentId && eventId) {
+    const book = await api(
+      'POST',
+      `/events/${eventId}/book`,
+      { userId: dependentId },
+      userAToken
+    );
+    assert(
+      'Book event for dependent',
+      book.status === 201 || book.status === 200,
+      book.ms,
+      `status=${book.status} ${book.data?.error || ''}`
+    );
+  }
+
+  // Get bookings with family filter
+  const familyBookings = await api(
+    'GET',
+    '/users/bookings?status=all&page=1&limit=10&includeFamily=true',
+    undefined,
+    userAToken
+  );
+  assert(
+    'Get family bookings (includeFamily=true)',
+    familyBookings.status === 200,
+    familyBookings.ms
+  );
+
+  // Get conversations scoped to dependent (X-Active-User-Id header)
+  if (dependentId) {
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${userAToken}`,
+      'X-Active-User-Id': dependentId,
+    };
+    const t0 = Date.now();
+    const res = await fetch(`${API}/conversations`, { headers });
+    const ms = Date.now() - t0;
+    const data: any = await res.json().catch(() => null);
+    assert(
+      'List conversations for dependent (X-Active-User-Id)',
+      res.status === 200 && Array.isArray(data),
+      ms
+    );
+  }
+
+  // Update dependent
+  if (dependentId) {
+    const update = await api(
+      'PUT',
+      `/dependents/${dependentId}`,
+      { firstName: `${PREFIX} Junior Updated` },
+      userAToken
+    );
+    assert(
+      'Update dependent',
+      update.status === 200,
+      update.ms,
+      `status=${update.status} ${update.data?.error || ''}`
+    );
+  }
+}
+
+// ── 19. Address Autocomplete ─────────────────────────────────────────────────
+
+async function testAddressAutocomplete() {
+  console.log('\n── 19. Address Autocomplete ──');
+
+  const autocomplete = await api(
+    'GET',
+    '/places/autocomplete?input=123+Main+St+Austin',
+    undefined,
+    userAToken
+  );
+  assert(
+    'Address autocomplete returns predictions',
+    autocomplete.status === 200 &&
+      Array.isArray(autocomplete.data?.predictions) &&
+      autocomplete.data.predictions.length > 0,
+    autocomplete.ms,
+    `status=${autocomplete.status} predictions=${autocomplete.data?.predictions?.length ?? 0} error=${autocomplete.data?.error_message || ''}`
+  );
+
+  // Test place details if we got a prediction
+  if (autocomplete.data?.predictions?.[0]?.place_id) {
+    const placeId = autocomplete.data.predictions[0].place_id;
+    const details = await api(
+      'GET',
+      `/places/details?place_id=${encodeURIComponent(placeId)}`,
+      undefined,
+      userAToken
+    );
+    assert(
+      'Place details returns address components',
+      details.status === 200 && !!details.data?.result?.address_components,
+      details.ms,
+      `status=${details.status}`
+    );
+    assert(
+      'Place details returns coordinates',
+      details.status === 200 &&
+        typeof details.data?.result?.geometry?.location?.lat === 'number',
+      0,
+      `lat=${details.data?.result?.geometry?.location?.lat}`
+    );
+  }
+}
+
+// ── 20. Dashboard + Inbox ────────────────────────────────────────────────────
 
 async function testDashboardAndInbox() {
-  console.log('\n── 17. Dashboard + Inbox ──');
+  console.log('\n── 20. Dashboard + Inbox ──');
 
   const dash = await api('GET', '/users/dashboard', undefined, userAToken);
   assert('Get dashboard', dash.status === 200, dash.ms);
@@ -624,6 +790,8 @@ async function run() {
     await testCreateLeague();
     await testGetUserData();
     await testConversations();
+    await testDependents();
+    await testAddressAutocomplete();
     await testDashboardAndInbox();
   } catch (err) {
     console.error('\n💥 Unhandled error:', err);
