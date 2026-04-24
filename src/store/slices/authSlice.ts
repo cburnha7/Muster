@@ -347,15 +347,26 @@ const authSlice = createSlice({
     },
   },
   extraReducers: builder => {
-    // After redux-persist rehydrates, force isBootLoading back to true.
-    // Rehydration restores the persisted value (false), but we need the
-    // loading gate to stay up until loadCachedUser completes — otherwise
-    // RTK Query hooks fire with a potentially expired persisted token
-    // before the boot thunk can validate/refresh it.
+    // After redux-persist rehydrates, check if we have a valid session.
+    // If user + accessToken are present, trust them and drop the boot gate
+    // immediately — no need for loadCachedUser to re-read from TokenStorage.
+    // If the token is expired, the 401 handler in createAuthenticatedBaseQuery
+    // and BaseApiService will refresh it transparently on the first request.
     builder.addMatcher(
       action => action.type === 'persist/REHYDRATE',
-      state => {
-        state.isBootLoading = true;
+      (state, action: any) => {
+        const persisted = action.payload?.auth;
+        if (persisted?.user && persisted?.accessToken) {
+          // Valid session restored — drop the boot gate
+          state.user = persisted.user;
+          state.accessToken = persisted.accessToken;
+          state.refreshToken = persisted.refreshToken ?? null;
+          state.isAuthenticated = true;
+          state.isBootLoading = false;
+        } else {
+          // No session — drop the gate too (show login screen)
+          state.isBootLoading = false;
+        }
       }
     );
 

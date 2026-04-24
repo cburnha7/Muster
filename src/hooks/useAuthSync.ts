@@ -5,9 +5,12 @@
  * logic that previously lived inside AuthContext/AuthProvider.
  *
  * Responsibilities:
- *   1. Boot: dispatch loadCachedUser on mount
- *   2. When user changes: sync logging, fetch subscription, fetch dependents, refresh profile
- *   3. Web: listen for 'auth:sessionExpired' window event
+ *   1. When user changes (after boot): sync logging, fetch subscription,
+ *      fetch dependents, refresh profile
+ *   2. Web: listen for 'auth:sessionExpired' window event
+ *
+ * Boot is handled entirely by redux-persist rehydration + the REHYDRATE
+ * matcher in authSlice. No loadCachedUser thunk needed.
  */
 
 import { useEffect, useRef } from 'react';
@@ -16,7 +19,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import * as Sentry from '@sentry/react-native';
 import {
   selectUser,
-  loadCachedUser,
+  selectBootLoading,
   setUser,
   clearAuth,
 } from '../store/slices/authSlice';
@@ -30,23 +33,22 @@ import { API_BASE_URL } from '../services/api/config';
 export function useAuthSync() {
   const dispatch = useDispatch();
   const user = useSelector(selectUser);
+  const bootLoading = useSelector(selectBootLoading);
   const lastRefreshedUserId = useRef<string | null>(null);
 
-  // ── Boot: load cached session ──
-  useEffect(() => {
-    dispatch(loadCachedUser() as any);
-  }, [dispatch]);
-
-  // ── Sync side effects when user changes ──
+  // ── Sync side effects when user changes (only after boot completes) ──
   useEffect(() => {
     loggingService.setUserId(user?.id ?? null);
 
-    // Sentry user context — tags every error with who experienced it
+    // Sentry user context
     if (user?.id) {
       Sentry.setUser({ id: user.id, email: user.email ?? undefined });
     } else {
       Sentry.setUser(null);
     }
+
+    // Don't fire API calls while boot is still in progress
+    if (bootLoading) return;
 
     if (!user?.id) {
       lastRefreshedUserId.current = null;
@@ -78,7 +80,7 @@ export function useAuthSync() {
       .then(res => (res.ok ? res.json() : []))
       .then(data => dispatch(setDependents(data)))
       .catch(() => {});
-  }, [user?.id, dispatch]);
+  }, [user?.id, bootLoading, dispatch]);
 
   // ── Web: session expired listener ──
   useEffect(() => {
@@ -86,7 +88,6 @@ export function useAuthSync() {
 
     const handleSessionExpired = () => {
       dispatch(clearAuth());
-      // Navigation to login happens automatically via RootNavigator's user check
     };
 
     window.addEventListener('auth:sessionExpired', handleSessionExpired);
