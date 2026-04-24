@@ -85,7 +85,9 @@ export class BaseApiService {
       ? url
       : `${this.config.baseURL}${url.startsWith('/') ? '' : '/'}${url}`;
 
-    const token = await TokenStorage.getAccessToken();
+    const token =
+      store.getState()?.auth?.accessToken ??
+      (await TokenStorage.getAccessToken());
     const headers: Record<string, string> = {
       ...(body instanceof FormData
         ? {}
