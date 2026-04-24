@@ -42,7 +42,11 @@ import {
 } from '../../services/api/UserService';
 
 // Store
-import { selectUser, selectAuthLoading } from '../../store/slices/authSlice';
+import {
+  selectUser,
+  selectAuthLoading,
+  selectBootLoading,
+} from '../../store/slices/authSlice';
 import {
   selectActiveUserId,
   selectDependents,
@@ -89,6 +93,7 @@ export function HomeScreen() {
   const { colors } = useTheme();
   const navigation = useNavigation<HomeScreenNavigationProp>();
   const authLoading = useSelector(selectAuthLoading);
+  const bootLoading = useSelector(selectBootLoading);
   const currentUser = useSelector(selectUser);
   const { width: screenWidth } = useWindowDimensions();
   const { pendingMilestone, dismissMilestone } = useMilestoneCheck();
@@ -469,7 +474,7 @@ export function HomeScreen() {
 
   useFocusEffect(
     useCallback(() => {
-      if (!authLoading) {
+      if (!authLoading && !bootLoading) {
         refetchBookings();
         refetchDiscover();
         loadDebriefEvents();
@@ -480,6 +485,7 @@ export function HomeScreen() {
       }
     }, [
       authLoading,
+      bootLoading,
       loadDebriefEvents,
       loadInvitations,
       loadReadyToScheduleLeagues,
@@ -502,7 +508,7 @@ export function HomeScreen() {
   }, []);
 
   useEffect(() => {
-    if (!authLoading) {
+    if (!authLoading && !bootLoading) {
       refetchBookings();
       refetchDiscover();
       loadDebriefEvents();
@@ -676,7 +682,7 @@ export function HomeScreen() {
     [navigation]
   );
 
-  if (authLoading || isLoading) {
+  if (authLoading || bootLoading || isLoading) {
     return (
       <View
         style={[styles.loadingContainer, { backgroundColor: colors.bgScreen }]}
