@@ -19,7 +19,6 @@ import {
   DebriefParticipant,
   DebriefDetails,
 } from '../../services/api/DebriefService';
-import { SaluteOverlay } from '../../components/SaluteOverlay';
 import { useSelector } from 'react-redux';
 import { selectUser } from '../../store/slices/authSlice';
 import { eventService } from '../../services/api/EventService';
@@ -176,8 +175,15 @@ export function DebriefScreen() {
     <SafeAreaView
       style={[styles.container, { backgroundColor: colors.bgScreen }]}
     >
-      {/* Header — event name only */}
+      {/* Header */}
       <View style={[styles.header, { borderBottomColor: colors.border }]}>
+        <TouchableOpacity
+          onPress={() => navigation.goBack()}
+          hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+          style={styles.backButton}
+        >
+          <Ionicons name="arrow-back" size={24} color={colors.ink} />
+        </TouchableOpacity>
         <Text style={[styles.title, { color: colors.ink }]} numberOfLines={1}>
           {details.event.title}
         </Text>
@@ -210,36 +216,43 @@ export function DebriefScreen() {
                   key={p.id}
                   style={[
                     styles.participantCard,
-                    isSaluted && styles.participantCardSaluted,
+                    { borderColor: isSaluted ? colors.gold : colors.border },
+                    isSaluted && { backgroundColor: colors.gold + '12' },
                   ]}
                   onPress={() => toggleSalute(p.id)}
                   activeOpacity={isReadonly ? 1 : 0.7}
                   disabled={isReadonly}
                 >
-                  <SaluteOverlay saluted={isSaluted} size={56}>
-                    {p.profileImage ? (
-                      <Image
-                        source={{ uri: p.profileImage }}
-                        style={styles.avatar}
-                      />
-                    ) : (
-                      <View
-                        style={[
-                          styles.avatarPlaceholder,
-                          { backgroundColor: colors.pine },
-                        ]}
+                  {/* Photo fills the card */}
+                  {p.profileImage ? (
+                    <Image
+                      source={{ uri: p.profileImage }}
+                      style={styles.cardPhoto}
+                    />
+                  ) : (
+                    <View
+                      style={[
+                        styles.cardPhoto,
+                        styles.cardPhotoPlaceholder,
+                        { backgroundColor: colors.cobalt },
+                      ]}
+                    >
+                      <Text
+                        style={[styles.cardInitials, { color: colors.white }]}
                       >
-                        <Text
-                          style={[
-                            styles.avatarInitials,
-                            { color: colors.white },
-                          ]}
-                        >
-                          {getInitials(p)}
-                        </Text>
-                      </View>
-                    )}
-                  </SaluteOverlay>
+                        {getInitials(p)}
+                      </Text>
+                    </View>
+                  )}
+
+                  {/* Salute badge — large, bright, overlaid on photo */}
+                  {isSaluted && (
+                    <View style={styles.saluteBadge}>
+                      <Text style={styles.saluteEmoji}>🫡</Text>
+                    </View>
+                  )}
+
+                  {/* Name below photo */}
                   <Text
                     style={[styles.participantName, { color: colors.ink }]}
                     numberOfLines={1}
@@ -325,10 +338,10 @@ export function DebriefScreen() {
           <TouchableOpacity
             style={[
               styles.submitButton,
-              !canSubmit && styles.submitButtonDisabled,
+              { backgroundColor: canSubmit ? colors.cobalt : colors.inkFaint },
             ]}
             onPress={handleSubmit}
-            disabled={submitting}
+            disabled={submitting || !canSubmit}
             activeOpacity={0.7}
             accessibilityRole="button"
             accessibilityLabel={
@@ -359,9 +372,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   header: {
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingHorizontal: 20,
     paddingVertical: 16,
     borderBottomWidth: 1,
+    gap: 12,
+  },
+  backButton: {
+    width: 32,
+    height: 32,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   title: {
     fontFamily: fonts.heading,
@@ -395,28 +417,43 @@ const styles = StyleSheet.create({
   participantCard: {
     width: '30%',
     alignItems: 'center',
-    padding: 12,
     borderRadius: 14,
     borderWidth: 2,
+    overflow: 'hidden',
   },
-  participantCardSaluted: {},
-  avatar: { width: 56, height: 56, borderRadius: 28 },
-  avatarPlaceholder: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+  cardPhoto: {
+    width: '100%',
+    aspectRatio: 1,
+    borderTopLeftRadius: 12,
+    borderTopRightRadius: 12,
+  },
+  cardPhotoPlaceholder: {
     justifyContent: 'center',
     alignItems: 'center',
   },
-  avatarInitials: {
+  cardInitials: {
     fontFamily: fonts.ui,
-    fontSize: 18,
+    fontSize: 24,
+  },
+  saluteBadge: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 28, // leave room for name
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(212, 160, 23, 0.25)',
+  },
+  saluteEmoji: {
+    fontSize: 36,
   },
   participantName: {
     fontFamily: fonts.body,
-    fontSize: 13,
+    fontSize: 12,
     textAlign: 'center',
-    marginTop: 8,
+    paddingVertical: 6,
+    paddingHorizontal: 4,
   },
   ratingSection: { marginBottom: 32, alignItems: 'center' },
   ratingHint: {
@@ -439,7 +476,6 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     alignItems: 'center',
   },
-  submitButtonDisabled: {},
   submitButtonText: {
     fontFamily: fonts.ui,
     fontSize: 16,
