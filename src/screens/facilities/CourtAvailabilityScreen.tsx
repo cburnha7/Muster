@@ -540,9 +540,7 @@ export function CourtAvailabilityScreen() {
       });
       if (response.status === 201) {
         const rental = await response.json();
-        Alert.alert('Reserved', 'Your court has been reserved.', [
-          { text: 'OK', onPress: () => navigateAfterBooking(rental) },
-        ]);
+        navigateAfterBooking(rental);
       } else if (response.status === 409) {
         const data = await response.json();
         Alert.alert(
