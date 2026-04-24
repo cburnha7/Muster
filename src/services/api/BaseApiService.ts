@@ -318,7 +318,7 @@ export class BaseApiService {
   }
 
   public async clearCache(): Promise<void> {
-    this.cache.clearAll();
+    this.cache.clear();
   }
 
   protected async getCacheStats(): Promise<any> {
