@@ -2,12 +2,13 @@
  * Smoke Test — exercises every critical user flow against the live API.
  *
  * Creates real data: users, facilities, courts, events, bookings,
- * rosters, leagues, conversations, messages. Verifies each step
- * returns the expected status code and shape.
+ * rosters, leagues, conversations, messages, photo uploads.
+ * Verifies each step returns the expected status code and shape.
+ * Reports response times for every call.
  *
  * Usage:
- *   npx ts-node scripts/smoke-test.ts
- *   npx ts-node scripts/smoke-test.ts https://muster-production.up.railway.app/api
+ *   npx tsx scripts/smoke-test.ts
+ *   npx tsx scripts/smoke-test.ts https://muster-production.up.railway.app/api
  *
  * All test entities are prefixed with "[SMOKE]" so they can be
  * identified and swept later.
@@ -19,7 +20,10 @@ const PREFIX = '[SMOKE]';
 
 let passed = 0;
 let failed = 0;
+let slowCount = 0;
+const SLOW_THRESHOLD = 1000; // ms — flag anything over 1s
 const failures: string[] = [];
+const timings: Array<{ label: string; ms: number }> = [];
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -28,17 +32,19 @@ async function api(
   path: string,
   body?: any,
   token?: string
-): Promise<{ status: number; data: any }> {
+): Promise<{ status: number; data: any; ms: number }> {
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
   };
   if (token) headers['Authorization'] = `Bearer ${token}`;
 
+  const t0 = Date.now();
   const res = await fetch(`${API}${path}`, {
     method,
     headers,
     ...(body ? { body: JSON.stringify(body) } : {}),
   });
+  const ms = Date.now() - t0;
 
   let data: any;
   try {
@@ -46,16 +52,26 @@ async function api(
   } catch {
     data = null;
   }
-  return { status: res.status, data };
+  return { status: res.status, data, ms };
 }
 
-function assert(label: string, condition: boolean, detail?: string): void {
+function assert(
+  label: string,
+  condition: boolean,
+  ms: number,
+  detail?: string
+): void {
+  const slow = ms > SLOW_THRESHOLD;
+  const timeStr = slow ? `⚠️ ${ms}ms` : `${ms}ms`;
+  if (slow) slowCount++;
+  timings.push({ label, ms });
+
   if (condition) {
-    console.log(`  ✅ ${label}`);
+    console.log(`  ✅ ${label} (${timeStr})`);
     passed++;
   } else {
     const msg = detail ? `${label} — ${detail}` : label;
-    console.log(`  ❌ ${msg}`);
+    console.log(`  ❌ ${msg} (${timeStr})`);
     failed++;
     failures.push(msg);
   }
@@ -68,16 +84,27 @@ let userAId = '';
 let userBToken = '';
 let userBId = '';
 let facilityId = '';
-let courtId = ''; // eslint-disable-line @typescript-eslint/no-unused-vars
+let courtId = '';
 let eventId = '';
 let teamId = '';
-let leagueId = ''; // eslint-disable-line @typescript-eslint/no-unused-vars
+let leagueId = '';
 let conversationId = '';
 
-// ── 1. Register two users ────────────────────────────────────────────────────
+// ── 1. Health Check ──────────────────────────────────────────────────────────
+
+async function testHealth() {
+  console.log('\n── 1. Health Check ──');
+  const t0 = Date.now();
+  const res = await fetch(`${API.replace('/api', '')}/health`);
+  const ms = Date.now() - t0;
+  const data: any = await res.json();
+  assert('Health check', res.status === 200 && data.status === 'ok', ms);
+}
+
+// ── 2. Register two users ────────────────────────────────────────────────────
 
 async function testRegistration() {
-  console.log('\n── 1. Registration ──');
+  console.log('\n── 2. Registration ──');
 
   const userA = await api('POST', '/auth/register', {
     firstName: `${PREFIX} Alice`,
@@ -90,6 +117,7 @@ async function testRegistration() {
   assert(
     'Register User A',
     userA.status === 201 || userA.status === 200,
+    userA.ms,
     `status=${userA.status} ${userA.data?.error || ''}`
   );
   if (userA.data?.accessToken) {
@@ -108,6 +136,7 @@ async function testRegistration() {
   assert(
     'Register User B',
     userB.status === 201 || userB.status === 200,
+    userB.ms,
     `status=${userB.status} ${userB.data?.error || ''}`
   );
   if (userB.data?.accessToken) {
@@ -116,11 +145,10 @@ async function testRegistration() {
   }
 }
 
-// ── 2. Login ─────────────────────────────────────────────────────────────────
+// ── 3. Login ─────────────────────────────────────────────────────────────────
 
 async function testLogin() {
-  console.log('\n── 2. Login ──');
-
+  console.log('\n── 3. Login ──');
   const res = await api('POST', '/auth/login', {
     emailOrUsername: `smoke_alice_${NOW}`,
     password: 'TestPass123!',
@@ -128,22 +156,19 @@ async function testLogin() {
   assert(
     'Login User A',
     res.status === 200 && !!res.data?.accessToken,
+    res.ms,
     `status=${res.status} ${res.data?.error || ''}`
   );
   if (res.data?.accessToken) userAToken = res.data.accessToken;
 }
 
-// ── 3. Profile ───────────────────────────────────────────────────────────────
+// ── 4. Profile ───────────────────────────────────────────────────────────────
 
 async function testProfile() {
-  console.log('\n── 3. Profile ──');
+  console.log('\n── 4. Profile ──');
 
   const get = await api('GET', '/users/profile', undefined, userAToken);
-  assert(
-    'Get profile',
-    get.status === 200 && !!get.data?.id,
-    `status=${get.status}`
-  );
+  assert('Get profile', get.status === 200 && !!get.data?.id, get.ms);
 
   const update = await api(
     'PUT',
@@ -154,15 +179,55 @@ async function testProfile() {
   assert(
     'Update profile',
     update.status === 200,
+    update.ms,
     `status=${update.status} ${update.data?.error || ''}`
   );
 }
 
-// ── 4. Create Facility ───────────────────────────────────────────────────────
+// ── 5. Upload Profile Photo ──────────────────────────────────────────────────
+
+async function testProfilePhoto() {
+  console.log('\n── 5. Upload Profile Photo ──');
+
+  // Get a presigned URL for profile photo upload
+  const presign = await api(
+    'POST',
+    '/uploads/presign',
+    {
+      context: 'profiles',
+      fileName: `smoke-test-${NOW}.jpg`,
+      contentType: 'image/jpeg',
+    },
+    userAToken
+  );
+  assert(
+    'Get presigned upload URL',
+    presign.status === 200 && !!presign.data?.uploadUrl,
+    presign.ms,
+    `status=${presign.status} ${presign.data?.error || ''}`
+  );
+
+  if (presign.data?.publicUrl) {
+    // Set the profile image URL (skip actual S3 upload — just verify the URL flow)
+    const setPhoto = await api(
+      'POST',
+      '/users/profile/image',
+      { imageUrl: presign.data.publicUrl },
+      userAToken
+    );
+    assert(
+      'Set profile image URL',
+      setPhoto.status === 200,
+      setPhoto.ms,
+      `status=${setPhoto.status} ${setPhoto.data?.error || ''}`
+    );
+  }
+}
+
+// ── 6. Create Facility ───────────────────────────────────────────────────────
 
 async function testCreateFacility() {
-  console.log('\n── 4. Create Facility ──');
-
+  console.log('\n── 6. Create Facility ──');
   const res = await api(
     'POST',
     '/facilities',
@@ -182,17 +247,60 @@ async function testCreateFacility() {
   assert(
     'Create facility',
     res.status === 201 && !!res.data?.id,
+    res.ms,
     `status=${res.status} ${res.data?.error || ''}`
   );
   if (res.data?.id) facilityId = res.data.id;
 }
 
-// ── 5. Add Court ─────────────────────────────────────────────────────────────
+// ── 7. Upload Facility Cover Photo ───────────────────────────────────────────
+
+async function testFacilityCoverPhoto() {
+  console.log('\n── 7. Upload Facility Cover Photo ──');
+  if (!facilityId) {
+    assert('Facility cover photo', false, 0, 'No facility — skipped');
+    return;
+  }
+
+  const presign = await api(
+    'POST',
+    '/uploads/presign',
+    {
+      context: 'grounds',
+      fileName: `smoke-cover-${NOW}.jpg`,
+      contentType: 'image/jpeg',
+    },
+    userAToken
+  );
+  assert(
+    'Get facility cover presign URL',
+    presign.status === 200 && !!presign.data?.uploadUrl,
+    presign.ms,
+    `status=${presign.status} ${presign.data?.error || ''}`
+  );
+
+  if (presign.data?.publicUrl) {
+    const update = await api(
+      'PUT',
+      `/facilities/${facilityId}`,
+      { coverImageUrl: presign.data.publicUrl },
+      userAToken
+    );
+    assert(
+      'Set facility cover image',
+      update.status === 200,
+      update.ms,
+      `status=${update.status} ${update.data?.error || ''}`
+    );
+  }
+}
+
+// ── 8. Add Court ─────────────────────────────────────────────────────────────
 
 async function testAddCourt() {
-  console.log('\n── 5. Add Court ──');
+  console.log('\n── 8. Add Court ──');
   if (!facilityId) {
-    assert('Add court', false, 'No facility ID — skipped');
+    assert('Add court', false, 0, 'No facility — skipped');
     return;
   }
 
@@ -211,18 +319,18 @@ async function testAddCourt() {
   assert(
     'Add court',
     res.status === 201 && !!res.data?.id,
+    res.ms,
     `status=${res.status} ${res.data?.error || ''}`
   );
   if (res.data?.id) courtId = res.data.id;
 }
 
-// ── 6. Create Event ──────────────────────────────────────────────────────────
+// ── 9. Create Event ──────────────────────────────────────────────────────────
 
 async function testCreateEvent() {
-  console.log('\n── 6. Create Event ──');
-
+  console.log('\n── 9. Create Event ──');
   const start = new Date();
-  start.setDate(start.getDate() + 7); // 1 week from now
+  start.setDate(start.getDate() + 7);
   start.setHours(10, 0, 0, 0);
   const end = new Date(start);
   end.setHours(12, 0, 0, 0);
@@ -251,17 +359,18 @@ async function testCreateEvent() {
   assert(
     'Create event',
     res.status === 201 && !!res.data?.id,
+    res.ms,
     `status=${res.status} ${res.data?.error || ''}`
   );
   if (res.data?.id) eventId = res.data.id;
 }
 
-// ── 7. Book Event (User B joins) ─────────────────────────────────────────────
+// ── 10. Book Event ───────────────────────────────────────────────────────────
 
 async function testBookEvent() {
-  console.log('\n── 7. Book Event ──');
+  console.log('\n── 10. Book Event ──');
   if (!eventId || !userBId) {
-    assert('Book event', false, 'No event or user B — skipped');
+    assert('Book event', false, 0, 'No event or user B — skipped');
     return;
   }
 
@@ -274,16 +383,17 @@ async function testBookEvent() {
   assert(
     'Book event (User B joins)',
     res.status === 201 || res.status === 200,
+    res.ms,
     `status=${res.status} ${res.data?.error || ''}`
   );
 }
 
-// ── 8. Get Event Details ─────────────────────────────────────────────────────
+// ── 11. Get Event Details ────────────────────────────────────────────────────
 
 async function testGetEvent() {
-  console.log('\n── 8. Get Event Details ──');
+  console.log('\n── 11. Get Event Details ──');
   if (!eventId) {
-    assert('Get event', false, 'No event ID — skipped');
+    assert('Get event', false, 0, 'No event — skipped');
     return;
   }
 
@@ -291,20 +401,20 @@ async function testGetEvent() {
   assert(
     'Get event details',
     res.status === 200 && res.data?.id === eventId,
-    `status=${res.status}`
+    res.ms
   );
   assert(
     'Event has participants',
     (res.data?.currentParticipants ?? 0) >= 1,
+    0,
     `currentParticipants=${res.data?.currentParticipants}`
   );
 }
 
-// ── 9. Create Roster ─────────────────────────────────────────────────────────
+// ── 12. Create Roster ────────────────────────────────────────────────────────
 
 async function testCreateTeam() {
-  console.log('\n── 9. Create Roster ──');
-
+  console.log('\n── 12. Create Roster ──');
   const res = await api(
     'POST',
     '/teams',
@@ -321,17 +431,18 @@ async function testCreateTeam() {
   assert(
     'Create roster',
     res.status === 201 && !!res.data?.id,
+    res.ms,
     `status=${res.status} ${res.data?.error || ''}`
   );
   if (res.data?.id) teamId = res.data.id;
 }
 
-// ── 10. User B joins Roster ──────────────────────────────────────────────────
+// ── 13. Join Roster ──────────────────────────────────────────────────────────
 
 async function testJoinTeam() {
-  console.log('\n── 10. Join Roster ──');
+  console.log('\n── 13. Join Roster ──');
   if (!teamId) {
-    assert('Join roster', false, 'No team ID — skipped');
+    assert('Join roster', false, 0, 'No team — skipped');
     return;
   }
 
@@ -339,15 +450,15 @@ async function testJoinTeam() {
   assert(
     'User B joins roster',
     res.status === 201 || res.status === 200,
+    res.ms,
     `status=${res.status} ${res.data?.error || ''}`
   );
 }
 
-// ── 11. Create League ────────────────────────────────────────────────────────
+// ── 14. Create League ────────────────────────────────────────────────────────
 
 async function testCreateLeague() {
-  console.log('\n── 11. Create League ──');
-
+  console.log('\n── 14. Create League ──');
   const start = new Date();
   start.setDate(start.getDate() + 14);
   const end = new Date(start);
@@ -371,66 +482,50 @@ async function testCreateLeague() {
   assert(
     'Create league',
     res.status === 201 && !!res.data?.id,
+    res.ms,
     `status=${res.status} ${res.data?.error || ''}`
   );
   if (res.data?.id) leagueId = res.data.id;
 }
 
-// ── 12. Get User Bookings ────────────────────────────────────────────────────
+// ── 15. Get User Data ────────────────────────────────────────────────────────
 
-async function testGetBookings() {
-  console.log('\n── 12. Get User Bookings ──');
+async function testGetUserData() {
+  console.log('\n── 15. Get User Data ──');
 
-  const res = await api(
+  const bookings = await api(
     'GET',
     '/users/bookings?status=all&page=1&limit=10',
     undefined,
     userBToken
   );
-  assert(
-    'Get bookings for User B',
-    res.status === 200,
-    `status=${res.status} ${res.data?.error || ''}`
-  );
-}
+  assert('Get bookings', bookings.status === 200, bookings.ms);
 
-// ── 13. Get User Teams ───────────────────────────────────────────────────────
-
-async function testGetTeams() {
-  console.log('\n── 13. Get User Teams ──');
-
-  const res = await api(
+  const teams = await api(
     'GET',
     '/users/teams?page=1&limit=10',
     undefined,
     userAToken
   );
-  assert(
-    'Get teams for User A',
-    res.status === 200,
-    `status=${res.status} ${res.data?.error || ''}`
+  assert('Get teams', teams.status === 200, teams.ms);
+
+  const leagues = await api('GET', '/users/leagues', undefined, userAToken);
+  assert('Get leagues', leagues.status === 200, leagues.ms);
+
+  const events = await api(
+    'GET',
+    '/users/events?page=1&limit=10',
+    undefined,
+    userAToken
   );
+  assert('Get events', events.status === 200, events.ms);
 }
 
-// ── 14. Get User Leagues ─────────────────────────────────────────────────────
-
-async function testGetLeagues() {
-  console.log('\n── 14. Get User Leagues ──');
-
-  const res = await api('GET', '/users/leagues', undefined, userAToken);
-  assert(
-    'Get leagues for User A',
-    res.status === 200,
-    `status=${res.status} ${res.data?.error || ''}`
-  );
-}
-
-// ── 15. Conversations ────────────────────────────────────────────────────────
+// ── 16. Conversations ────────────────────────────────────────────────────────
 
 async function testConversations() {
-  console.log('\n── 15. Conversations ──');
+  console.log('\n── 16. Conversations ──');
 
-  // Create team chat (User A is captain of the roster)
   if (teamId) {
     const chat = await api(
       'POST',
@@ -441,20 +536,19 @@ async function testConversations() {
     assert(
       'Create/get team chat',
       chat.status === 200 && !!chat.data?.id,
+      chat.ms,
       `status=${chat.status} ${chat.data?.error || ''}`
     );
     if (chat.data?.id) conversationId = chat.data.id;
   }
 
-  // List conversations
   const list = await api('GET', '/conversations', undefined, userAToken);
   assert(
     'List conversations',
     list.status === 200 && Array.isArray(list.data),
-    `status=${list.status}`
+    list.ms
   );
 
-  // Send a message
   if (conversationId) {
     const msg = await api(
       'POST',
@@ -465,10 +559,10 @@ async function testConversations() {
     assert(
       'Send message',
       msg.status === 201 && !!msg.data?.id,
+      msg.ms,
       `status=${msg.status} ${msg.data?.error || ''}`
     );
 
-    // Get messages
     const msgs = await api(
       'GET',
       `/conversations/${conversationId}/messages`,
@@ -478,94 +572,49 @@ async function testConversations() {
     assert(
       'Get messages',
       msgs.status === 200 && msgs.data?.messages?.length > 0,
-      `status=${msgs.status}`
+      msgs.ms
     );
   }
 }
 
-// ── 16. Dashboard ────────────────────────────────────────────────────────────
+// ── 17. Dashboard + Inbox ────────────────────────────────────────────────────
 
-async function testDashboard() {
-  console.log('\n── 16. Dashboard ──');
+async function testDashboardAndInbox() {
+  console.log('\n── 17. Dashboard + Inbox ──');
 
-  const res = await api('GET', '/users/dashboard', undefined, userAToken);
-  assert(
-    'Get dashboard',
-    res.status === 200,
-    `status=${res.status} ${res.data?.error || ''}`
-  );
-}
+  const dash = await api('GET', '/users/dashboard', undefined, userAToken);
+  assert('Get dashboard', dash.status === 200, dash.ms);
 
-// ── 17. Invitations ──────────────────────────────────────────────────────────
+  const inv = await api('GET', '/users/invitations', undefined, userAToken);
+  assert('Get invitations', inv.status === 200, inv.ms);
 
-async function testInvitations() {
-  console.log('\n── 17. Invitations ──');
+  const debrief = await api('GET', '/debrief', undefined, userAToken);
+  assert('Get debrief events', debrief.status === 200, debrief.ms);
 
-  const res = await api('GET', '/users/invitations', undefined, userAToken);
-  assert(
-    'Get invitations',
-    res.status === 200,
-    `status=${res.status} ${res.data?.error || ''}`
-  );
-}
-
-// ── 18. Debrief ──────────────────────────────────────────────────────────────
-
-async function testDebrief() {
-  console.log('\n── 18. Debrief ──');
-
-  const res = await api('GET', '/debrief', undefined, userAToken);
-  assert(
-    'Get debrief events',
-    res.status === 200,
-    `status=${res.status} ${res.data?.error || ''}`
-  );
-}
-
-// ── 19. Search ───────────────────────────────────────────────────────────────
-
-async function testSearch() {
-  console.log('\n── 19. Search ──');
-
-  const res = await api(
+  const search = await api(
     'GET',
     '/search/teams?query=smoke&page=1&limit=5',
     undefined,
     userAToken
   );
-  assert(
-    'Search teams',
-    res.status === 200,
-    `status=${res.status} ${res.data?.error || ''}`
-  );
-}
-
-// ── 20. Health Check ─────────────────────────────────────────────────────────
-
-async function testHealth() {
-  console.log('\n── 20. Health Check ──');
-
-  const res = await fetch(`${API.replace('/api', '')}/health`);
-  const data: any = await res.json();
-  assert(
-    'Health check',
-    res.status === 200 && data.status === 'ok',
-    `status=${res.status} ${data.status}`
-  );
+  assert('Search teams', search.status === 200, search.ms);
 }
 
 // ── Run ──────────────────────────────────────────────────────────────────────
 
 async function run() {
   console.log(`\n🔥 Muster Smoke Test — ${API}`);
-  console.log(`   Timestamp: ${new Date().toISOString()}\n`);
+  console.log(`   Timestamp: ${new Date().toISOString()}`);
+  console.log(`   Slow threshold: ${SLOW_THRESHOLD}ms\n`);
 
   try {
     await testHealth();
     await testRegistration();
     await testLogin();
     await testProfile();
+    await testProfilePhoto();
     await testCreateFacility();
+    await testFacilityCoverPhoto();
     await testAddCourt();
     await testCreateEvent();
     await testBookEvent();
@@ -573,27 +622,35 @@ async function run() {
     await testCreateTeam();
     await testJoinTeam();
     await testCreateLeague();
-    await testGetBookings();
-    await testGetTeams();
-    await testGetLeagues();
+    await testGetUserData();
     await testConversations();
-    await testDashboard();
-    await testInvitations();
-    await testDebrief();
-    await testSearch();
+    await testDashboardAndInbox();
   } catch (err) {
     console.error('\n💥 Unhandled error:', err);
     failed++;
   }
 
-  console.log(`\n${'═'.repeat(50)}`);
-  console.log(`  ✅ Passed: ${passed}`);
-  console.log(`  ❌ Failed: ${failed}`);
+  // Performance summary
+  const sorted = [...timings].sort((a, b) => b.ms - a.ms);
+  const avg = Math.round(
+    timings.reduce((s, t) => s + t.ms, 0) / timings.length
+  );
+
+  console.log(`\n${'═'.repeat(56)}`);
+  console.log(
+    `  ✅ Passed: ${passed}   ❌ Failed: ${failed}   ⚠️ Slow: ${slowCount}`
+  );
+  console.log(`  📊 Avg response: ${avg}ms`);
+  console.log(`\n  🐢 Slowest endpoints:`);
+  sorted.slice(0, 5).forEach(t => {
+    const flag = t.ms > SLOW_THRESHOLD ? ' ⚠️' : '';
+    console.log(`     ${t.ms.toString().padStart(5)}ms  ${t.label}${flag}`);
+  });
   if (failures.length > 0) {
     console.log(`\n  Failures:`);
     failures.forEach(f => console.log(`    • ${f}`));
   }
-  console.log(`${'═'.repeat(50)}\n`);
+  console.log(`${'═'.repeat(56)}\n`);
 
   process.exit(failed > 0 ? 1 : 0);
 }

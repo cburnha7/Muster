@@ -1201,33 +1201,35 @@ export async function bookEvent(eventId: string, userId: string) {
     }),
   ]);
 
-  // Messaging hook: add to game thread
-  try {
-    const { MessagingService } = await import('./MessagingService');
-    const conv = await MessagingService.getConversationForEvent(eventId);
-    if (conv) {
-      const user = await prisma.user.findUnique({
-        where: { id: userId },
-        select: { firstName: true, lastName: true },
-      });
-      const totalParticipants = await prisma.booking.count({
-        where: { eventId, status: 'confirmed' },
-      });
-      await MessagingService.addParticipant(conv.id, userId, 'MEMBER');
-      if (user) {
-        const eventRecord = await prisma.event.findUnique({
-          where: { id: eventId },
-          select: { maxParticipants: true },
+  // Messaging hook: add to game thread (fire-and-forget — don't block the response)
+  (async () => {
+    try {
+      const { MessagingService } = await import('./MessagingService');
+      const conv = await MessagingService.getConversationForEvent(eventId);
+      if (conv) {
+        const user = await prisma.user.findUnique({
+          where: { id: userId },
+          select: { firstName: true, lastName: true },
         });
-        await MessagingService.postSystemMessage(
-          conv.id,
-          `${user.firstName} ${user.lastName} is in! (${totalParticipants}/${eventRecord?.maxParticipants ?? '?'})`
-        );
+        const totalParticipants = await prisma.booking.count({
+          where: { eventId, status: 'confirmed' },
+        });
+        await MessagingService.addParticipant(conv.id, userId, 'MEMBER');
+        if (user) {
+          const eventRecord = await prisma.event.findUnique({
+            where: { id: eventId },
+            select: { maxParticipants: true },
+          });
+          await MessagingService.postSystemMessage(
+            conv.id,
+            `${user.firstName} ${user.lastName} is in! (${totalParticipants}/${eventRecord?.maxParticipants ?? '?'})`
+          );
+        }
       }
+    } catch (msgErr) {
+      console.error('Failed to update game thread on RSVP:', msgErr);
     }
-  } catch (msgErr) {
-    console.error('Failed to update game thread on RSVP:', msgErr);
-  }
+  })();
 
   return booking;
 }
@@ -1255,36 +1257,38 @@ export async function cancelBooking(eventId: string, bookingId: string) {
     }),
   ]);
 
-  // Messaging hook: remove from game thread
+  // Messaging hook: remove from game thread (fire-and-forget)
   if (bookingToCancel) {
-    try {
-      const { MessagingService } = await import('./MessagingService');
-      const conv = await MessagingService.getConversationForEvent(eventId);
-      if (conv) {
-        const user = await prisma.user.findUnique({
-          where: { id: bookingToCancel.userId },
-          select: { firstName: true, lastName: true },
-        });
-        await MessagingService.removeParticipant(
-          conv.id,
-          bookingToCancel.userId
-        );
-        const remaining = await prisma.booking.count({
-          where: { eventId, status: 'confirmed' },
-        });
-        if (user) {
-          const eventRecord = await prisma.event.findUnique({
-            where: { id: eventId },
-            select: { maxParticipants: true },
+    (async () => {
+      try {
+        const { MessagingService } = await import('./MessagingService');
+        const conv = await MessagingService.getConversationForEvent(eventId);
+        if (conv) {
+          const user = await prisma.user.findUnique({
+            where: { id: bookingToCancel.userId },
+            select: { firstName: true, lastName: true },
           });
-          await MessagingService.postSystemMessage(
+          await MessagingService.removeParticipant(
             conv.id,
-            `${user.firstName} ${user.lastName} stepped out (${remaining}/${eventRecord?.maxParticipants ?? '?'})`
+            bookingToCancel.userId
           );
+          const remaining = await prisma.booking.count({
+            where: { eventId, status: 'confirmed' },
+          });
+          if (user) {
+            const eventRecord = await prisma.event.findUnique({
+              where: { id: eventId },
+              select: { maxParticipants: true },
+            });
+            await MessagingService.postSystemMessage(
+              conv.id,
+              `${user.firstName} ${user.lastName} stepped out (${remaining}/${eventRecord?.maxParticipants ?? '?'})`
+            );
+          }
         }
+      } catch (msgErr) {
+        console.error('Failed to update game thread on RSVP out:', msgErr);
       }
-    } catch (msgErr) {
-      console.error('Failed to update game thread on RSVP out:', msgErr);
-    }
+    })();
   }
 }
