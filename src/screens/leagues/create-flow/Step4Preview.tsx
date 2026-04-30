@@ -9,6 +9,7 @@ import {
   View,
   Text,
   FlatList,
+  ScrollView,
   TouchableOpacity,
   StyleSheet,
   Dimensions,
@@ -377,7 +378,12 @@ export function Step4Preview() {
   );
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.bgScreen }]}>
+    <ScrollView
+      style={[styles.container, { backgroundColor: colors.bgScreen }]}
+      contentContainerStyle={styles.scrollContent}
+      showsVerticalScrollIndicator={false}
+    >
+      {' '}
       {/* Title */}
       <View style={styles.titleSection}>
         <Text style={[styles.heading, { color: colors.ink }]}>
@@ -387,7 +393,6 @@ export function Step4Preview() {
           {subtitle}
         </Text>
       </View>
-
       {/* Part 1: Start Date Picker */}
       <View style={styles.dateSection}>
         <Text style={[styles.fieldLabel, { color: colors.ink }]}>
@@ -419,7 +424,6 @@ export function Step4Preview() {
           />
         )}
       </View>
-
       {/* Part 2: Round Cards */}
       {totalRounds > 0 ? (
         <>
@@ -480,7 +484,6 @@ export function Step4Preview() {
           </Text>
         </View>
       )}
-
       {/* Part 3: Calendar */}
       {state.frequency && state.frequency !== 'block' && totalRounds > 0 && (
         <ScheduleCalendar
@@ -501,14 +504,15 @@ export function Step4Preview() {
           }}
         />
       )}
-    </View>
+    </ScrollView>
   );
 }
 
 // ── Styles ───────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
-  container: { flex: 1, paddingBottom: 24 },
+  container: { flex: 1 },
+  scrollContent: { paddingBottom: 48 },
   titleSection: { paddingHorizontal: 20, paddingTop: 24, marginBottom: 16 },
   heading: { fontFamily: fonts.heading, fontSize: 28, letterSpacing: -0.3 },
   subtitle: { fontFamily: fonts.body, fontSize: 14, marginTop: 4 },

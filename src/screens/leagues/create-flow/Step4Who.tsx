@@ -68,11 +68,17 @@ export function Step4Who() {
 
   return (
     <ScrollView
-      style={[styles.container, { backgroundColor: colors.white }, { backgroundColor: colors.bgScreen }]}
+      style={[
+        styles.container,
+        { backgroundColor: colors.white },
+        { backgroundColor: colors.bgScreen },
+      ]}
       contentContainerStyle={styles.content}
       keyboardShouldPersistTaps="handled"
     >
-      <Text style={[styles.heading, { color: colors.ink }]}>Who can join?</Text>
+      <Text style={[styles.heading, { color: colors.ink }]}>
+        Invite Rosters
+      </Text>
 
       {/* Gender */}
       <FormSelect
@@ -90,7 +96,14 @@ export function Step4Who() {
       <View style={styles.row}>
         <View style={styles.half}>
           <TextInput
-            style={[styles.input, { backgroundColor: colors.surface, borderColor: colors.border, color: colors.ink }]}
+            style={[
+              styles.input,
+              {
+                backgroundColor: colors.surface,
+                borderColor: colors.border,
+                color: colors.ink,
+              },
+            ]}
             placeholder="Min Age"
             placeholderTextColor={colors.inkSoft}
             keyboardType="numeric"
@@ -102,7 +115,14 @@ export function Step4Who() {
         </View>
         <View style={styles.half}>
           <TextInput
-            style={[styles.input, { backgroundColor: colors.surface, borderColor: colors.border, color: colors.ink }]}
+            style={[
+              styles.input,
+              {
+                backgroundColor: colors.surface,
+                borderColor: colors.border,
+                color: colors.ink,
+              },
+            ]}
             placeholder="Max Age"
             placeholderTextColor={colors.inkSoft}
             keyboardType="numeric"
@@ -129,7 +149,15 @@ export function Step4Who() {
       <Text style={[styles.label, { color: colors.ink }]}>Visibility</Text>
       <View style={styles.visRow}>
         <TouchableOpacity
-          style={[styles.visBtn, { backgroundColor: colors.surface, borderColor: colors.border }, privateSelected && styles.visBtnActive, privateSelected && { backgroundColor: colors.cobalt, borderColor: colors.cobalt }]}
+          style={[
+            styles.visBtn,
+            { backgroundColor: colors.surface, borderColor: colors.border },
+            privateSelected && styles.visBtnActive,
+            privateSelected && {
+              backgroundColor: colors.cobalt,
+              borderColor: colors.cobalt,
+            },
+          ]}
           onPress={() =>
             dispatch({ type: 'SET_VISIBILITY', visibility: 'private' })
           }
@@ -141,13 +169,26 @@ export function Step4Who() {
             color={privateSelected ? colors.white : colors.ink}
           />
           <Text
-            style={[styles.visText, { color: colors.ink }, privateSelected && styles.visTextActive, privateSelected && { color: colors.white }]}
+            style={[
+              styles.visText,
+              { color: colors.ink },
+              privateSelected && styles.visTextActive,
+              privateSelected && { color: colors.white },
+            ]}
           >
             Private
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={[styles.visBtn, { backgroundColor: colors.surface, borderColor: colors.border }, publicSelected && styles.visBtnActive, publicSelected && { backgroundColor: colors.cobalt, borderColor: colors.cobalt }]}
+          style={[
+            styles.visBtn,
+            { backgroundColor: colors.surface, borderColor: colors.border },
+            publicSelected && styles.visBtnActive,
+            publicSelected && {
+              backgroundColor: colors.cobalt,
+              borderColor: colors.cobalt,
+            },
+          ]}
           onPress={() =>
             dispatch({ type: 'SET_VISIBILITY', visibility: 'public' })
           }
@@ -159,7 +200,12 @@ export function Step4Who() {
             color={publicSelected ? colors.white : colors.ink}
           />
           <Text
-            style={[styles.visText, { color: colors.ink }, publicSelected && styles.visTextActive, publicSelected && { color: colors.white }]}
+            style={[
+              styles.visText,
+              { color: colors.ink },
+              publicSelected && styles.visTextActive,
+              publicSelected && { color: colors.white },
+            ]}
           >
             Public
           </Text>
@@ -169,9 +215,18 @@ export function Step4Who() {
       {/* Private: roster search */}
       {privateSelected && (
         <>
-          <Text style={[styles.label, { color: colors.ink }]}>Search Rosters</Text>
+          <Text style={[styles.label, { color: colors.ink }]}>
+            Search Rosters
+          </Text>
           <TextInput
-            style={[styles.searchInput, { backgroundColor: colors.surface, borderColor: colors.border, color: colors.ink }]}
+            style={[
+              styles.searchInput,
+              {
+                backgroundColor: colors.surface,
+                borderColor: colors.border,
+                color: colors.ink,
+              },
+            ]}
             placeholder="Search by name..."
             placeholderTextColor={colors.inkSoft}
             value={query}
@@ -185,7 +240,12 @@ export function Step4Who() {
             />
           )}
           {results.length > 0 && (
-            <View style={[styles.resultsList, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <View
+              style={[
+                styles.resultsList,
+                { backgroundColor: colors.surface, borderColor: colors.border },
+              ]}
+            >
               {results.map(roster => {
                 const added = state.invitedRosters.some(
                   r => r.id === roster.id
@@ -193,7 +253,10 @@ export function Step4Who() {
                 return (
                   <TouchableOpacity
                     key={roster.id}
-                    style={[styles.resultRow, { borderBottomColor: colors.border }]}
+                    style={[
+                      styles.resultRow,
+                      { borderBottomColor: colors.border },
+                    ]}
                     onPress={() => {
                       dispatch({ type: 'ADD_ROSTER', roster });
                       setQuery('');
@@ -208,7 +271,12 @@ export function Step4Who() {
                       color={colors.inkSoft}
                     />
                     <Text
-                      style={[styles.resultName, { color: colors.ink }, added && styles.resultMuted, added && { color: colors.inkSoft }]}
+                      style={[
+                        styles.resultName,
+                        { color: colors.ink },
+                        added && styles.resultMuted,
+                        added && { color: colors.inkSoft },
+                      ]}
                     >
                       {roster.name}
                     </Text>
@@ -227,13 +295,24 @@ export function Step4Who() {
           {state.invitedRosters.length > 0 && (
             <View style={styles.chipList}>
               {state.invitedRosters.map(roster => (
-                <View key={roster.id} style={[styles.chip, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+                <View
+                  key={roster.id}
+                  style={[
+                    styles.chip,
+                    {
+                      backgroundColor: colors.surface,
+                      borderColor: colors.border,
+                    },
+                  ]}
+                >
                   <Ionicons
                     name="people-outline"
                     size={14}
                     color={colors.cobalt}
                   />
-                  <Text style={[styles.chipText, { color: colors.ink }]}>{roster.name}</Text>
+                  <Text style={[styles.chipText, { color: colors.ink }]}>
+                    {roster.name}
+                  </Text>
                   <TouchableOpacity
                     onPress={() =>
                       dispatch({ type: 'REMOVE_ROSTER', id: roster.id })
@@ -255,9 +334,18 @@ export function Step4Who() {
       {/* Public: minimum player rating */}
       {publicSelected && (
         <>
-          <Text style={[styles.label, { color: colors.ink }]}>Minimum Player Rating</Text>
+          <Text style={[styles.label, { color: colors.ink }]}>
+            Minimum Player Rating
+          </Text>
           <TextInput
-            style={[styles.input, { backgroundColor: colors.surface, borderColor: colors.border, color: colors.ink }]}
+            style={[
+              styles.input,
+              {
+                backgroundColor: colors.surface,
+                borderColor: colors.border,
+                color: colors.ink,
+              },
+            ]}
             placeholder="0 – 100"
             placeholderTextColor={colors.inkSoft}
             keyboardType="numeric"

@@ -69,98 +69,76 @@ export function Step2Config() {
       />
 
       {/* Host Name */}
-      <Text style={[styles.label, { color: colors.ink }]}>Host Name</Text>
-      <TextInput
-        style={[
-          styles.input,
-          {
-            backgroundColor: colors.surface,
-            borderColor: colors.border,
-            color: colors.ink,
-          },
-        ]}
-        placeholder="League or host name"
-        placeholderTextColor={colors.inkMuted}
-        value={state.hostName}
-        onChangeText={set('hostName')}
-        autoFocus
-      />
+      <View style={styles.fieldGroup}>
+        <Text style={[styles.label, { color: colors.ink }]}>Host Name</Text>
+        <TextInput
+          style={[
+            styles.input,
+            {
+              backgroundColor: colors.surface,
+              borderColor: colors.border,
+              color: colors.ink,
+            },
+          ]}
+          placeholder="League or host name"
+          placeholderTextColor={colors.inkMuted}
+          value={state.hostName}
+          onChangeText={set('hostName')}
+          autoFocus
+        />
+      </View>
 
       {/* League Format */}
-      <FormSelect
-        label="League Format"
-        placeholder="Select format"
-        value={state.leagueFormat ?? ''}
-        options={FORMAT_OPTIONS}
-        onValueChange={v =>
-          dispatch({ type: 'SET_LEAGUE_FORMAT', format: v as any })
-        }
-      />
-
-      {/* Game Days */}
-      <Text style={[styles.label, { color: colors.ink }]}>Game Days</Text>
-      <View style={styles.daysRow}>
-        {ALL_DAYS.map(day => {
-          const active = state.gameDays.includes(day);
-          return (
-            <TouchableOpacity
-              key={day}
-              style={[
-                styles.dayChip,
-                { backgroundColor: colors.surface, borderColor: colors.border },
-                active && {
-                  backgroundColor: colors.pine,
-                  borderColor: colors.pine,
-                },
-              ]}
-              onPress={() => dispatch({ type: 'TOGGLE_DAY', day })}
-            >
-              <Text
-                style={[
-                  styles.dayChipText,
-                  { color: colors.ink },
-                  active && { color: colors.white, fontFamily: fonts.label },
-                ]}
-              >
-                {day}
-              </Text>
-            </TouchableOpacity>
-          );
-        })}
+      <View style={styles.fieldGroup}>
+        <FormSelect
+          label="League Format"
+          placeholder="Select format"
+          value={state.leagueFormat ?? ''}
+          options={FORMAT_OPTIONS}
+          onValueChange={v =>
+            dispatch({ type: 'SET_LEAGUE_FORMAT', format: v as any })
+          }
+        />
       </View>
 
       {/* Frequency */}
-      <FormSelect
-        label="Frequency"
-        placeholder="Select frequency"
-        value={state.frequency ?? ''}
-        options={FREQUENCY_OPTIONS}
-        onValueChange={v =>
-          dispatch({ type: 'SET_FREQUENCY', frequency: v as any })
-        }
-      />
+      <View style={styles.fieldGroup}>
+        <FormSelect
+          label="Frequency"
+          placeholder="Select frequency"
+          value={state.frequency ?? ''}
+          options={FREQUENCY_OPTIONS}
+          onValueChange={v =>
+            dispatch({ type: 'SET_FREQUENCY', frequency: v as any })
+          }
+        />
+      </View>
 
       {/* Number of Games */}
-      <Text style={[styles.label, { color: colors.ink }]}>Number of Games</Text>
-      <TextInput
-        style={[
-          styles.input,
-          {
-            backgroundColor: colors.surface,
-            borderColor: colors.border,
-            color: colors.ink,
-          },
-        ]}
-        placeholder="Total games in the league"
-        placeholderTextColor={colors.inkMuted}
-        keyboardType="numeric"
-        value={state.numberOfGames}
-        onChangeText={set('numberOfGames')}
-      />
+      <View style={styles.fieldGroup}>
+        <Text style={[styles.label, { color: colors.ink }]}>
+          Number of Games
+        </Text>
+        <TextInput
+          style={[
+            styles.input,
+            {
+              backgroundColor: colors.surface,
+              borderColor: colors.border,
+              color: colors.ink,
+            },
+          ]}
+          placeholder="Total games in the league"
+          placeholderTextColor={colors.inkMuted}
+          keyboardType="numeric"
+          value={state.numberOfGames}
+          onChangeText={set('numberOfGames')}
+        />
+      </View>
 
       {/* Games Per Period (hidden for block) */}
       {showGamesPerPeriod && (
-        <>
+        <View style={styles.fieldGroup}>
           <Text style={[styles.label, { color: colors.ink }]}>
             {gamesPerPeriodLabel(state.frequency)}
           </Text>
@@ -179,25 +157,64 @@ export function Step2Config() {
             value={state.gamesPerPeriod}
             onChangeText={set('gamesPerPeriod')}
           />
-        </>
+        </View>
       )}
+
+      {/* Game Days */}
+      <View style={styles.fieldGroup}>
+        <Text style={[styles.label, { color: colors.ink }]}>Game Days</Text>
+        <View style={styles.daysRow}>
+          {ALL_DAYS.map(day => {
+            const active = state.gameDays.includes(day);
+            return (
+              <TouchableOpacity
+                key={day}
+                style={[
+                  styles.dayChip,
+                  {
+                    backgroundColor: colors.surface,
+                    borderColor: colors.border,
+                  },
+                  active && {
+                    backgroundColor: colors.pine,
+                    borderColor: colors.pine,
+                  },
+                ]}
+                onPress={() => dispatch({ type: 'TOGGLE_DAY', day })}
+              >
+                <Text
+                  style={[
+                    styles.dayChipText,
+                    { color: colors.ink },
+                    active && { color: colors.white, fontFamily: fonts.label },
+                  ]}
+                >
+                  {day}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+      </View>
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  content: { paddingHorizontal: 20, paddingTop: 24, paddingBottom: 40 },
+  content: { paddingHorizontal: 20, paddingTop: 24, paddingBottom: 48 },
   heading: {
     fontFamily: fonts.heading,
     fontSize: 24,
+    marginBottom: 8,
+  },
+  fieldGroup: {
     marginBottom: 24,
   },
   label: {
     fontFamily: fonts.body,
     fontSize: 16,
     marginBottom: 8,
-    marginTop: 16,
   },
   input: {
     borderRadius: 12,
@@ -206,9 +223,8 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     fontFamily: fonts.body,
     fontSize: 16,
-    marginBottom: 8,
   },
-  daysRow: { flexDirection: 'row', gap: 6, flexWrap: 'wrap', marginBottom: 8 },
+  daysRow: { flexDirection: 'row', gap: 6, flexWrap: 'wrap' },
   dayChip: {
     paddingHorizontal: 14,
     paddingVertical: 10,
