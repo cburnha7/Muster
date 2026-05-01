@@ -876,7 +876,7 @@ interface PreferencesTabProps {
 }
 
 function PreferencesTab({ intents, onToggleIntent }: PreferencesTabProps) {
-  const { colors, isDark, setDarkMode } = useTheme();
+  const { isDark, setDarkMode } = useTheme();
   const [locationServices, setLocationServices] = useState(true);
 
   return (
