@@ -344,7 +344,7 @@ export function AvatarBottomSheet() {
         </TouchableOpacity>
 
         {/* ── Plan Section ────────────────────── */}
-        {isFreeTier && (
+        {isFreeTier && Platform.OS === 'web' && (
           <>
             <View
               style={[

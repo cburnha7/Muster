@@ -44,7 +44,7 @@ export function RedeemCodeScreen() {
   const [selectedPlan, setSelectedPlan] = useState<SubscriptionPlan | null>(
     null
   );
-  const [showPromo, setShowPromo] = useState(false);
+  const [showPromo, setShowPromo] = useState(Platform.OS !== 'web');
   const [code, setCode] = useState('');
   const [validated, setValidated] = useState(false);
   const [selectedTier, setSelectedTier] = useState<string | null>(null);
@@ -145,10 +145,12 @@ export function RedeemCodeScreen() {
           <>
             {/* Header */}
             <Text style={[styles.heading, { color: colors.ink }]}>
-              Membership Plans
+              {Platform.OS === 'web' ? 'Membership Plans' : 'Redeem Code'}
             </Text>
             <Text style={[styles.subheading, { color: colors.inkSoft }]}>
-              Unlock more features with a Muster membership.
+              {Platform.OS === 'web'
+                ? 'Unlock more features with a Muster membership.'
+                : 'Enter a promo code to unlock features.'}
             </Text>
 
             {/* Current plan badge */}
@@ -173,124 +175,133 @@ export function RedeemCodeScreen() {
               </View>
             )}
 
-            {/* Plan cards */}
-            {PLANS.map(({ key, icon }) => {
-              const info = PLAN_INFO[key];
-              const planIndex = PLAN_HIERARCHY.indexOf(key);
-              const isCurrent = key === currentPlan;
-              const isDowngrade =
-                planIndex <= currentPlanIndex && currentPlan !== 'free';
-              const isSelected = selectedPlan === key;
+            {/* Plan cards — web only (iOS uses App Store subscriptions) */}
+            {Platform.OS === 'web' && (
+              <>
+                {PLANS.map(({ key, icon }) => {
+                  const info = PLAN_INFO[key];
+                  const planIndex = PLAN_HIERARCHY.indexOf(key);
+                  const isCurrent = key === currentPlan;
+                  const isDowngrade =
+                    planIndex <= currentPlanIndex && currentPlan !== 'free';
+                  const isSelected = selectedPlan === key;
 
-              return (
-                <TouchableOpacity
-                  key={key}
-                  style={[
-                    styles.planCard,
-                    {
-                      backgroundColor: colors.surface,
-                      borderColor: colors.border,
-                    },
-                    isSelected && {
-                      borderColor: colors.cobalt,
-                      backgroundColor: `${colors.cobalt}08`,
-                    },
-                    isCurrent && { borderColor: colors.pine },
-                  ]}
-                  onPress={() =>
-                    !isCurrent && !isDowngrade && setSelectedPlan(key)
-                  }
-                  activeOpacity={isCurrent || isDowngrade ? 1 : 0.7}
-                  disabled={isCurrent || isDowngrade}
-                >
-                  <View style={styles.planHeader}>
-                    <Ionicons
-                      name={icon as any}
-                      size={24}
-                      color={
-                        isCurrent
-                          ? colors.pine
-                          : isSelected
-                            ? colors.cobalt
-                            : colors.inkSoft
+                  return (
+                    <TouchableOpacity
+                      key={key}
+                      style={[
+                        styles.planCard,
+                        {
+                          backgroundColor: colors.surface,
+                          borderColor: colors.border,
+                        },
+                        isSelected && {
+                          borderColor: colors.cobalt,
+                          backgroundColor: `${colors.cobalt}08`,
+                        },
+                        isCurrent && { borderColor: colors.pine },
+                      ]}
+                      onPress={() =>
+                        !isCurrent && !isDowngrade && setSelectedPlan(key)
                       }
-                    />
-                    <View style={styles.planTitleRow}>
-                      <Text style={[styles.planLabel, { color: colors.ink }]}>
-                        {info.label}
-                      </Text>
-                      <Text
-                        style={[styles.planPrice, { color: colors.cobalt }]}
-                      >
-                        {info.price}
-                      </Text>
-                    </View>
-                    {isCurrent && (
-                      <View
-                        style={[
-                          styles.activeBadge,
-                          { backgroundColor: colors.pine },
-                        ]}
-                      >
-                        <Text
-                          style={[
-                            styles.activeBadgeText,
-                            { color: colors.white },
-                          ]}
-                        >
-                          Active
-                        </Text>
-                      </View>
-                    )}
-                    {isSelected && !isCurrent && (
-                      <Ionicons
-                        name="checkmark-circle"
-                        size={22}
-                        color={colors.cobalt}
-                      />
-                    )}
-                  </View>
-                  <View style={styles.featureList}>
-                    {info.features.map((f, i) => (
-                      <View key={i} style={styles.featureRow}>
+                      activeOpacity={isCurrent || isDowngrade ? 1 : 0.7}
+                      disabled={isCurrent || isDowngrade}
+                    >
+                      <View style={styles.planHeader}>
                         <Ionicons
-                          name="checkmark"
-                          size={14}
-                          color={colors.pine}
+                          name={icon as any}
+                          size={24}
+                          color={
+                            isCurrent
+                              ? colors.pine
+                              : isSelected
+                                ? colors.cobalt
+                                : colors.inkSoft
+                          }
                         />
-                        <Text
-                          style={[
-                            styles.featureText,
-                            { color: colors.inkSoft },
-                          ]}
-                        >
-                          {f}
-                        </Text>
+                        <View style={styles.planTitleRow}>
+                          <Text
+                            style={[styles.planLabel, { color: colors.ink }]}
+                          >
+                            {info.label}
+                          </Text>
+                          <Text
+                            style={[styles.planPrice, { color: colors.cobalt }]}
+                          >
+                            {info.price}
+                          </Text>
+                        </View>
+                        {isCurrent && (
+                          <View
+                            style={[
+                              styles.activeBadge,
+                              { backgroundColor: colors.pine },
+                            ]}
+                          >
+                            <Text
+                              style={[
+                                styles.activeBadgeText,
+                                { color: colors.white },
+                              ]}
+                            >
+                              Active
+                            </Text>
+                          </View>
+                        )}
+                        {isSelected && !isCurrent && (
+                          <Ionicons
+                            name="checkmark-circle"
+                            size={22}
+                            color={colors.cobalt}
+                          />
+                        )}
                       </View>
-                    ))}
-                  </View>
-                </TouchableOpacity>
-              );
-            })}
+                      <View style={styles.featureList}>
+                        {info.features.map((f, i) => (
+                          <View key={i} style={styles.featureRow}>
+                            <Ionicons
+                              name="checkmark"
+                              size={14}
+                              color={colors.pine}
+                            />
+                            <Text
+                              style={[
+                                styles.featureText,
+                                { color: colors.inkSoft },
+                              ]}
+                            >
+                              {f}
+                            </Text>
+                          </View>
+                        ))}
+                      </View>
+                    </TouchableOpacity>
+                  );
+                })}
 
-            {/* Subscribe button */}
-            {selectedPlan && (
-              <TouchableOpacity
-                style={[styles.primaryBtn, { backgroundColor: colors.cobalt }]}
-                onPress={() => handleSubscribe(selectedPlan)}
-                disabled={isCheckingOut}
-                activeOpacity={0.7}
-              >
-                {isCheckingOut ? (
-                  <ActivityIndicator color={colors.white} size="small" />
-                ) : (
-                  <Text
-                    style={[styles.primaryBtnText, { color: colors.white }]}
+                {/* Subscribe button */}
+                {selectedPlan && (
+                  <TouchableOpacity
+                    style={[
+                      styles.primaryBtn,
+                      { backgroundColor: colors.cobalt },
+                    ]}
+                    onPress={() => handleSubscribe(selectedPlan)}
+                    disabled={isCheckingOut}
+                    activeOpacity={0.7}
                   >
-                    Subscribe to {PLAN_INFO[selectedPlan].label}
-                  </Text>
+                    {isCheckingOut ? (
+                      <ActivityIndicator color={colors.white} size="small" />
+                    ) : (
+                      <Text
+                        style={[styles.primaryBtnText, { color: colors.white }]}
+                      >
+                        Subscribe to {PLAN_INFO[selectedPlan].label}
+                      </Text>
+                    )}
+                  </TouchableOpacity>
                 )}
-              </TouchableOpacity>
+              </>
             )}
 
             {error && (
@@ -300,29 +311,35 @@ export function RedeemCodeScreen() {
             )}
 
             {/* Promo code section */}
-            <View
-              style={[styles.divider, { backgroundColor: colors.border }]}
-            />
+            {Platform.OS === 'web' && (
+              <View
+                style={[styles.divider, { backgroundColor: colors.border }]}
+              />
+            )}
 
-            <TouchableOpacity
-              style={styles.promoToggle}
-              onPress={() => setShowPromo(!showPromo)}
-              activeOpacity={0.7}
-            >
-              <Ionicons
-                name="pricetag-outline"
-                size={18}
-                color={colors.inkSoft}
-              />
-              <Text style={[styles.promoToggleText, { color: colors.inkSoft }]}>
-                Have a promo code?
-              </Text>
-              <Ionicons
-                name={showPromo ? 'chevron-up' : 'chevron-down'}
-                size={16}
-                color={colors.inkSoft}
-              />
-            </TouchableOpacity>
+            {Platform.OS === 'web' && (
+              <TouchableOpacity
+                style={styles.promoToggle}
+                onPress={() => setShowPromo(!showPromo)}
+                activeOpacity={0.7}
+              >
+                <Ionicons
+                  name="pricetag-outline"
+                  size={18}
+                  color={colors.inkSoft}
+                />
+                <Text
+                  style={[styles.promoToggleText, { color: colors.inkSoft }]}
+                >
+                  Have a promo code?
+                </Text>
+                <Ionicons
+                  name={showPromo ? 'chevron-up' : 'chevron-down'}
+                  size={16}
+                  color={colors.inkSoft}
+                />
+              </TouchableOpacity>
+            )}
 
             {showPromo && (
               <View style={styles.promoSection}>
