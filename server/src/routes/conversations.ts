@@ -17,20 +17,47 @@ conversationsRouter.get('/unread-count', async (req, res) => {
   try {
     const userId = req.user!.userId;
 
-    // Single query to get total unread count across all non-muted conversations
-    const result = await prisma.$queryRawUnsafe<Array<{ count: bigint }>>(
-      `SELECT COALESCE(SUM(sub.cnt), 0)::bigint as count FROM (
-         SELECT COUNT(*) as cnt
-         FROM messages m
-         JOIN conversation_participants cp ON cp.conversation_id = m.conversation_id
-         WHERE cp.user_id = $1
-         AND cp.is_muted = false
-         AND m.created_at > COALESCE(cp.last_read_at, '1970-01-01'::timestamp)
-       ) sub`,
-      userId
-    );
+    // Get all non-muted participations with last message
+    const participants = await prisma.conversationParticipant.findMany({
+      where: { userId, isMuted: false },
+      select: {
+        conversationId: true,
+        lastReadAt: true,
+        conversation: {
+          select: {
+            messages: {
+              orderBy: { createdAt: 'desc' },
+              take: 1,
+              select: { createdAt: true },
+            },
+          },
+        },
+      },
+    });
 
-    res.json({ count: Number(result[0]?.count ?? 0) });
+    // Only count conversations where last message is after lastReadAt
+    let total = 0;
+    const needsCounting = participants.filter(p => {
+      const lastMsg = p.conversation.messages[0];
+      if (!lastMsg) return false;
+      return !p.lastReadAt || lastMsg.createdAt > p.lastReadAt;
+    });
+
+    if (needsCounting.length > 0) {
+      const counts = await Promise.all(
+        needsCounting.map(p =>
+          prisma.message.count({
+            where: {
+              conversationId: p.conversationId,
+              createdAt: { gt: p.lastReadAt ?? new Date(0) },
+            },
+          })
+        )
+      );
+      total = counts.reduce((sum, c) => sum + c, 0);
+    }
+
+    res.json({ count: total });
   } catch (error) {
     console.error('Unread count error:', error);
     res.status(500).json({ error: 'Failed to get unread count' });
@@ -486,28 +513,30 @@ conversationsRouter.get('/', async (req, res) => {
     });
 
     // Calculate unread counts in a single batch query instead of N+1
-    const conversationIds = participations.map(p => p.conversationId);
-    const lastReadMap = new Map(
-      participations.map(p => [p.conversationId, p.lastReadAt])
-    );
-
-    // Batch unread count: one query per conversation using raw SQL for performance
+    // Only count for conversations that have messages newer than lastReadAt
     let unreadCounts: Map<string, number> = new Map();
-    if (conversationIds.length > 0) {
-      const counts = await prisma.$queryRawUnsafe<
-        Array<{ conversation_id: string; count: bigint }>
-      >(
-        `SELECT m.conversation_id, COUNT(*)::bigint as count
-         FROM messages m
-         JOIN conversation_participants cp ON cp.conversation_id = m.conversation_id AND cp.user_id = $1
-         WHERE m.conversation_id = ANY($2::uuid[])
-         AND m.created_at > COALESCE(cp.last_read_at, '1970-01-01'::timestamp)
-         GROUP BY m.conversation_id`,
-        userId,
-        conversationIds
+    const withMessages = participations.filter(
+      p => p.conversation.messages.length > 0
+    );
+    if (withMessages.length > 0) {
+      const counts = await Promise.all(
+        withMessages.map(async p => {
+          const lastMsg = p.conversation.messages[0];
+          // Skip if last message is before lastReadAt
+          if (p.lastReadAt && lastMsg.createdAt <= p.lastReadAt) {
+            return { id: p.conversationId, count: 0 };
+          }
+          const count = await prisma.message.count({
+            where: {
+              conversationId: p.conversationId,
+              createdAt: { gt: p.lastReadAt ?? new Date(0) },
+            },
+          });
+          return { id: p.conversationId, count };
+        })
       );
       for (const row of counts) {
-        unreadCounts.set(row.conversation_id, Number(row.count));
+        if (row.count > 0) unreadCounts.set(row.id, row.count);
       }
     }
 

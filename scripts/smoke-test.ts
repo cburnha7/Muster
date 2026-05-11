@@ -973,11 +973,12 @@ async function testEventBookingWithRental() {
     `status=${schedule.status} ${schedule.data?.error || ''}`
   );
 
-  // Book a time slot (as facility owner, should be free)
+  // Book a time slot using book-range endpoint
   const bookSlot = await api(
     'POST',
-    `/rentals`,
+    `/rentals/book-range`,
     {
+      userId: userAId,
       facilityId,
       courtId,
       date: dateStr,
