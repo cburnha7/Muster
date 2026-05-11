@@ -766,6 +766,286 @@ async function testDashboardAndInbox() {
   assert('Search teams', search.status === 200, search.ms);
 }
 
+// ── 21. Stripe Connect Onboarding ────────────────────────────────────────────
+
+async function testStripeConnect() {
+  console.log('\n── 21. Stripe Connect Onboarding ──');
+
+  // Test user-level Connect onboarding (personal Stripe account)
+  const userOnboard = await api(
+    'POST',
+    '/stripe/connect/onboard',
+    {
+      refreshUrl: 'https://muster-ecru.vercel.app/settings',
+      returnUrl: 'https://muster-ecru.vercel.app/settings',
+    },
+    userAToken
+  );
+  assert(
+    'Start user Connect onboarding',
+    (userOnboard.status === 200 && !!userOnboard.data?.url) ||
+      userOnboard.status === 503, // 503 = Stripe not configured (acceptable in some envs)
+    userOnboard.ms,
+    `status=${userOnboard.status} ${userOnboard.data?.error || ''}`
+  );
+
+  // Check user Connect status
+  const userStatus = await api(
+    'GET',
+    '/stripe/connect/status',
+    undefined,
+    userAToken
+  );
+  assert(
+    'Get user Connect status',
+    userStatus.status === 200,
+    userStatus.ms,
+    `status=${userStatus.status} ${userStatus.data?.error || ''}`
+  );
+
+  // Test entity-level Connect onboarding (roster)
+  if (teamId) {
+    const rosterOnboard = await api(
+      'POST',
+      '/connect/onboard',
+      {
+        entityType: 'roster',
+        entityId: teamId,
+        refreshUrl: 'https://muster-ecru.vercel.app/settings',
+        returnUrl: 'https://muster-ecru.vercel.app/settings',
+      },
+      userAToken
+    );
+    assert(
+      'Start roster Connect onboarding',
+      (rosterOnboard.status === 200 && !!rosterOnboard.data?.url) ||
+        rosterOnboard.status === 503,
+      rosterOnboard.ms,
+      `status=${rosterOnboard.status} ${rosterOnboard.data?.error || ''}`
+    );
+
+    // Check roster Connect status
+    const rosterStatus = await api(
+      'GET',
+      `/connect/status/roster/${teamId}`,
+      undefined,
+      userAToken
+    );
+    assert(
+      'Get roster Connect status',
+      rosterStatus.status === 200,
+      rosterStatus.ms,
+      `status=${rosterStatus.status} ${rosterStatus.data?.error || ''}`
+    );
+  }
+
+  // Test facility-level Connect onboarding
+  if (facilityId) {
+    const facilityOnboard = await api(
+      'POST',
+      '/connect/onboard',
+      {
+        entityType: 'facility',
+        entityId: facilityId,
+        refreshUrl: 'https://muster-ecru.vercel.app/settings',
+        returnUrl: 'https://muster-ecru.vercel.app/settings',
+      },
+      userAToken
+    );
+    assert(
+      'Start facility Connect onboarding',
+      (facilityOnboard.status === 200 && !!facilityOnboard.data?.url) ||
+        facilityOnboard.status === 503,
+      facilityOnboard.ms,
+      `status=${facilityOnboard.status} ${facilityOnboard.data?.error || ''}`
+    );
+  }
+
+  // List all Connect accounts
+  const accounts = await api('GET', '/connect/accounts', undefined, userAToken);
+  assert(
+    'List Connect accounts',
+    accounts.status === 200 && Array.isArray(accounts.data?.accounts),
+    accounts.ms,
+    `status=${accounts.status} ${accounts.data?.error || ''}`
+  );
+}
+
+// ── 22. Subscription Checkout ────────────────────────────────────────────────
+
+async function testSubscriptionCheckout() {
+  console.log('\n── 22. Subscription Checkout ──');
+
+  // Get current subscription (should be free)
+  const getSub = await api(
+    'GET',
+    `/subscriptions/${userAId}`,
+    undefined,
+    userAToken
+  );
+  assert(
+    'Get subscription (free by default)',
+    getSub.status === 200 && getSub.data?.plan === 'free',
+    getSub.ms,
+    `status=${getSub.status} plan=${getSub.data?.plan}`
+  );
+
+  // Create checkout session for roster plan
+  const checkout = await api(
+    'POST',
+    '/subscriptions/create-checkout-session',
+    { plan: 'roster' },
+    userAToken
+  );
+  assert(
+    'Create checkout session (roster)',
+    (checkout.status === 200 && !!checkout.data?.url) ||
+      checkout.status === 503, // 503 = Stripe not configured
+    checkout.ms,
+    `status=${checkout.status} ${checkout.data?.error || ''}`
+  );
+
+  // Verify checkout URL points to Stripe
+  if (checkout.data?.url) {
+    assert(
+      'Checkout URL is a Stripe URL',
+      checkout.data.url.includes('checkout.stripe.com'),
+      0,
+      `url=${checkout.data.url.substring(0, 50)}...`
+    );
+  }
+
+  // Test invalid plan
+  const badPlan = await api(
+    'POST',
+    '/subscriptions/create-checkout-session',
+    { plan: 'nonexistent' },
+    userAToken
+  );
+  assert(
+    'Reject invalid plan',
+    badPlan.status === 400,
+    badPlan.ms,
+    `status=${badPlan.status}`
+  );
+
+  // Test cancel (should fail gracefully — no active subscription)
+  const cancel = await api('POST', '/subscriptions/cancel', {}, userAToken);
+  assert(
+    'Cancel with no subscription returns 400',
+    cancel.status === 400,
+    cancel.ms,
+    `status=${cancel.status} ${cancel.data?.error || ''}`
+  );
+}
+
+// ── 23. Event Booking with Facility Rental ───────────────────────────────────
+
+async function testEventBookingWithRental() {
+  console.log('\n── 23. Event Booking with Facility Rental ──');
+
+  if (!facilityId || !courtId) {
+    assert(
+      'Event booking with rental',
+      false,
+      0,
+      'No facility/court — skipped'
+    );
+    return;
+  }
+
+  // Generate time slots for the court (tomorrow)
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const dateStr = `${tomorrow.getFullYear()}-${String(tomorrow.getMonth() + 1).padStart(2, '0')}-${String(tomorrow.getDate()).padStart(2, '0')}`;
+
+  // Get court schedule
+  const schedule = await api(
+    'GET',
+    `/facilities/${facilityId}/courts/${courtId}/schedule?userId=${userAId}&date=${dateStr}`,
+    undefined,
+    userAToken
+  );
+  assert(
+    'Get court schedule',
+    schedule.status === 200,
+    schedule.ms,
+    `status=${schedule.status} ${schedule.data?.error || ''}`
+  );
+
+  // Book a time slot (as facility owner, should be free)
+  const bookSlot = await api(
+    'POST',
+    `/rentals`,
+    {
+      facilityId,
+      courtId,
+      date: dateStr,
+      startTime: '10:00',
+      endTime: '12:00',
+    },
+    userAToken
+  );
+  const rentalCreated = bookSlot.status === 201 || bookSlot.status === 200;
+  assert(
+    'Book time slot (rental)',
+    rentalCreated,
+    bookSlot.ms,
+    `status=${bookSlot.status} ${bookSlot.data?.error || ''}`
+  );
+
+  const rentalId = bookSlot.data?.id || bookSlot.data?.rental?.id;
+
+  // Create event using the rental
+  if (rentalId) {
+    const start = new Date(tomorrow);
+    start.setHours(10, 0, 0, 0);
+    const end = new Date(tomorrow);
+    end.setHours(12, 0, 0, 0);
+
+    const eventWithRental = await api(
+      'POST',
+      '/events',
+      {
+        title: `${PREFIX} Rental Event`,
+        description: 'Event created with a facility rental',
+        sportType: 'soccer',
+        eventType: 'pickup',
+        startTime: start.toISOString(),
+        endTime: end.toISOString(),
+        maxParticipants: 20,
+        skillLevel: 'all_levels',
+        organizerId: userAId,
+        facilityId,
+        rentalId,
+      },
+      userAToken
+    );
+    assert(
+      'Create event with rental',
+      eventWithRental.status === 201 && !!eventWithRental.data?.id,
+      eventWithRental.ms,
+      `status=${eventWithRental.status} ${eventWithRental.data?.error || ''}`
+    );
+
+    // User B books the event
+    if (eventWithRental.data?.id) {
+      const bookEvent = await api(
+        'POST',
+        `/events/${eventWithRental.data.id}/book`,
+        { userId: userBId },
+        userBToken
+      );
+      assert(
+        'User B books rental event',
+        bookEvent.status === 201 || bookEvent.status === 200,
+        bookEvent.ms,
+        `status=${bookEvent.status} ${bookEvent.data?.error || ''}`
+      );
+    }
+  }
+}
+
 // ── Run ──────────────────────────────────────────────────────────────────────
 
 async function run() {
@@ -793,6 +1073,9 @@ async function run() {
     await testDependents();
     await testAddressAutocomplete();
     await testDashboardAndInbox();
+    await testStripeConnect();
+    await testSubscriptionCheckout();
+    await testEventBookingWithRental();
   } catch (err) {
     console.error('\n💥 Unhandled error:', err);
     failed++;
