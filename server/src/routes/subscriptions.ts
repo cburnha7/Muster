@@ -6,19 +6,12 @@ import { getStripe } from '../services/stripe-connect';
 
 const router = Router();
 
-const PLAN_HIERARCHY = [
-  'free',
-  'roster',
-  'league',
-  'facility_basic',
-  'facility_pro',
-];
+const PLAN_HIERARCHY = ['free', 'roster', 'league', 'facility_pro'];
 
 /** Map plan names to Stripe price env vars */
 const PLAN_TO_PRICE_ENV: Record<string, string> = {
   roster: 'STRIPE_PRICE_ROSTER',
   league: 'STRIPE_PRICE_LEAGUE',
-  facility_basic: 'STRIPE_PRICE_FACILITY_BASIC',
   facility_pro: 'STRIPE_PRICE_FACILITY_PRO',
 };
 

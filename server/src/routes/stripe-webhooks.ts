@@ -32,7 +32,6 @@ const WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET || '';
 const PRICE_TO_PLAN: Record<string, string> = {
   [process.env.STRIPE_PRICE_ROSTER || '']: 'roster',
   [process.env.STRIPE_PRICE_LEAGUE || '']: 'league',
-  [process.env.STRIPE_PRICE_FACILITY_BASIC || '']: 'facility_basic',
   [process.env.STRIPE_PRICE_FACILITY_PRO || '']: 'facility_pro',
 };
 

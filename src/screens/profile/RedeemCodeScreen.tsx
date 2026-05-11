@@ -32,8 +32,7 @@ import {
 const PLANS: { key: SubscriptionPlan; icon: string }[] = [
   { key: 'roster', icon: 'people-outline' },
   { key: 'league', icon: 'trophy-outline' },
-  { key: 'facility_basic', icon: 'business-outline' },
-  { key: 'facility_pro', icon: 'diamond-outline' },
+  { key: 'facility_pro', icon: 'business-outline' },
 ];
 
 export function RedeemCodeScreen() {

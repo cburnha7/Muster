@@ -10,18 +10,12 @@
 import { Request, Response, NextFunction } from 'express';
 import { prisma } from '../lib/prisma';
 
-const PLAN_HIERARCHY = [
-  'free',
-  'roster',
-  'league',
-  'facility_basic',
-  'facility_pro',
-];
+const PLAN_HIERARCHY = ['free', 'roster', 'league', 'facility_pro'];
 
 /** Maps membershipTier values to equivalent subscription plans */
 const TIER_TO_PLAN: Record<string, string> = {
   facility: 'facility_pro',
-  host: 'facility_basic',
+  host: 'facility_pro',
   player: 'league',
   standard: 'free',
 };
