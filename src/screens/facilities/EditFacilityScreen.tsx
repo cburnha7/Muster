@@ -1637,7 +1637,7 @@ export function EditFacilityScreen({
         >
           <View
             style={{
-              backgroundColor: colors.white,
+              backgroundColor: colors.bgCard,
               borderRadius: 16,
               padding: Spacing.xl,
               width: '100%',
@@ -1650,7 +1650,7 @@ export function EditFacilityScreen({
                 width: 80,
                 height: 80,
                 borderRadius: 40,
-                backgroundColor: colors.white,
+                backgroundColor: colors.bgCard,
                 justifyContent: 'center',
                 alignItems: 'center',
                 marginBottom: Spacing.lg,
@@ -1691,7 +1691,7 @@ export function EditFacilityScreen({
                   paddingVertical: Spacing.md,
                   borderRadius: 8,
                   alignItems: 'center',
-                  backgroundColor: colors.white,
+                  backgroundColor: colors.bgCard,
                 }}
                 onPress={() => setShowDeleteModal(false)}
               >

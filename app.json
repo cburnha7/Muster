@@ -12,12 +12,11 @@
       "resizeMode": "contain",
       "backgroundColor": "#0052FF"
     },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
+    "assetBundlePatterns": ["**/*"],
     "ios": {
-      "supportsTablet": true,
+      "supportsTablet": false,
       "bundleIdentifier": "com.muster.app",
+      "requireFullScreen": true,
       "usesAppleSignIn": true,
       "icon": "./assets/muster-icon-1024.png",
       "infoPlist": {
@@ -67,9 +66,7 @@
         {
           "icon": "./assets/notification-icon.png",
           "color": "#0052FF",
-          "sounds": [
-            "./assets/sounds/notification.wav"
-          ]
+          "sounds": ["./assets/sounds/notification.wav"]
         }
       ],
       [

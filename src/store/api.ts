@@ -256,6 +256,28 @@ export const api = createApi({
       }),
       invalidatesTags: ['User'],
     }),
+
+    // Subscription checkout
+    createCheckoutSession: builder.mutation<
+      { url: string; sessionId: string },
+      { plan: string }
+    >({
+      query: body => ({
+        url: '/subscriptions/create-checkout-session',
+        method: 'POST',
+        body,
+      }),
+    }),
+
+    cancelSubscription: builder.mutation<
+      { success: boolean; cancelAtPeriodEnd: boolean },
+      void
+    >({
+      query: () => ({
+        url: '/subscriptions/cancel',
+        method: 'POST',
+      }),
+    }),
   }),
 });
 
@@ -301,6 +323,10 @@ export const {
   // Promo code hooks
   useValidatePromoCodeMutation,
   useRedeemPromoCodeMutation,
+
+  // Subscription hooks
+  useCreateCheckoutSessionMutation,
+  useCancelSubscriptionMutation,
 
   // League scheduling hooks
   useGenerateScheduleMutation,

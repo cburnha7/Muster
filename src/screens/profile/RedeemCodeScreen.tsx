@@ -9,45 +9,46 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  Alert,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { Ionicons } from '@expo/vector-icons';
+import * as Linking from 'expo-linking';
 import { fonts, typeScale, useTheme } from '../../theme';
 import {
   useValidatePromoCodeMutation,
   useRedeemPromoCodeMutation,
+  useCreateCheckoutSessionMutation,
 } from '../../store/api';
 import { setUser } from '../../store/slices/authSlice';
+import { selectPlan } from '../../store/slices/subscriptionSlice';
+import {
+  PLAN_INFO,
+  SubscriptionPlan,
+  PLAN_HIERARCHY,
+} from '../../types/subscription';
 
-const TIERS = [
-  {
-    key: 'player',
-    label: 'Player',
-    icon: 'person-outline' as const,
-    desc: 'Access player features and stats tracking',
-  },
-  {
-    key: 'host',
-    label: 'Host',
-    icon: 'megaphone-outline' as const,
-    desc: 'Create and manage events, plus all Player features',
-  },
-  {
-    key: 'facility',
-    label: 'Facility',
-    icon: 'business-outline' as const,
-    desc: 'Manage facilities and courts, plus all Host features',
-  },
+const PLANS: { key: SubscriptionPlan; icon: string }[] = [
+  { key: 'roster', icon: 'people-outline' },
+  { key: 'league', icon: 'trophy-outline' },
+  { key: 'facility_basic', icon: 'business-outline' },
+  { key: 'facility_pro', icon: 'diamond-outline' },
 ];
 
 export function RedeemCodeScreen() {
   const { colors } = useTheme();
   const navigation = useNavigation();
   const dispatch = useDispatch();
+  const currentPlan = useSelector(selectPlan);
+
+  const [selectedPlan, setSelectedPlan] = useState<SubscriptionPlan | null>(
+    null
+  );
+  const [showPromo, setShowPromo] = useState(false);
   const [code, setCode] = useState('');
-  const [selectedTier, setSelectedTier] = useState<string | null>(null);
   const [validated, setValidated] = useState(false);
+  const [selectedTier, setSelectedTier] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
@@ -55,6 +56,22 @@ export function RedeemCodeScreen() {
     useValidatePromoCodeMutation();
   const [redeemPromoCode, { isLoading: isRedeeming }] =
     useRedeemPromoCodeMutation();
+  const [createCheckoutSession, { isLoading: isCheckingOut }] =
+    useCreateCheckoutSessionMutation();
+
+  const handleSubscribe = async (plan: SubscriptionPlan) => {
+    setError(null);
+    try {
+      const result = await createCheckoutSession({ plan }).unwrap();
+      if (result.url) {
+        await Linking.openURL(result.url);
+      } else {
+        setError('Could not open checkout. Please try again.');
+      }
+    } catch (e: any) {
+      setError(e?.data?.error || 'Failed to start checkout. Please try again.');
+    }
+  };
 
   const handleValidate = async () => {
     if (!code.trim()) {
@@ -86,7 +103,6 @@ export function RedeemCodeScreen() {
         code: code.trim(),
         selectedTier,
       }).unwrap();
-      // Update auth state so feature gates pick up the new trial tier immediately
       if (result) {
         dispatch(setUser(result));
       }
@@ -98,122 +114,346 @@ export function RedeemCodeScreen() {
     }
   };
 
+  const currentPlanIndex = PLAN_HIERARCHY.indexOf(currentPlan);
+
   return (
     <KeyboardAvoidingView
       style={[styles.flex, { backgroundColor: colors.bgScreen }]}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <ScrollView
-        style={[styles.container, { backgroundColor: colors.background }]}
+        style={styles.flex}
         contentContainerStyle={styles.content}
         keyboardShouldPersistTaps="handled"
       >
         {successMsg ? (
           <View style={styles.successCard}>
-            <Ionicons
-              name="checkmark-circle"
-              size={48}
-              color={colors.pine}
-            />
-            <Text style={[styles.successText, { color: colors.ink }]}>{successMsg}</Text>
+            <Ionicons name="checkmark-circle" size={48} color={colors.pine} />
+            <Text style={[styles.successText, { color: colors.ink }]}>
+              {successMsg}
+            </Text>
             <TouchableOpacity
               style={[styles.primaryBtn, { backgroundColor: colors.cobalt }]}
               onPress={() => navigation.goBack()}
               activeOpacity={0.7}
             >
-              <Text style={[styles.primaryBtnText, { color: colors.white }]}>Back to Profile</Text>
+              <Text style={[styles.primaryBtnText, { color: colors.white }]}>
+                Back to Profile
+              </Text>
             </TouchableOpacity>
           </View>
         ) : (
           <>
-            {/* Code Input */}
-            <Text style={[styles.label, { color: colors.inkSecondary }]}>Promo Code</Text>
-            <View style={styles.inputRow}>
-              <TextInput
-                style={[styles.input, { backgroundColor: colors.white, color: colors.ink, borderColor: `${colors.inkSecondary}30` }, validated && styles.inputDisabled, validated && { backgroundColor: `${colors.cobalt}10`, borderColor: colors.cobalt }]}
-                placeholder="Enter your code"
-                placeholderTextColor={colors.inkSecondary}
-                value={code}
-                onChangeText={t => {
-                  setCode(t);
-                  setError(null);
-                  setValidated(false);
-                  setSelectedTier(null);
-                }}
-                autoCapitalize="characters"
-                editable={!validated}
-              />
-              {!validated && (
+            {/* Header */}
+            <Text style={[styles.heading, { color: colors.ink }]}>
+              Membership Plans
+            </Text>
+            <Text style={[styles.subheading, { color: colors.inkSoft }]}>
+              Unlock more features with a Muster membership.
+            </Text>
+
+            {/* Current plan badge */}
+            {currentPlan !== 'free' && (
+              <View
+                style={[
+                  styles.currentPlanBadge,
+                  {
+                    backgroundColor: colors.pineTint,
+                    borderColor: colors.pine,
+                  },
+                ]}
+              >
+                <Ionicons
+                  name="checkmark-circle"
+                  size={16}
+                  color={colors.pine}
+                />
+                <Text style={[styles.currentPlanText, { color: colors.pine }]}>
+                  Current plan: {PLAN_INFO[currentPlan].label}
+                </Text>
+              </View>
+            )}
+
+            {/* Plan cards */}
+            {PLANS.map(({ key, icon }) => {
+              const info = PLAN_INFO[key];
+              const planIndex = PLAN_HIERARCHY.indexOf(key);
+              const isCurrent = key === currentPlan;
+              const isDowngrade =
+                planIndex <= currentPlanIndex && currentPlan !== 'free';
+              const isSelected = selectedPlan === key;
+
+              return (
                 <TouchableOpacity
-                  style={[styles.validateBtn, { backgroundColor: colors.cobalt }]}
-                  onPress={handleValidate}
-                  disabled={isValidating}
-                  activeOpacity={0.7}
+                  key={key}
+                  style={[
+                    styles.planCard,
+                    {
+                      backgroundColor: colors.surface,
+                      borderColor: colors.border,
+                    },
+                    isSelected && {
+                      borderColor: colors.cobalt,
+                      backgroundColor: `${colors.cobalt}08`,
+                    },
+                    isCurrent && { borderColor: colors.pine },
+                  ]}
+                  onPress={() =>
+                    !isCurrent && !isDowngrade && setSelectedPlan(key)
+                  }
+                  activeOpacity={isCurrent || isDowngrade ? 1 : 0.7}
+                  disabled={isCurrent || isDowngrade}
                 >
-                  {isValidating ? (
-                    <ActivityIndicator color={colors.white} size="small" />
-                  ) : (
-                    <Text style={[styles.validateBtnText, { color: colors.white }]}>Apply</Text>
-                  )}
-                </TouchableOpacity>
-              )}
-            </View>
-
-            {error && <Text style={[styles.error, { color: colors.error }]}>{error}</Text>}
-
-            {validated && (
-              <>
-                <Text style={[styles.label, { color: colors.inkSecondary }]}>Select Your Tier</Text>
-                {TIERS.map(tier => {
-                  const active = selectedTier === tier.key;
-                  return (
-                    <TouchableOpacity
-                      key={tier.key}
-                      style={[styles.tierCard, { backgroundColor: colors.white }, active && styles.tierCardActive, active && { borderColor: colors.cobalt, backgroundColor: `${colors.cobalt}08` }]}
-                      onPress={() => setSelectedTier(tier.key)}
-                      activeOpacity={0.7}
-                    >
-                      <Ionicons
-                        name={tier.icon}
-                        size={24}
-                        color={active ? colors.cobalt : colors.inkSecondary}
-                      />
-                      <View style={styles.tierInfo}>
+                  <View style={styles.planHeader}>
+                    <Ionicons
+                      name={icon as any}
+                      size={24}
+                      color={
+                        isCurrent
+                          ? colors.pine
+                          : isSelected
+                            ? colors.cobalt
+                            : colors.inkSoft
+                      }
+                    />
+                    <View style={styles.planTitleRow}>
+                      <Text style={[styles.planLabel, { color: colors.ink }]}>
+                        {info.label}
+                      </Text>
+                      <Text
+                        style={[styles.planPrice, { color: colors.cobalt }]}
+                      >
+                        {info.price}
+                      </Text>
+                    </View>
+                    {isCurrent && (
+                      <View
+                        style={[
+                          styles.activeBadge,
+                          { backgroundColor: colors.pine },
+                        ]}
+                      >
                         <Text
                           style={[
-                            styles.tierLabel, { color: colors.ink },
-                            active && styles.tierLabelActive, active && { color: colors.cobalt }]}
+                            styles.activeBadgeText,
+                            { color: colors.white },
+                          ]}
                         >
-                          {tier.label}
+                          Active
                         </Text>
-                        <Text style={[styles.tierDesc, { color: colors.inkSecondary }]}>{tier.desc}</Text>
                       </View>
-                      {active && (
+                    )}
+                    {isSelected && !isCurrent && (
+                      <Ionicons
+                        name="checkmark-circle"
+                        size={22}
+                        color={colors.cobalt}
+                      />
+                    )}
+                  </View>
+                  <View style={styles.featureList}>
+                    {info.features.map((f, i) => (
+                      <View key={i} style={styles.featureRow}>
                         <Ionicons
-                          name="checkmark-circle"
-                          size={22}
-                          color={colors.cobalt}
+                          name="checkmark"
+                          size={14}
+                          color={colors.pine}
                         />
+                        <Text
+                          style={[
+                            styles.featureText,
+                            { color: colors.inkSoft },
+                          ]}
+                        >
+                          {f}
+                        </Text>
+                      </View>
+                    ))}
+                  </View>
+                </TouchableOpacity>
+              );
+            })}
+
+            {/* Subscribe button */}
+            {selectedPlan && (
+              <TouchableOpacity
+                style={[styles.primaryBtn, { backgroundColor: colors.cobalt }]}
+                onPress={() => handleSubscribe(selectedPlan)}
+                disabled={isCheckingOut}
+                activeOpacity={0.7}
+              >
+                {isCheckingOut ? (
+                  <ActivityIndicator color={colors.white} size="small" />
+                ) : (
+                  <Text
+                    style={[styles.primaryBtnText, { color: colors.white }]}
+                  >
+                    Subscribe to {PLAN_INFO[selectedPlan].label}
+                  </Text>
+                )}
+              </TouchableOpacity>
+            )}
+
+            {error && (
+              <Text style={[styles.error, { color: colors.error }]}>
+                {error}
+              </Text>
+            )}
+
+            {/* Promo code section */}
+            <View
+              style={[styles.divider, { backgroundColor: colors.border }]}
+            />
+
+            <TouchableOpacity
+              style={styles.promoToggle}
+              onPress={() => setShowPromo(!showPromo)}
+              activeOpacity={0.7}
+            >
+              <Ionicons
+                name="pricetag-outline"
+                size={18}
+                color={colors.inkSoft}
+              />
+              <Text style={[styles.promoToggleText, { color: colors.inkSoft }]}>
+                Have a promo code?
+              </Text>
+              <Ionicons
+                name={showPromo ? 'chevron-up' : 'chevron-down'}
+                size={16}
+                color={colors.inkSoft}
+              />
+            </TouchableOpacity>
+
+            {showPromo && (
+              <View style={styles.promoSection}>
+                <View style={styles.inputRow}>
+                  <TextInput
+                    style={[
+                      styles.input,
+                      {
+                        backgroundColor: colors.bgInput,
+                        color: colors.ink,
+                        borderColor: colors.border,
+                      },
+                      validated && {
+                        backgroundColor: `${colors.cobalt}10`,
+                        borderColor: colors.cobalt,
+                      },
+                    ]}
+                    placeholder="Enter promo code"
+                    placeholderTextColor={colors.inkSoft}
+                    value={code}
+                    onChangeText={t => {
+                      setCode(t);
+                      setError(null);
+                      setValidated(false);
+                      setSelectedTier(null);
+                    }}
+                    autoCapitalize="characters"
+                    editable={!validated}
+                  />
+                  {!validated && (
+                    <TouchableOpacity
+                      style={[
+                        styles.validateBtn,
+                        { backgroundColor: colors.cobalt },
+                      ]}
+                      onPress={handleValidate}
+                      disabled={isValidating}
+                      activeOpacity={0.7}
+                    >
+                      {isValidating ? (
+                        <ActivityIndicator color={colors.white} size="small" />
+                      ) : (
+                        <Text
+                          style={[
+                            styles.validateBtnText,
+                            { color: colors.white },
+                          ]}
+                        >
+                          Apply
+                        </Text>
                       )}
                     </TouchableOpacity>
-                  );
-                })}
-
-                <TouchableOpacity
-                  style={[
-                    styles.primaryBtn, { backgroundColor: colors.cobalt },
-                    !selectedTier && styles.primaryBtnDisabled]}
-                  onPress={handleRedeem}
-                  disabled={!selectedTier || isRedeeming}
-                  activeOpacity={0.7}
-                >
-                  {isRedeeming ? (
-                    <ActivityIndicator color={colors.white} size="small" />
-                  ) : (
-                    <Text style={[styles.primaryBtnText, { color: colors.white }]}>Redeem</Text>
                   )}
-                </TouchableOpacity>
-              </>
+                </View>
+
+                {validated && (
+                  <>
+                    <Text
+                      style={[styles.promoLabel, { color: colors.inkSoft }]}
+                    >
+                      Select trial tier:
+                    </Text>
+                    {[
+                      { key: 'player', label: 'Player' },
+                      { key: 'host', label: 'Host' },
+                      { key: 'facility', label: 'Facility' },
+                    ].map(tier => {
+                      const active = selectedTier === tier.key;
+                      return (
+                        <TouchableOpacity
+                          key={tier.key}
+                          style={[
+                            styles.tierChip,
+                            {
+                              backgroundColor: colors.surface,
+                              borderColor: colors.border,
+                            },
+                            active && {
+                              borderColor: colors.cobalt,
+                              backgroundColor: `${colors.cobalt}10`,
+                            },
+                          ]}
+                          onPress={() => setSelectedTier(tier.key)}
+                          activeOpacity={0.7}
+                        >
+                          <Text
+                            style={[
+                              styles.tierChipText,
+                              { color: colors.ink },
+                              active && { color: colors.cobalt },
+                            ]}
+                          >
+                            {tier.label}
+                          </Text>
+                          {active && (
+                            <Ionicons
+                              name="checkmark"
+                              size={16}
+                              color={colors.cobalt}
+                            />
+                          )}
+                        </TouchableOpacity>
+                      );
+                    })}
+                    <TouchableOpacity
+                      style={[
+                        styles.redeemBtn,
+                        { backgroundColor: colors.pine },
+                        !selectedTier && { opacity: 0.5 },
+                      ]}
+                      onPress={handleRedeem}
+                      disabled={!selectedTier || isRedeeming}
+                      activeOpacity={0.7}
+                    >
+                      {isRedeeming ? (
+                        <ActivityIndicator color={colors.white} size="small" />
+                      ) : (
+                        <Text
+                          style={[
+                            styles.redeemBtnText,
+                            { color: colors.white },
+                          ]}
+                        >
+                          Redeem
+                        </Text>
+                      )}
+                    </TouchableOpacity>
+                  </>
+                )}
+              </View>
             )}
           </>
         )}
@@ -224,15 +464,101 @@ export function RedeemCodeScreen() {
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
-  container: { flex: 1 },
-  content: { padding: 20, paddingBottom: 40 },
-  label: {
+  content: { padding: 20, paddingBottom: 60 },
+  heading: {
+    fontFamily: fonts.heading,
+    fontSize: 24,
+    marginBottom: 6,
+  },
+  subheading: {
+    fontFamily: fonts.body,
+    fontSize: 15,
+    marginBottom: 20,
+  },
+  currentPlanBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 12,
+    borderWidth: 1,
+    marginBottom: 16,
+  },
+  currentPlanText: {
     fontFamily: fonts.label,
     fontSize: 13,
-    textTransform: 'uppercase',
-    marginBottom: 8,
+  },
+  planCard: {
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 12,
+    borderWidth: 1.5,
+  },
+  planHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginBottom: 10,
+  },
+  planTitleRow: { flex: 1 },
+  planLabel: {
+    fontFamily: fonts.ui,
+    fontSize: 16,
+  },
+  planPrice: {
+    fontFamily: fonts.label,
+    fontSize: 13,
+    marginTop: 2,
+  },
+  activeBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 9999,
+  },
+  activeBadgeText: {
+    fontFamily: fonts.label,
+    fontSize: 11,
+  },
+  featureList: { gap: 4, marginLeft: 36 },
+  featureRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  featureText: {
+    fontFamily: fonts.body,
+    fontSize: 13,
+  },
+  primaryBtn: {
+    borderRadius: 9999,
+    paddingVertical: 14,
+    alignItems: 'center',
     marginTop: 16,
   },
+  primaryBtnText: { fontFamily: fonts.ui, fontSize: 16 },
+  error: {
+    fontFamily: fonts.body,
+    fontSize: 13,
+    marginTop: 8,
+    textAlign: 'center',
+  },
+  divider: {
+    height: 1,
+    marginVertical: 24,
+  },
+  promoToggle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingVertical: 8,
+  },
+  promoToggleText: {
+    fontFamily: fonts.body,
+    fontSize: 14,
+    flex: 1,
+  },
+  promoSection: { marginTop: 12 },
   inputRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   input: {
     flex: 1,
@@ -243,44 +569,38 @@ const styles = StyleSheet.create({
     fontSize: 16,
     borderWidth: 1,
   },
-  inputDisabled: {},
   validateBtn: {
     borderRadius: 9999,
     paddingHorizontal: 18,
     paddingVertical: 12,
   },
   validateBtnText: { fontFamily: fonts.ui, fontSize: 15 },
-  error: {
-    fontFamily: fonts.body,
-    fontSize: 13,
-    marginTop: 6,
+  promoLabel: {
+    fontFamily: fonts.label,
+    fontSize: 12,
+    marginTop: 14,
+    marginBottom: 8,
   },
-  tierCard: {
+  tierChip: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderRadius: 16,
-    padding: 14,
-    marginBottom: 10,
-    borderWidth: 1.5,
-    borderColor: 'transparent',
+    justifyContent: 'space-between',
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 8,
+    borderWidth: 1,
   },
-  tierCardActive: {},
-  tierInfo: { flex: 1, marginLeft: 12 },
-  tierLabel: { fontFamily: fonts.ui, fontSize: 15 },
-  tierLabelActive: {},
-  tierDesc: {
-    fontFamily: fonts.body,
-    fontSize: 13,
-    marginTop: 2,
+  tierChipText: {
+    fontFamily: fonts.ui,
+    fontSize: 14,
   },
-  primaryBtn: {
+  redeemBtn: {
     borderRadius: 9999,
-    paddingVertical: 14,
+    paddingVertical: 12,
     alignItems: 'center',
-    marginTop: 20,
+    marginTop: 12,
   },
-  primaryBtnDisabled: { opacity: 0.5 },
-  primaryBtnText: { fontFamily: fonts.ui, fontSize: 16 },
+  redeemBtnText: { fontFamily: fonts.ui, fontSize: 15 },
   successCard: { alignItems: 'center', marginTop: 40, gap: 16 },
   successText: {
     fontFamily: fonts.body,

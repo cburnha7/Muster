@@ -16,36 +16,21 @@ messagesRouter.use(authMiddleware);
 conversationsRouter.get('/unread-count', async (req, res) => {
   try {
     const userId = req.user!.userId;
-    const participants = await prisma.conversationParticipant.findMany({
-      where: { userId, isMuted: false },
-      include: {
-        conversation: {
-          include: {
-            messages: {
-              orderBy: { createdAt: 'desc' },
-              take: 1,
-            },
-          },
-        },
-      },
-    });
 
-    let total = 0;
-    for (const p of participants) {
-      const lastMsg = p.conversation.messages[0];
-      if (!lastMsg) continue;
-      if (!p.lastReadAt || lastMsg.createdAt > p.lastReadAt) {
-        const count = await prisma.message.count({
-          where: {
-            conversationId: p.conversationId,
-            createdAt: { gt: p.lastReadAt ?? new Date(0) },
-          },
-        });
-        total += count;
-      }
-    }
+    // Single query to get total unread count across all non-muted conversations
+    const result = await prisma.$queryRawUnsafe<Array<{ count: bigint }>>(
+      `SELECT COALESCE(SUM(sub.cnt), 0)::bigint as count FROM (
+         SELECT COUNT(*) as cnt
+         FROM messages m
+         JOIN conversation_participants cp ON cp.conversation_id = m.conversation_id
+         WHERE cp.user_id = $1
+         AND cp.is_muted = false
+         AND m.created_at > COALESCE(cp.last_read_at, '1970-01-01'::timestamp)
+       ) sub`,
+      userId
+    );
 
-    res.json({ count: total });
+    res.json({ count: Number(result[0]?.count ?? 0) });
   } catch (error) {
     console.error('Unread count error:', error);
     res.status(500).json({ error: 'Failed to get unread count' });
@@ -461,11 +446,19 @@ conversationsRouter.get('/', async (req, res) => {
     const typeFilter = type && type !== 'ALL' ? { type: type as any } : {};
 
     const participations = await prisma.conversationParticipant.findMany({
-      where: { userId, conversation: { isArchived: false, ...typeFilter } },
+      where: {
+        userId,
+        conversation: {
+          isArchived: false,
+          ...typeFilter,
+          parentConversationId: null,
+        },
+      },
       include: {
         conversation: {
           include: {
             participants: {
+              take: 5, // Only include first 5 participants for preview
               include: {
                 user: {
                   select: {
@@ -486,44 +479,43 @@ conversationsRouter.get('/', async (req, res) => {
                 },
               },
             },
-            subChannels: {
-              where: { isArchived: false },
-              include: {
-                participants: {
-                  where: { userId },
-                  select: { lastReadAt: true, isMuted: true },
-                },
-                messages: { orderBy: { createdAt: 'desc' }, take: 1 },
-              },
-            },
           },
         },
       },
       orderBy: { conversation: { updatedAt: 'desc' } },
     });
 
-    // Calculate unread counts and shape response
-    const conversations = await Promise.all(
-      participations
-        .filter(p => !p.conversation.parentConversationId) // only top-level
-        .map(async p => {
-          const lastMsg = p.conversation.messages[0];
-          const unreadCount = lastMsg
-            ? await prisma.message.count({
-                where: {
-                  conversationId: p.conversationId,
-                  createdAt: { gt: p.lastReadAt ?? new Date(0) },
-                },
-              })
-            : 0;
-
-          return {
-            ...p.conversation,
-            myParticipant: p,
-            unreadCount,
-          };
-        })
+    // Calculate unread counts in a single batch query instead of N+1
+    const conversationIds = participations.map(p => p.conversationId);
+    const lastReadMap = new Map(
+      participations.map(p => [p.conversationId, p.lastReadAt])
     );
+
+    // Batch unread count: one query per conversation using raw SQL for performance
+    let unreadCounts: Map<string, number> = new Map();
+    if (conversationIds.length > 0) {
+      const counts = await prisma.$queryRawUnsafe<
+        Array<{ conversation_id: string; count: bigint }>
+      >(
+        `SELECT m.conversation_id, COUNT(*)::bigint as count
+         FROM messages m
+         JOIN conversation_participants cp ON cp.conversation_id = m.conversation_id AND cp.user_id = $1
+         WHERE m.conversation_id = ANY($2::uuid[])
+         AND m.created_at > COALESCE(cp.last_read_at, '1970-01-01'::timestamp)
+         GROUP BY m.conversation_id`,
+        userId,
+        conversationIds
+      );
+      for (const row of counts) {
+        unreadCounts.set(row.conversation_id, Number(row.count));
+      }
+    }
+
+    const conversations = participations.map(p => ({
+      ...p.conversation,
+      myParticipant: p,
+      unreadCount: unreadCounts.get(p.conversationId) ?? 0,
+    }));
 
     res.json(conversations);
   } catch (error) {

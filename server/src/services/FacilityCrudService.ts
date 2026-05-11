@@ -383,6 +383,171 @@ export async function getAuthorizedFacilities(userId: string | undefined) {
   };
 }
 
+// ---------------------------------------------------------------------------
+// GET /facilities/available-for-event
+// Returns facilities where the user has a reservation overlapping the event window
+// ---------------------------------------------------------------------------
+export async function getAvailableFacilitiesForEvent(params: {
+  sportType?: string;
+  eventDate?: string;
+  startTime?: string;
+  endTime?: string;
+  userId?: string;
+}) {
+  const { sportType, eventDate, startTime, endTime, userId } = params;
+
+  if (!sportType) {
+    throw new ServiceError('sportType is required', 400);
+  }
+  if (!eventDate) {
+    throw new ServiceError('eventDate is required', 400);
+  }
+  if (!startTime) {
+    throw new ServiceError('startTime is required', 400);
+  }
+  if (!endTime) {
+    throw new ServiceError('endTime is required', 400);
+  }
+  if (!userId) {
+    throw new ServiceError('userId is required', 400);
+  }
+
+  // Parse the event date to a Date object (midnight UTC)
+  const parsedDate = new Date(eventDate);
+  if (isNaN(parsedDate.getTime())) {
+    throw new ServiceError('eventDate must be a valid ISO date string', 400);
+  }
+  parsedDate.setUTCHours(0, 0, 0, 0);
+
+  // Validate time format (HH:MM)
+  const timeRegex = /^\d{2}:\d{2}$/;
+  if (!timeRegex.test(startTime) || !timeRegex.test(endTime)) {
+    throw new ServiceError(
+      'startTime and endTime must be in HH:MM format',
+      400
+    );
+  }
+
+  // Find facilities the user owns that match the sport type
+  const ownedFacilities = await prisma.facility.findMany({
+    where: {
+      ownerId: userId,
+      isActive: true,
+      courts: {
+        some: {
+          sportType: sportType,
+          isActive: true,
+        },
+      },
+    },
+    include: {
+      courts: {
+        where: { sportType: sportType, isActive: true },
+        select: { id: true, name: true, sportType: true },
+      },
+    },
+    orderBy: { name: 'asc' },
+  });
+
+  // Find rentals that overlap the event time window
+  // Overlap condition: rental.startTime < eventEndTime AND rental.endTime > eventStartTime
+  const overlappingRentals = await prisma.facilityRental.findMany({
+    where: {
+      userId: userId,
+      status: 'confirmed',
+      usedForEventId: null,
+      timeSlot: {
+        date: parsedDate,
+        startTime: { lt: endTime },
+        endTime: { gt: startTime },
+        court: {
+          sportType: sportType,
+          isActive: true,
+        },
+      },
+    },
+    select: {
+      id: true,
+      timeSlot: {
+        select: {
+          court: {
+            select: {
+              facilityId: true,
+              facility: {
+                select: {
+                  id: true,
+                  name: true,
+                  city: true,
+                  state: true,
+                  isActive: true,
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  });
+
+  // Collect unique facility IDs from overlapping rentals
+  const rentalFacilityMap = new Map<
+    string,
+    { id: string; name: string; city: string; state: string }
+  >();
+  for (const r of overlappingRentals) {
+    const facility = r.timeSlot?.court?.facility;
+    if (facility && facility.isActive && !rentalFacilityMap.has(facility.id)) {
+      rentalFacilityMap.set(facility.id, {
+        id: facility.id,
+        name: facility.name,
+        city: facility.city,
+        state: facility.state,
+      });
+    }
+  }
+
+  // Combine owned facilities + rental facilities (deduplicate)
+  const ownedIds = new Set(ownedFacilities.map(f => f.id));
+  const data: Array<{
+    id: string;
+    name: string;
+    city: string;
+    state: string;
+    isOwned: boolean;
+    hasRentals: boolean;
+  }> = [];
+
+  // Add owned facilities first
+  for (const f of ownedFacilities) {
+    data.push({
+      id: f.id,
+      name: f.name,
+      city: f.city,
+      state: f.state,
+      isOwned: true,
+      hasRentals: rentalFacilityMap.has(f.id),
+    });
+  }
+
+  // Add rental-only facilities
+  for (const [facId, fac] of rentalFacilityMap) {
+    if (!ownedIds.has(facId)) {
+      data.push({
+        id: fac.id,
+        name: fac.name,
+        city: fac.city,
+        state: fac.state,
+        isOwned: false,
+        hasRentals: true,
+      });
+    }
+  }
+
+  const hasAnyReservations = data.length > 0;
+
+  return { data, total: data.length, hasAnyReservations };
+}
+
 export interface CheckDuplicatesAddress {
   street: string;
   city: string;

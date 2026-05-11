@@ -14,7 +14,7 @@ import { MyRentalsScreen } from '../../screens/facilities/MyRentalsScreen';
 import { CancellationPolicyScreen } from '../../screens/facilities/CancellationPolicyScreen';
 import { FacilityRentalsScreen } from '../../screens/facilities/FacilityRentalsScreen';
 import { EscrowTransactionsScreen } from '../../screens/facilities/EscrowTransactionsScreen';
-import { lightColors, fonts } from '../../theme';
+import { fonts } from '../../theme';
 
 const Stack = createNativeStackNavigator<FacilitiesStackParamList>();
 
@@ -22,14 +22,11 @@ const detailHeader = {
   headerShown: true as const,
   headerBackVisible: false,
   headerBackTitleVisible: false,
-  headerTintColor: lightColors.ink,
   headerTitleAlign: 'center' as const,
-  headerStyle: { backgroundColor: lightColors.background },
   headerShadowVisible: false,
   headerTitleStyle: {
     fontFamily: fonts.headingSemi,
     fontSize: 17,
-    color: lightColors.ink,
   },
 };
 

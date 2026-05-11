@@ -415,7 +415,7 @@ export function DependentFormScreen() {
                     style={[
                       styles.chip,
                       {
-                        backgroundColor: colors.white,
+                        backgroundColor: colors.surface,
                         borderColor: colors.border,
                       },
                       selected && styles.chipSelected,
@@ -467,7 +467,7 @@ export function DependentFormScreen() {
                     style={[
                       styles.chip,
                       {
-                        backgroundColor: colors.white,
+                        backgroundColor: colors.surface,
                         borderColor: colors.border,
                       },
                       selected && styles.chipSelected,

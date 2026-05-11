@@ -251,9 +251,13 @@ export function FacilitiesListScreen() {
   const handleFacilityPress = (facility: Facility) => {
     const params = (route.params as any) ?? {};
     const returnTo = params?.returnTo;
+    const eventDate = params?.eventDate;
+    const eventStartTime = params?.eventStartTime;
     (navigation as any).navigate('FacilityDetails', {
       facilityId: facility.id,
       ...(returnTo ? { returnTo } : {}),
+      ...(eventDate ? { eventDate } : {}),
+      ...(eventStartTime ? { eventStartTime } : {}),
     });
   };
 

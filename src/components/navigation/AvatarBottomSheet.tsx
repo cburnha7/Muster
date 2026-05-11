@@ -140,8 +140,14 @@ export function AvatarBottomSheet() {
       snapPoints={snapPoints}
       enablePanDownToClose
       backdropComponent={renderBackdrop}
-      backgroundStyle={styles.sheetBackground}
-      handleIndicatorStyle={styles.handleIndicator}
+      backgroundStyle={[
+        styles.sheetBackground,
+        { backgroundColor: colors.bgCard },
+      ]}
+      handleIndicatorStyle={[
+        styles.handleIndicator,
+        { backgroundColor: colors.border },
+      ]}
     >
       <BottomSheetScrollView contentContainerStyle={styles.content}>
         {/* ── Profiles ─────────────────────────── */}
@@ -357,7 +363,7 @@ export function AvatarBottomSheet() {
                 style={[styles.upgradeBtn, { backgroundColor: colors.cobalt }]}
                 activeOpacity={0.7}
                 onPress={() => {
-                  close();
+                  handleClose();
                   setTimeout(
                     () =>
                       navigation.dispatch(
@@ -373,7 +379,9 @@ export function AvatarBottomSheet() {
                   );
                 }}
               >
-                <Text style={styles.upgradeBtnText}>Upgrade</Text>
+                <Text style={[styles.upgradeBtnText, { color: colors.white }]}>
+                  Upgrade
+                </Text>
               </TouchableOpacity>
             </View>
           </>
@@ -480,6 +488,7 @@ const styles = StyleSheet.create({
   personInitial: {
     fontFamily: fonts.ui,
     fontSize: 15,
+    color: '#FFFFFF',
   },
   personInfo: {
     flex: 1,

@@ -341,7 +341,7 @@ function CreateFacilityInner() {
           <View
             style={[
               styles.duplicateModalContent,
-              { backgroundColor: colors.white },
+              { backgroundColor: colors.bgCard },
             ]}
           >
             <View style={styles.duplicateModalHeader}>

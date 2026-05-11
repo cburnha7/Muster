@@ -23,7 +23,7 @@ import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
 import { fonts, Spacing, useTheme } from '../../theme';
 import { FacilitiesStackParamList } from '../../navigation/types';
 import {
-  calendarTheme,
+  buildCalendarTheme,
   formatDateForCalendar,
   formatTime12,
 } from '../../utils/calendarUtils';
@@ -71,6 +71,7 @@ interface Rental {
 
 export function FacilityRentalsScreen() {
   const { colors } = useTheme();
+  const calendarTheme = useMemo(() => buildCalendarTheme(colors), [colors]);
   const navigation = useNavigation<Nav>();
   const route = useRoute<Route>();
   const { facilityId, facilityName } = route.params ?? {};

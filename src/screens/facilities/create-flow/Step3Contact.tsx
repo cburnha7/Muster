@@ -12,7 +12,11 @@ export function Step3Contact() {
 
   return (
     <ScrollView
-      style={[styles.container, { backgroundColor: colors.white }, { backgroundColor: colors.bgScreen }]}
+      style={[
+        styles.container,
+        { backgroundColor: colors.white },
+        { backgroundColor: colors.bgScreen },
+      ]}
       contentContainerStyle={styles.content}
       keyboardShouldPersistTaps="handled"
       showsVerticalScrollIndicator={false}
@@ -23,7 +27,14 @@ export function Step3Contact() {
       </Text>
 
       <TextInput
-        style={[styles.textInput, { borderColor: colors.border, color: colors.ink, backgroundColor: colors.white }]}
+        style={[
+          styles.textInput,
+          {
+            borderColor: colors.border,
+            color: colors.ink,
+            backgroundColor: colors.bgInput,
+          },
+        ]}
         value={state.contactName}
         onChangeText={v => setField('contactName', v)}
         placeholder="Contact name"
@@ -31,7 +42,14 @@ export function Step3Contact() {
       />
 
       <TextInput
-        style={[styles.textInput, { borderColor: colors.border, color: colors.ink, backgroundColor: colors.white }]}
+        style={[
+          styles.textInput,
+          {
+            borderColor: colors.border,
+            color: colors.ink,
+            backgroundColor: colors.bgInput,
+          },
+        ]}
         value={state.contactPhone}
         onChangeText={v => setField('contactPhone', v)}
         placeholder="Phone number"
@@ -40,7 +58,14 @@ export function Step3Contact() {
       />
 
       <TextInput
-        style={[styles.textInput, { borderColor: colors.border, color: colors.ink, backgroundColor: colors.white }]}
+        style={[
+          styles.textInput,
+          {
+            borderColor: colors.border,
+            color: colors.ink,
+            backgroundColor: colors.bgInput,
+          },
+        ]}
         value={state.contactEmail}
         onChangeText={v => setField('contactEmail', v)}
         placeholder="Email address"
@@ -50,7 +75,14 @@ export function Step3Contact() {
       />
 
       <TextInput
-        style={[styles.textInput, { borderColor: colors.border, color: colors.ink, backgroundColor: colors.white }]}
+        style={[
+          styles.textInput,
+          {
+            borderColor: colors.border,
+            color: colors.ink,
+            backgroundColor: colors.bgInput,
+          },
+        ]}
         value={state.contactWebsite}
         onChangeText={v => setField('contactWebsite', v)}
         placeholder="Website URL"

@@ -9,7 +9,11 @@ import {
   StyleSheet,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useNavigation, useRoute } from '@react-navigation/native';
+import {
+  useNavigation,
+  useRoute,
+  useFocusEffect,
+} from '@react-navigation/native';
 import { FormSelect, SelectOption } from '../../../components/forms/FormSelect';
 import { useCreateEvent } from './CreateEventContext';
 import { useSelector } from 'react-redux';
@@ -48,6 +52,8 @@ export function Step4Where() {
     }[]
   >([]);
   const [loadingFacilities, setLoadingFacilities] = useState(false);
+  const [facilitiesError, setFacilitiesError] = useState<string | null>(null);
+  const [hasAnyReservations, setHasAnyReservations] = useState<boolean>(true);
   const [courts, setCourts] = useState<SelectOption[]>([]);
   const [loadingCourts, setLoadingCourts] = useState(false);
   const [noSportMatch, setNoSportMatch] = useState(false);
@@ -83,9 +89,34 @@ export function Step4Where() {
   const loadFacilities = useCallback(async () => {
     if (!user?.id) return;
     setLoadingFacilities(true);
+    setFacilitiesError(null);
     try {
-      // Load all facilities matching the event's sport type
-      if (state.sport) {
+      // If sport, date, and times are all set, use the filtered endpoint
+      if (state.sport && state.startDate && state.startTime && state.endTime) {
+        const dateStr = `${state.startDate.getFullYear()}-${String(state.startDate.getMonth() + 1).padStart(2, '0')}-${String(state.startDate.getDate()).padStart(2, '0')}`;
+        const startTimeStr = fmtTime(state.startTime);
+        const endTimeStr = fmtTime(state.endTime);
+
+        const res = await facilityService.getAvailableFacilitiesForEvent({
+          sportType: state.sport,
+          eventDate: dateStr,
+          startTime: startTimeStr,
+          endTime: endTimeStr,
+          userId: user.id,
+        });
+        setFacilities(
+          res.data.map((f: any) => ({
+            id: f.id,
+            name: f.name,
+            city: f.city,
+            state: f.state,
+            isOwned: f.isOwned,
+            hasRentals: f.hasRentals,
+          }))
+        );
+        setHasAnyReservations(res.hasAnyReservations);
+      } else if (state.sport) {
+        // Fallback: sport set but date/time not yet — use general for-event endpoint
         const res = await facilityService.getFacilitiesForEvent(
           state.sport,
           user.id
@@ -100,8 +131,9 @@ export function Step4Where() {
             hasRentals: f.hasRentals,
           }))
         );
+        setHasAnyReservations(true);
       } else {
-        // Fallback: load authorized facilities only
+        // No sport set — load authorized facilities only
         const res = await facilityService.getAuthorizedFacilities(user.id);
         setFacilities(
           res.data.map((f: any) => ({
@@ -113,17 +145,29 @@ export function Step4Where() {
             hasRentals: f.hasRentals ?? false,
           }))
         );
+        setHasAnyReservations(true);
       }
-    } catch {
+    } catch (err: any) {
+      console.warn('Facilities load failed:', err?.message);
       setFacilities([]);
+      setFacilitiesError(null);
     } finally {
       setLoadingFacilities(false);
     }
-  }, [user?.id, state.sport]);
+  }, [user?.id, state.sport, state.startDate, state.startTime, state.endTime]);
 
   useEffect(() => {
     if (isMuster) loadFacilities();
   }, [isMuster, loadFacilities]);
+
+  // Re-fetch facilities when screen regains focus (e.g., after booking a reservation)
+  useFocusEffect(
+    useCallback(() => {
+      if (isMuster && user?.id) {
+        loadFacilities();
+      }
+    }, [isMuster, user?.id, loadFacilities])
+  );
 
   // Load courts when facility selected
   useEffect(() => {
@@ -308,6 +352,21 @@ export function Step4Where() {
     }
   };
 
+  const handleNeedASpot = () => {
+    const dateStr = state.startDate
+      ? `${state.startDate.getFullYear()}-${String(state.startDate.getMonth() + 1).padStart(2, '0')}-${String(state.startDate.getDate()).padStart(2, '0')}`
+      : undefined;
+    navigation.navigate('Facilities', {
+      screen: 'FacilitiesList',
+      params: {
+        eventDate: dateStr,
+        eventStartTime: state.startTime ? fmtTime(state.startTime) : undefined,
+        returnTo: 'CreateEvent',
+        fromEventCreation: true,
+      },
+    });
+  };
+
   const eventDateLabel = state.startDate
     ? state.startDate.toLocaleDateString('en-US', {
         weekday: 'short',
@@ -395,20 +454,66 @@ export function Step4Where() {
 
       {isMuster && (
         <>
-          {loadingFacilities ? (
-            <ActivityIndicator
-              size="small"
-              color={colors.pine}
-              style={styles.loader}
-            />
-          ) : (
-            <FormSelect
-              label="Ground"
-              placeholder="Select a ground"
-              value={state.facilityId || ''}
-              options={facilityOptions}
-              onValueChange={handleFacilitySelect}
-            />
+          {/* Warning if date/time not set */}
+          {(!state.startDate || !state.startTime || !state.endTime) && (
+            <View
+              style={[
+                styles.warningCard,
+                {
+                  backgroundColor: colors.heartTint,
+                  borderColor: colors.heart,
+                },
+              ]}
+            >
+              <Ionicons name="time-outline" size={18} color={colors.heart} />
+              <Text style={[styles.warningText, { color: colors.heart }]}>
+                Please set the event date and time before selecting a Grounds.
+              </Text>
+            </View>
+          )}
+
+          {/* Grounds list or empty state */}
+          {state.startDate && state.startTime && state.endTime && (
+            <>
+              {loadingFacilities ? (
+                <ActivityIndicator
+                  size="small"
+                  color={colors.pine}
+                  style={styles.loader}
+                />
+              ) : facilities.length > 0 ? (
+                <FormSelect
+                  label="Ground"
+                  placeholder="Select a ground"
+                  value={state.facilityId || ''}
+                  options={facilityOptions}
+                  onValueChange={handleFacilitySelect}
+                />
+              ) : (
+                <View style={styles.emptyGroundsCard}>
+                  <Ionicons
+                    name="calendar-outline"
+                    size={32}
+                    color={colors.inkSoft}
+                  />
+                  <Text
+                    style={[styles.emptyGroundsText, { color: colors.inkSoft }]}
+                  >
+                    No reservations found for this sport and time.
+                  </Text>
+                  <TouchableOpacity
+                    onPress={handleNeedASpot}
+                    activeOpacity={0.7}
+                  >
+                    <Text
+                      style={[styles.needASpotLink, { color: colors.cobalt }]}
+                    >
+                      Need a spot?
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+            </>
           )}
 
           {noSportMatch && (
@@ -871,6 +976,29 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
   },
   bookCourtBtnText: { fontFamily: fonts.ui, fontSize: 15 },
+  retryBtn: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+    marginLeft: 'auto',
+  },
+  retryBtnText: { fontFamily: fonts.ui, fontSize: 13 },
+  emptyGroundsCard: {
+    alignItems: 'center',
+    gap: 12,
+    paddingVertical: 32,
+    paddingHorizontal: 24,
+  },
+  emptyGroundsText: {
+    fontFamily: fonts.body,
+    fontSize: 15,
+    textAlign: 'center',
+  },
+  needASpotLink: {
+    fontFamily: fonts.ui,
+    fontSize: 16,
+    textDecorationLine: 'underline',
+  },
   fieldLabel: {
     fontFamily: fonts.body,
     fontSize: 16,

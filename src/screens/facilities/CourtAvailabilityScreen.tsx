@@ -23,7 +23,7 @@ import {
 } from '../../theme';
 import { FacilitiesStackParamList } from '../../navigation/types';
 import {
-  calendarTheme,
+  buildCalendarTheme,
   formatDateForCalendar,
   formatTime12,
   createMarkedDates,
@@ -93,6 +93,7 @@ function toMinHelper(t: string): number {
 
 export function CourtAvailabilityScreen() {
   const { colors } = useTheme();
+  const calendarTheme = useMemo(() => buildCalendarTheme(colors), [colors]);
   const navigation = useNavigation<CourtAvailabilityScreenNavigationProp>();
   const route = useRoute<CourtAvailabilityScreenRouteProp>();
   const user = useSelector(selectUser);

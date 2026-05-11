@@ -171,7 +171,7 @@ export function ManageGroundScreen() {
             onPress={handleManageAvailability}
           >
             <View
-              style={[styles.actionIcon, { backgroundColor: colors.white }]}
+              style={[styles.actionIcon, { backgroundColor: colors.surface }]}
             >
               <Ionicons
                 name="calendar-outline"
@@ -207,7 +207,7 @@ export function ManageGroundScreen() {
             onPress={handleViewRentals}
           >
             <View
-              style={[styles.actionIcon, { backgroundColor: colors.white }]}
+              style={[styles.actionIcon, { backgroundColor: colors.surface }]}
             >
               <Ionicons name="list-outline" size={24} color={colors.ink} />
             </View>
@@ -239,7 +239,7 @@ export function ManageGroundScreen() {
             onPress={handleEditMap}
           >
             <View
-              style={[styles.actionIcon, { backgroundColor: colors.white }]}
+              style={[styles.actionIcon, { backgroundColor: colors.surface }]}
             >
               <Ionicons name="map-outline" size={24} color={colors.gold} />
             </View>
@@ -271,7 +271,7 @@ export function ManageGroundScreen() {
             onPress={handleCancellationPolicy}
           >
             <View
-              style={[styles.actionIcon, { backgroundColor: colors.white }]}
+              style={[styles.actionIcon, { backgroundColor: colors.surface }]}
             >
               <Ionicons
                 name="shield-checkmark-outline"
@@ -307,7 +307,7 @@ export function ManageGroundScreen() {
             onPress={handleViewEscrowLog}
           >
             <View
-              style={[styles.actionIcon, { backgroundColor: colors.white }]}
+              style={[styles.actionIcon, { backgroundColor: colors.surface }]}
             >
               <Ionicons name="cash-outline" size={24} color={colors.cobalt} />
             </View>

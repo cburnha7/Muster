@@ -166,7 +166,7 @@ export const PayPlayerDuesScreen: React.FC = () => {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        <View style={[styles.card, { backgroundColor: colors.white }]}>
+        <View style={[styles.card, { backgroundColor: colors.bgCard }]}>
           <Text style={[styles.cardTitle, { color: colors.ink }]}>
             Season Dues
           </Text>
@@ -211,7 +211,9 @@ export const PayPlayerDuesScreen: React.FC = () => {
         </View>
 
         {isPaid && (
-          <View style={[styles.successCard, { backgroundColor: colors.white }]}>
+          <View
+            style={[styles.successCard, { backgroundColor: colors.bgCard }]}
+          >
             <Ionicons name="checkmark-circle" size={24} color={colors.pine} />
             <Text style={[styles.successText, { color: colors.ink }]}>
               Your season dues have been paid. You're all set.
@@ -224,7 +226,7 @@ export const PayPlayerDuesScreen: React.FC = () => {
         <View
           style={[
             styles.bottomBar,
-            { borderTopColor: colors.border, backgroundColor: colors.white },
+            { borderTopColor: colors.border, backgroundColor: colors.bgCard },
           ]}
         >
           <TouchableOpacity
@@ -266,7 +268,7 @@ export const PayPlayerDuesScreen: React.FC = () => {
         <View
           style={[
             styles.bottomBar,
-            { borderTopColor: colors.border, backgroundColor: colors.white },
+            { borderTopColor: colors.border, backgroundColor: colors.bgCard },
           ]}
         >
           <View style={styles.dependentNotice}>

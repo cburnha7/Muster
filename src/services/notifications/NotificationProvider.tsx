@@ -43,6 +43,12 @@ export function NotificationProvider({
 
     const initializeNotifications = async () => {
       try {
+        // Skip notification initialization on web — native modules not available
+        if (Platform.OS === 'web') {
+          if (isMounted) setIsInitialized(true);
+          return;
+        }
+
         const token = await NotificationService.initialize();
 
         if (isMounted) {

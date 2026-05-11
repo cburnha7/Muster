@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -14,7 +14,7 @@ import { fonts, Spacing, useTheme } from '../../theme';
 import { API_BASE_URL } from '../../services/api/config';
 import { VisualDaySchedule, ScheduleBlock } from './VisualDaySchedule';
 import {
-  calendarTheme,
+  buildCalendarTheme,
   formatDateForCalendar,
 } from '../../utils/calendarUtils';
 
@@ -31,6 +31,7 @@ interface OwnerScheduleTabProps {
 
 export function OwnerScheduleTab({ facilityId }: OwnerScheduleTabProps) {
   const { colors } = useTheme();
+  const calendarTheme = useMemo(() => buildCalendarTheme(colors), [colors]);
   const [selectedDate, setSelectedDate] = useState(
     formatDateForCalendar(new Date())
   );
@@ -118,7 +119,9 @@ export function OwnerScheduleTab({ facilityId }: OwnerScheduleTabProps) {
     return (
       <View style={st.centered}>
         <Ionicons name="calendar-outline" size={48} color={colors.inkFaint} />
-        <Text style={[st.emptyText, { color: colors.inkFaint }]}>No courts set up yet</Text>
+        <Text style={[st.emptyText, { color: colors.inkFaint }]}>
+          No courts set up yet
+        </Text>
       </View>
     );
   }
@@ -138,7 +141,15 @@ export function OwnerScheduleTab({ facilityId }: OwnerScheduleTabProps) {
             return (
               <TouchableOpacity
                 key={court.id}
-                style={[st.courtChip, { borderColor: colors.border, backgroundColor: colors.white }, isSelected && st.courtChipSelected, isSelected && { borderColor: colors.cobalt, backgroundColor: colors.cobalt }]}
+                style={[
+                  st.courtChip,
+                  { borderColor: colors.border, backgroundColor: colors.white },
+                  isSelected && st.courtChipSelected,
+                  isSelected && {
+                    borderColor: colors.cobalt,
+                    backgroundColor: colors.cobalt,
+                  },
+                ]}
                 onPress={() => setSelectedCourt(court)}
                 activeOpacity={0.7}
               >
@@ -149,8 +160,11 @@ export function OwnerScheduleTab({ facilityId }: OwnerScheduleTabProps) {
                 />
                 <Text
                   style={[
-                    st.courtChipText, { color: colors.ink },
-                    isSelected && st.courtChipTextSelected, isSelected && { color: colors.white }]}
+                    st.courtChipText,
+                    { color: colors.ink },
+                    isSelected && st.courtChipTextSelected,
+                    isSelected && { color: colors.white },
+                  ]}
                 >
                   {court.name}
                 </Text>
@@ -162,13 +176,18 @@ export function OwnerScheduleTab({ facilityId }: OwnerScheduleTabProps) {
 
       {/* Calendar */}
       <View style={st.section}>
-        <Text style={[st.sectionTitle, { color: colors.ink }]}>Select Date</Text>
+        <Text style={[st.sectionTitle, { color: colors.ink }]}>
+          Select Date
+        </Text>
         <Calendar
           current={selectedDate}
           onDayPress={handleDateSelect}
           markedDates={markedDates}
           theme={calendarTheme}
-          style={[st.calendar, { backgroundColor: colors.white, shadowColor: colors.ink }]}
+          style={[
+            st.calendar,
+            { backgroundColor: colors.white, shadowColor: colors.ink },
+          ]}
         />
       </View>
 
@@ -186,7 +205,9 @@ export function OwnerScheduleTab({ facilityId }: OwnerScheduleTabProps) {
         {loadingSchedule ? (
           <View style={st.centered}>
             <ActivityIndicator size="small" color={colors.cobalt} />
-            <Text style={[st.loadingText, { color: colors.inkFaint }]}>Loading schedule...</Text>
+            <Text style={[st.loadingText, { color: colors.inkFaint }]}>
+              Loading schedule...
+            </Text>
           </View>
         ) : schedule.length > 0 ? (
           <VisualDaySchedule
@@ -202,7 +223,9 @@ export function OwnerScheduleTab({ facilityId }: OwnerScheduleTabProps) {
               size={32}
               color={colors.inkFaint}
             />
-            <Text style={[st.emptyText, { color: colors.inkFaint }]}>No schedule for this date</Text>
+            <Text style={[st.emptyText, { color: colors.inkFaint }]}>
+              No schedule for this date
+            </Text>
           </View>
         )}
       </View>

@@ -159,7 +159,7 @@ export function ChatScreen() {
         } catch (err) {
           console.warn('Chat polling failed:', (err as Error).message);
         }
-      }, 5000);
+      }, 15000);
 
       return () => {
         clearInterval(interval);

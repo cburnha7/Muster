@@ -89,6 +89,30 @@ router.get('/for-event', async (req, res) => {
   }
 });
 
+// ---------------------------------------------------------------------------
+// GET /facilities/available-for-event — Facilities with overlapping reservations
+// ---------------------------------------------------------------------------
+router.get('/available-for-event', async (req, res) => {
+  try {
+    const sportType = req.query.sportType as string | undefined;
+    const eventDate = req.query.eventDate as string | undefined;
+    const startTime = req.query.startTime as string | undefined;
+    const endTime = req.query.endTime as string | undefined;
+    const userId = req.query.userId as string | undefined;
+    const result = await FacilityCrudService.getAvailableFacilitiesForEvent({
+      ...(sportType ? { sportType } : {}),
+      ...(eventDate ? { eventDate } : {}),
+      ...(startTime ? { startTime } : {}),
+      ...(endTime ? { endTime } : {}),
+      ...(userId ? { userId } : {}),
+    });
+    res.json(result);
+  } catch (error: any) {
+    console.error('Facilities available-for-event error:', error);
+    sendServiceError(res, error);
+  }
+});
+
 // Get authorized facilities for event creation
 router.get('/authorized/for-events', async (req, res) => {
   try {

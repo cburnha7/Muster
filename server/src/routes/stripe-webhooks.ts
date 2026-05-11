@@ -53,6 +53,37 @@ router.post('/', async (req: Request, res: Response) => {
 
   try {
     switch (event.type) {
+      case 'checkout.session.completed': {
+        const session = event.data.object as Stripe.Checkout.Session;
+        const userId = session.metadata?.userId;
+        const plan = session.metadata?.plan;
+        const customerId = session.customer as string;
+        const subscriptionId = session.subscription as string;
+
+        if (userId && plan && customerId && subscriptionId) {
+          await prisma.subscription.upsert({
+            where: { userId },
+            create: {
+              userId,
+              plan,
+              status: 'active',
+              stripeCustomerId: customerId,
+              stripeSubscriptionId: subscriptionId,
+            },
+            update: {
+              plan,
+              status: 'active',
+              stripeCustomerId: customerId,
+              stripeSubscriptionId: subscriptionId,
+            },
+          });
+          console.log(
+            `[Stripe] Checkout completed for user ${userId} → ${plan}`
+          );
+        }
+        break;
+      }
+
       case 'customer.subscription.created':
       case 'customer.subscription.updated': {
         const sub = event.data.object as Stripe.Subscription;

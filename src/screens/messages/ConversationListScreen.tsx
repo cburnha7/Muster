@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import {
   View,
   FlatList,
@@ -10,6 +10,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { useFocusEffect } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useDispatch, useSelector } from 'react-redux';
 import { Ionicons } from '@expo/vector-icons';
@@ -111,29 +112,44 @@ export function ConversationListScreen() {
   const { crewMembers, selectedCrewId, onSelectCrew, hasDependents } =
     useCrewSelector();
 
-  const loadConversations = useCallback(async () => {
-    dispatch(setLoadingConversations(true));
-    try {
-      const data = await conversationService.getConversations(
-        activeFilter,
-        selectedCrewId ?? undefined
-      );
-      dispatch(setConversations(data));
-      const total = data.reduce(
-        (sum, c) => sum + (c.myParticipant?.isMuted ? 0 : c.unreadCount),
-        0
-      );
-      dispatch(setUnreadCount(total));
-    } catch (err: any) {
-      dispatch(setError(err.message ?? 'Failed to load conversations'));
-    }
-  }, [dispatch, activeFilter, selectedCrewId]);
+  const loadConversations = useCallback(
+    async (showLoading = false) => {
+      if (showLoading) dispatch(setLoadingConversations(true));
+      try {
+        const data = await conversationService.getConversations(
+          activeFilter,
+          selectedCrewId ?? undefined
+        );
+        dispatch(setConversations(data));
+        const total = data.reduce(
+          (sum, c) => sum + (c.myParticipant?.isMuted ? 0 : c.unreadCount),
+          0
+        );
+        dispatch(setUnreadCount(total));
+      } catch (err: any) {
+        if (showLoading) {
+          dispatch(setError(err.message ?? 'Failed to load conversations'));
+        }
+      }
+    },
+    [dispatch, activeFilter, selectedCrewId]
+  );
 
+  // Load on mount and when filter/crew changes
+  const isFirstLoad = useRef(true);
   useEffect(() => {
-    loadConversations();
-    const interval = setInterval(loadConversations, 30000);
-    return () => clearInterval(interval);
+    loadConversations(isFirstLoad.current);
+    isFirstLoad.current = false;
   }, [loadConversations]);
+
+  // Refresh on screen focus (returning from chat) — silent, no spinner
+  useFocusEffect(
+    useCallback(() => {
+      if (!isFirstLoad.current) {
+        loadConversations(false);
+      }
+    }, [loadConversations])
+  );
 
   const onRefresh = async () => {
     setRefreshing(true);

@@ -294,7 +294,7 @@ export function MyRentalsScreen() {
         </TouchableOpacity>
 
         {/* Court Info */}
-        <View style={[styles.courtInfo, { backgroundColor: colors.white }]}>
+        <View style={[styles.courtInfo, { backgroundColor: colors.surface }]}>
           <Ionicons name="basketball" size={20} color={colors.cobalt} />
           <Text style={[styles.courtName, { color: colors.ink }]}>
             {rental.timeSlot.court.name}
@@ -343,7 +343,7 @@ export function MyRentalsScreen() {
             <TouchableOpacity
               style={[
                 styles.createEventButton,
-                { backgroundColor: colors.white, borderColor: colors.cobalt },
+                { backgroundColor: colors.surface, borderColor: colors.cobalt },
               ]}
               onPress={() => handleCreateEvent(rental)}
             >
@@ -362,7 +362,7 @@ export function MyRentalsScreen() {
             <TouchableOpacity
               style={[
                 styles.cancelButton,
-                { backgroundColor: colors.white, borderColor: colors.heart },
+                { backgroundColor: colors.surface, borderColor: colors.heart },
                 rental.cancellationStatus === 'pending' &&
                   styles.cancelButtonDisabled,
                 rental.cancellationStatus === 'pending' && {
@@ -401,7 +401,10 @@ export function MyRentalsScreen() {
         {/* Cancellation Info */}
         {rental.status === 'cancelled' && rental.cancellationReason && (
           <View
-            style={[styles.cancellationInfo, { backgroundColor: colors.white }]}
+            style={[
+              styles.cancellationInfo,
+              { backgroundColor: colors.surface },
+            ]}
           >
             <Ionicons
               name="information-circle"

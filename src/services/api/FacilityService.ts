@@ -413,6 +413,33 @@ export class FacilityService extends BaseApiService {
   }
 
   /**
+   * Get facilities where the user has a reservation overlapping the event time window.
+   * Used in event creation to show only relevant grounds.
+   */
+  async getAvailableFacilitiesForEvent(params: {
+    sportType: string;
+    eventDate: string;
+    startTime: string;
+    endTime: string;
+    userId: string;
+  }): Promise<{
+    data: {
+      id: string;
+      name: string;
+      city: string;
+      state: string;
+      isOwned: boolean;
+      hasRentals: boolean;
+    }[];
+    total: number;
+    hasAnyReservations: boolean;
+  }> {
+    return this.get(`${API_ENDPOINTS.FACILITIES.BASE}/available-for-event`, {
+      params,
+    });
+  }
+
+  /**
    * Get available time slots for event creation at a facility
    * Returns slots based on ownership (all available) or rentals (only user's rentals)
    */

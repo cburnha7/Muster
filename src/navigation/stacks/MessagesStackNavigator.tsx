@@ -4,7 +4,7 @@ import type { MessagesStackParamList } from '../types';
 import { ConversationListScreen } from '../../screens/messages/ConversationListScreen';
 import { NewConversationScreen } from '../../screens/messages/NewConversationScreen';
 import { ChatScreen } from '../../screens/messages/ChatScreen';
-import { lightColors, fonts } from '../../theme';
+import { fonts } from '../../theme';
 
 const Stack = createNativeStackNavigator<MessagesStackParamList>();
 
@@ -12,14 +12,11 @@ const detailHeader = {
   headerShown: true,
   headerBackVisible: false,
   headerBackTitleVisible: false,
-  headerTintColor: lightColors.ink,
   headerTitleAlign: 'center' as const,
-  headerStyle: { backgroundColor: lightColors.background },
   headerShadowVisible: false,
   headerTitleStyle: {
     fontFamily: fonts.headingSemi,
     fontSize: 17,
-    color: lightColors.ink,
   },
 };
 

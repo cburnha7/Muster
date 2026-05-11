@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Calendar, DateData } from 'react-native-calendars';
-import { calendarTheme } from '../../utils/calendarUtils';
+import { buildCalendarTheme } from '../../utils/calendarUtils';
 import { MultiDotMarking } from '../../types/eventsCalendar';
 import { useTheme } from '../../theme';
 
@@ -25,6 +25,7 @@ export const EventsCalendar: React.FC<EventsCalendarProps> = ({
   onMonthChange,
 }) => {
   const { colors } = useTheme();
+  const calendarTheme = useMemo(() => buildCalendarTheme(colors), [colors]);
   // Merge selected date highlighting into markedDates
   const mergedMarkedDates: Record<string, MultiDotMarking> = {
     ...markedDates,

@@ -256,7 +256,10 @@ export function JoinTeamScreen({ route }: JoinTeamScreenProps) {
               <View
                 style={[
                   styles.teamInfo,
-                  { backgroundColor: colors.white, borderColor: colors.border },
+                  {
+                    backgroundColor: colors.surface,
+                    borderColor: colors.border,
+                  },
                 ]}
               >
                 <Text style={[styles.teamNameText, { color: colors.ink }]}>
@@ -288,7 +291,9 @@ export function JoinTeamScreen({ route }: JoinTeamScreenProps) {
             </View>
           )}
 
-          <View style={[styles.helpSection, { backgroundColor: colors.white }]}>
+          <View
+            style={[styles.helpSection, { backgroundColor: colors.surface }]}
+          >
             <Text style={[styles.helpTitle, { color: colors.ink }]}>
               Don't have an invite code?
             </Text>
@@ -316,7 +321,7 @@ export function JoinTeamScreen({ route }: JoinTeamScreenProps) {
       >
         <View style={styles.modalOverlay}>
           <View
-            style={[styles.modalContent, { backgroundColor: colors.white }]}
+            style={[styles.modalContent, { backgroundColor: colors.bgCard }]}
           >
             <Text style={[styles.modalTitle, { color: colors.ink }]}>
               Who's joining?

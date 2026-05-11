@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -14,7 +14,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Spacing, TextStyles, useTheme } from '../../theme';
 import { courtService, TimeSlot, Court } from '../../services/api/CourtService';
 import {
-  calendarTheme,
+  buildCalendarTheme,
   formatDateForCalendar,
   formatTime12,
 } from '../../utils/calendarUtils';
@@ -39,6 +39,7 @@ export function GroundAvailabilityScreen({
   navigation,
 }: GroundAvailabilityScreenProps) {
   const { colors } = useTheme();
+  const calendarTheme = useMemo(() => buildCalendarTheme(colors), [colors]);
   const { facilityId, facilityName } = route.params ?? {};
 
   const [selectedDate, setSelectedDate] = useState<string>(
@@ -199,14 +200,24 @@ export function GroundAvailabilityScreen({
         style={[styles.loadingContainer, { backgroundColor: colors.bgScreen }]}
       >
         <ActivityIndicator size="large" color={colors.cobalt} />
-        <Text style={[styles.loadingText, { color: colors.textSecondary }]}>Loading availability...</Text>
+        <Text style={[styles.loadingText, { color: colors.textSecondary }]}>
+          Loading availability...
+        </Text>
       </View>
     );
   }
 
   return (
     <View style={[styles.container, { backgroundColor: colors.bgScreen }]}>
-      <View style={[styles.header, { backgroundColor: colors.bgScreen, borderBottomColor: colors.border }]}>
+      <View
+        style={[
+          styles.header,
+          {
+            backgroundColor: colors.bgScreen,
+            borderBottomColor: colors.border,
+          },
+        ]}
+      >
         <TouchableOpacity
           style={styles.backButton}
           onPress={() => navigation.goBack()}
@@ -214,8 +225,14 @@ export function GroundAvailabilityScreen({
           <Ionicons name="arrow-back" size={24} color={colors.textPrimary} />
         </TouchableOpacity>
         <View style={styles.headerContent}>
-          <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>Ground Availability</Text>
-          <Text style={[styles.headerSubtitle, { color: colors.textSecondary }]}>{facilityName}</Text>
+          <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>
+            Ground Availability
+          </Text>
+          <Text
+            style={[styles.headerSubtitle, { color: colors.textSecondary }]}
+          >
+            {facilityName}
+          </Text>
         </View>
       </View>
 
@@ -225,7 +242,12 @@ export function GroundAvailabilityScreen({
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
       >
-        <View style={[styles.calendarContainer, { backgroundColor: colors.surface, shadowColor: colors.ink }]}>
+        <View
+          style={[
+            styles.calendarContainer,
+            { backgroundColor: colors.surface, shadowColor: colors.ink },
+          ]}
+        >
           <Calendar
             current={selectedDate}
             onDayPress={handleDateSelect}
@@ -242,7 +264,9 @@ export function GroundAvailabilityScreen({
 
         {courts.length > 0 && (
           <View style={styles.section}>
-            <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Select Courts</Text>
+            <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>
+              Select Courts
+            </Text>
             <View style={styles.courtSelector}>
               {courts.map(court => (
                 <TouchableOpacity
@@ -272,7 +296,9 @@ export function GroundAvailabilityScreen({
         {selectedCourtIds.length > 0 ? (
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
-              <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>
+              <Text
+                style={[styles.sectionTitle, { color: colors.textPrimary }]}
+              >
                 Availability for{' '}
                 {new Date(selectedDate).toLocaleDateString('en-US', {
                   month: 'short',
@@ -294,7 +320,9 @@ export function GroundAvailabilityScreen({
                 }}
               >
                 <Ionicons name="add-circle" size={24} color={colors.cobalt} />
-                <Text style={[styles.addButtonText, { color: colors.cobalt }]}>Block Slot</Text>
+                <Text style={[styles.addButtonText, { color: colors.cobalt }]}>
+                  Block Slot
+                </Text>
               </TouchableOpacity>
             </View>
             <TimeSlotGrid
@@ -310,32 +338,42 @@ export function GroundAvailabilityScreen({
               size={64}
               color={colors.inkFaint}
             />
-            <Text style={[styles.emptyStateText, { color: colors.textSecondary }]}>
+            <Text
+              style={[styles.emptyStateText, { color: colors.textSecondary }]}
+            >
               Select at least one court to view availability
             </Text>
           </View>
         )}
 
         <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Legend</Text>
+          <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>
+            Legend
+          </Text>
           <View style={styles.legend}>
             <View style={styles.legendItem}>
               <View
                 style={[styles.legendColor, { backgroundColor: colors.cobalt }]}
               />
-              <Text style={[styles.legendText, { color: colors.textPrimary }]}>Available</Text>
+              <Text style={[styles.legendText, { color: colors.textPrimary }]}>
+                Available
+              </Text>
             </View>
             <View style={styles.legendItem}>
               <View
                 style={[styles.legendColor, { backgroundColor: colors.heart }]}
               />
-              <Text style={[styles.legendText, { color: colors.textPrimary }]}>Blocked</Text>
+              <Text style={[styles.legendText, { color: colors.textPrimary }]}>
+                Blocked
+              </Text>
             </View>
             <View style={styles.legendItem}>
               <View
                 style={[styles.legendColor, { backgroundColor: colors.ink }]}
               />
-              <Text style={[styles.legendText, { color: colors.textPrimary }]}>Rented</Text>
+              <Text style={[styles.legendText, { color: colors.textPrimary }]}>
+                Rented
+              </Text>
             </View>
           </View>
         </View>

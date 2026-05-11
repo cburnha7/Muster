@@ -2,14 +2,20 @@ import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
 import Constants from 'expo-constants';
 
-// Configure notification behavior
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowAlert: true,
-    shouldPlaySound: true,
-    shouldSetBadge: true,
-  }),
-});
+// Configure notification behavior — wrapped in try/catch to prevent
+// TurboModule crashes on devices where expo-notifications native module
+// isn't fully available (e.g., iPad without notification entitlement).
+try {
+  Notifications.setNotificationHandler({
+    handleNotification: async () => ({
+      shouldShowAlert: true,
+      shouldPlaySound: true,
+      shouldSetBadge: true,
+    }),
+  });
+} catch (e) {
+  console.warn('Failed to set notification handler:', e);
+}
 
 export interface NotificationPreferences {
   eventReminders: boolean;
@@ -42,6 +48,13 @@ class NotificationServiceClass {
    */
   async initialize(): Promise<string | null> {
     try {
+      // Guard: only initialize on native platforms with physical devices
+      if (Platform.OS === 'web') return null;
+      if (!Constants.isDevice) {
+        console.warn('Push notifications only work on physical devices');
+        return null;
+      }
+
       // Request permissions
       const token = await this.registerForPushNotifications();
 
@@ -56,7 +69,7 @@ class NotificationServiceClass {
 
       return null;
     } catch (error) {
-      console.error('Failed to initialize notifications:', error);
+      console.warn('Failed to initialize notifications:', error);
       return null;
     }
   }

@@ -1,35 +1,43 @@
-import { lightColors } from '../theme/tokens';
+import { lightColors, SemanticColors } from '../theme/tokens';
 import { fonts } from '../theme';
+
+/**
+ * Build a calendar theme from the given color palette.
+ * Supports both light and dark mode.
+ */
+export function buildCalendarTheme(colors: SemanticColors) {
+  return {
+    backgroundColor: 'transparent',
+    calendarBackground: 'transparent',
+    textSectionTitleColor: colors.inkSecondary,
+    selectedDayBackgroundColor: colors.success,
+    selectedDayTextColor: colors.white,
+    todayTextColor: colors.success,
+    dayTextColor: colors.ink,
+    textDisabledColor: colors.border,
+    dotColor: colors.success,
+    selectedDotColor: colors.white,
+    arrowColor: colors.ink,
+    monthTextColor: colors.ink,
+    indicatorColor: colors.success,
+    textDayFontFamily: fonts.body,
+    textMonthFontFamily: fonts.heading,
+    textDayHeaderFontFamily: fonts.headingSemi,
+    textDayFontWeight: '400' as const,
+    textMonthFontWeight: '700' as const,
+    textDayHeaderFontWeight: '600' as const,
+    textDayFontSize: 16,
+    textMonthFontSize: 18,
+    textDayHeaderFontSize: 13,
+  };
+}
 
 /**
  * Calendar theme configuration for react-native-calendars
  * Uses lightColors directly since this is a non-component utility file.
- * For dark mode, consumers should override these values from useTheme().
+ * For dark mode support, use buildCalendarTheme(colors) instead.
  */
-export const calendarTheme = {
-  backgroundColor: 'transparent',
-  calendarBackground: 'transparent',
-  textSectionTitleColor: lightColors.inkSecondary,
-  selectedDayBackgroundColor: lightColors.success,
-  selectedDayTextColor: lightColors.white,
-  todayTextColor: lightColors.success,
-  dayTextColor: lightColors.ink,
-  textDisabledColor: lightColors.border,
-  dotColor: lightColors.success,
-  selectedDotColor: lightColors.white,
-  arrowColor: lightColors.ink,
-  monthTextColor: lightColors.ink,
-  indicatorColor: lightColors.success,
-  textDayFontFamily: fonts.body,
-  textMonthFontFamily: fonts.heading,
-  textDayHeaderFontFamily: fonts.headingSemi,
-  textDayFontWeight: '400' as const,
-  textMonthFontWeight: '700' as const,
-  textDayHeaderFontWeight: '600' as const,
-  textDayFontSize: 16,
-  textMonthFontSize: 18,
-  textDayHeaderFontSize: 13,
-};
+export const calendarTheme = buildCalendarTheme(lightColors);
 
 /**
  * Marking colors for calendar dates

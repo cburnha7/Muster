@@ -79,7 +79,7 @@ import {
 } from '../../utils/eventsCalendarUtils';
 import {
   formatDateForCalendar,
-  calendarTheme,
+  buildCalendarTheme,
 } from '../../utils/calendarUtils';
 import { searchEventBus } from '../../utils/searchEventBus';
 import { getSportEmoji } from '../../constants/sports';
@@ -110,6 +110,9 @@ export function HomeScreen() {
   const [selectedDate, setSelectedDate] = useState<string>(
     formatDateForCalendar(new Date())
   );
+
+  // Dynamic calendar theme (responds to dark mode)
+  const calendarTheme = useMemo(() => buildCalendarTheme(colors), [colors]);
 
   // My Crew selection — shared across all tabs via Redux
   const {

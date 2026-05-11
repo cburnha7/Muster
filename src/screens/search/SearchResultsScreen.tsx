@@ -144,11 +144,23 @@ export function SearchResultsScreen({
 
   const renderTabButton = (tab: TabType, label: string, count?: number) => (
     <TouchableOpacity
-      style={[styles.tabButton, { backgroundColor: colors.surface }, activeTab === tab && styles.tabButtonActive, activeTab === tab && { backgroundColor: colors.cobalt }]}
+      style={[
+        styles.tabButton,
+        { backgroundColor: colors.surface },
+        activeTab === tab && styles.tabButtonActive,
+        activeTab === tab && { backgroundColor: colors.cobalt },
+      ]}
       onPress={() => setActiveTab(tab)}
       activeOpacity={0.75}
     >
-      <Text style={[styles.tabText, { color: colors.inkSoft }, activeTab === tab && styles.tabTextActive, activeTab === tab && { color: colors.white }]}>
+      <Text
+        style={[
+          styles.tabText,
+          { color: colors.inkSoft },
+          activeTab === tab && styles.tabTextActive,
+          activeTab === tab && { color: colors.white },
+        ]}
+      >
         {label}
         {count !== undefined && ` (${count})`}
       </Text>
@@ -158,7 +170,9 @@ export function SearchResultsScreen({
   const renderEmptyState = () => (
     <View style={styles.emptyContainer}>
       <Ionicons name="search-outline" size={64} color={colors.inkFaint} />
-      <Text style={[styles.emptyTitle, { color: colors.ink }]}>No results found</Text>
+      <Text style={[styles.emptyTitle, { color: colors.ink }]}>
+        No results found
+      </Text>
       <Text style={[styles.emptySubtitle, { color: colors.inkSoft }]}>
         Try adjusting your search or filters
       </Text>
@@ -170,7 +184,9 @@ export function SearchResultsScreen({
       return (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={colors.cobalt} />
-          <Text style={[styles.loadingText, { color: colors.inkSoft }]}>Searching...</Text>
+          <Text style={[styles.loadingText, { color: colors.inkSoft }]}>
+            Searching...
+          </Text>
         </View>
       );
     }
@@ -313,7 +329,13 @@ export function SearchResultsScreen({
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.white }, { backgroundColor: colors.bgScreen }]}>
+    <View
+      style={[
+        styles.container,
+        { backgroundColor: colors.white },
+        { backgroundColor: colors.bgScreen },
+      ]}
+    >
       <SearchBar
         value={query}
         onChangeText={setQuery}
@@ -330,7 +352,12 @@ export function SearchResultsScreen({
         </Text>
       </View>
 
-      <View style={[styles.tabContainer, { borderBottomColor: colors.border, backgroundColor: colors.white }]}>
+      <View
+        style={[
+          styles.tabContainer,
+          { borderBottomColor: colors.border, backgroundColor: colors.bgCard },
+        ]}
+      >
         {renderTabButton('all', 'All', totalResults)}
         {renderTabButton('events', 'Events', events.length)}
         {renderTabButton('facilities', 'Facilities', facilities.length)}

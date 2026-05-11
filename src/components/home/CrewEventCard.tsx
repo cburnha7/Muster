@@ -40,17 +40,28 @@ function tintColor(hex: string): string {
   return `rgb(${mix(r)}, ${mix(g)}, ${mix(b)})`;
 }
 
+/** Darken a hex color to ~15% opacity feel for dark mode card background */
+function tintColorDark(hex: string): string {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  // Mix toward dark background (#1A2020) at 85% darkness
+  const mix = (c: number, base: number) => Math.round(base + (c - base) * 0.18);
+  return `rgb(${mix(r, 26)}, ${mix(g, 32)}, ${mix(b, 32)})`;
+}
+
 function CrewEventCardInner({
   booking,
   crewColor,
   onPress,
 }: CrewEventCardProps) {
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
   const event = booking.event;
   if (!event) return null;
 
   const start = new Date(event.startTime);
-  const bg = tintColor(crewColor);
+  // In light mode, tint toward white; in dark mode, tint toward the dark background
+  const bg = isDark ? tintColorDark(crewColor) : tintColor(crewColor);
 
   return (
     <TouchableOpacity
@@ -61,12 +72,22 @@ function CrewEventCardInner({
       <View style={styles.row}>
         <View style={styles.info}>
           <Text
-            style={[styles.title, { color: colors.ink }, { color: colors.textPrimary }]}
+            style={[
+              styles.title,
+              { color: colors.ink },
+              { color: colors.textPrimary },
+            ]}
             numberOfLines={1}
           >
             {event.title}
           </Text>
-          <Text style={[styles.meta, { color: colors.inkSoft }, { color: colors.textSecondary }]}>
+          <Text
+            style={[
+              styles.meta,
+              { color: colors.inkSoft },
+              { color: colors.textSecondary },
+            ]}
+          >
             {formatDay(start)} · {formatTime(start)}
           </Text>
           {(event.facility?.name || event.locationName) && (
@@ -77,7 +98,11 @@ function CrewEventCardInner({
                 color={colors.textSecondary}
               />
               <Text
-                style={[styles.locText, { color: colors.inkSoft }, { color: colors.textSecondary }]}
+                style={[
+                  styles.locText,
+                  { color: colors.inkSoft },
+                  { color: colors.textSecondary },
+                ]}
                 numberOfLines={1}
               >
                 {event.facility?.name || event.locationName}
