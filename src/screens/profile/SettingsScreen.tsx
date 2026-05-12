@@ -500,8 +500,8 @@ function AccountsTab({
         Platform.OS === 'web'
           ? typeof window !== 'undefined'
             ? window.location.href
-            : 'https://muster.app'
-          : 'muster://settings/accounts';
+            : 'https://muster-ecru.vercel.app/settings'
+          : 'https://muster-ecru.vercel.app/settings';
       const res = await fetch(`${API_BASE_URL}/stripe/connect/onboard`, {
         method: 'POST',
         headers: {
@@ -625,8 +625,8 @@ function AccountsTab({
           Platform.OS === 'web'
             ? typeof window !== 'undefined'
               ? window.location.href
-              : 'https://muster.app'
-            : 'muster://settings/accounts';
+              : 'https://muster-ecru.vercel.app/settings'
+            : 'https://muster-ecru.vercel.app/settings';
 
         const res = await fetch(`${API_BASE_URL}/connect/onboard`, {
           method: 'POST',

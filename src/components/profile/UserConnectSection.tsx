@@ -74,7 +74,9 @@ export function UserConnectSection({ userId }: UserConnectSectionProps) {
       if (tkn) headers['Authorization'] = `Bearer ${tkn}`;
 
       const currentUrl =
-        Platform.OS === 'web' ? window.location.href : 'muster://profile';
+        Platform.OS === 'web'
+          ? window.location.href
+          : 'https://muster-ecru.vercel.app/settings';
 
       const response = await fetch(url, {
         method: 'POST',
