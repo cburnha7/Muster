@@ -111,10 +111,6 @@ class SSOService {
         scopes: ['openid', 'profile', 'email'],
         responseType: ResponseType.Token,
         usePKCE: false,
-        extraParams: {
-          // Request id_token alongside access_token
-          nonce: Math.random().toString(36).substring(2),
-        },
       });
 
       const result = await request.promptAsync(discovery);
