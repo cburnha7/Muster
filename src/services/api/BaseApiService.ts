@@ -143,17 +143,26 @@ export class BaseApiService {
           }
           return this.request<T>(method, url, body, extraHeaders, 1);
         } catch {
-          // Refresh failed — clear session and signal the app
+          // Refresh failed — clear session and navigate to login
           await TokenStorage.clearAll();
-          store.dispatch(clearAuth());
           if (Platform.OS !== 'web') {
             Alert.alert(
               'Session Expired',
               'Please sign in again to continue.',
-              [{ text: 'OK' }]
+              [
+                {
+                  text: 'OK',
+                  onPress: () => {
+                    store.dispatch(clearAuth());
+                  },
+                },
+              ]
             );
-          } else if (typeof window?.dispatchEvent === 'function') {
-            window.dispatchEvent(new CustomEvent('auth:sessionExpired'));
+          } else {
+            store.dispatch(clearAuth());
+            if (typeof window?.dispatchEvent === 'function') {
+              window.dispatchEvent(new CustomEvent('auth:sessionExpired'));
+            }
           }
           // fall through to throw the 401 error
         }
