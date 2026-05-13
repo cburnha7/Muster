@@ -234,6 +234,8 @@ export function EditFacilityScreen({
           zipCode: facility.zipCode,
           country: 'USA',
         },
+        latitude: facility.latitude,
+        longitude: facility.longitude,
         contactInfo: {
           name: facility.contactName || '',
           phone: facility.contactPhone || '',
@@ -515,6 +517,8 @@ export function EditFacilityScreen({
         city: (formData.address?.city || '').trim(),
         state: (formData.address?.state || '').trim(),
         zipCode: (formData.address?.zipCode || '').trim(),
+        latitude: (formData as any).latitude,
+        longitude: (formData as any).longitude,
         contactName: (formData.contactInfo?.name || '').trim() || undefined,
         contactPhone: (formData.contactInfo?.phone || '').trim() || undefined,
         contactEmail: (formData.contactInfo?.email || '').trim() || undefined,
@@ -763,6 +767,10 @@ export function EditFacilityScreen({
                     updateNestedField('address', 'city', addr.city);
                     updateNestedField('address', 'state', addr.state);
                     updateNestedField('address', 'zipCode', addr.zipCode);
+                    if (addr.latitude != null)
+                      updateField('latitude', addr.latitude);
+                    if (addr.longitude != null)
+                      updateField('longitude', addr.longitude);
                     setAddressQuery(addr.formatted || addr.street);
                   }}
                   label=""
