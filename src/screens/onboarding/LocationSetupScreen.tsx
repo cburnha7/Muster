@@ -88,7 +88,7 @@ export const LocationSetupScreen: React.FC = () => {
   };
 
   const handleContinue = () => {
-    navigation.navigate('PersonaSetup', {
+    navigation.navigate('ProfileFinish', {
       intents,
       sports,
       ...(city ? { locationCity: city } : {}),
@@ -99,7 +99,7 @@ export const LocationSetupScreen: React.FC = () => {
   };
 
   const handleSkip = () => {
-    navigation.navigate('PersonaSetup', { intents, sports });
+    navigation.navigate('ProfileFinish', { intents, sports });
   };
 
   const handleBack = () => {
@@ -147,14 +147,21 @@ export const LocationSetupScreen: React.FC = () => {
               contentContainerStyle={styles.scrollContent}
               keyboardShouldPersistTaps="handled"
             >
-              <Text style={[styles.title, { color: colors.ink }]}>Where do you play?</Text>
+              <Text style={[styles.title, { color: colors.ink }]}>
+                Where do you play?
+              </Text>
               <Text style={[styles.subtitle, { color: colors.inkSecondary }]}>
                 We'll show you games and facilities nearby
               </Text>
 
               {/* Location confirmed state */}
               {locationConfirmed && (
-                <View style={[styles.confirmedCard, { backgroundColor: colors.surface }]}>
+                <View
+                  style={[
+                    styles.confirmedCard,
+                    { backgroundColor: colors.surface },
+                  ]}
+                >
                   <View style={styles.confirmedIconRow}>
                     <View style={styles.confirmedIcon}>
                       <Ionicons
@@ -164,8 +171,17 @@ export const LocationSetupScreen: React.FC = () => {
                       />
                     </View>
                   </View>
-                  <Text style={[styles.confirmedText, { color: colors.inkSecondary }]}>Looks like you're in</Text>
-                  <Text style={[styles.confirmedLocation, { color: colors.ink }]}>
+                  <Text
+                    style={[
+                      styles.confirmedText,
+                      { color: colors.inkSecondary },
+                    ]}
+                  >
+                    Looks like you're in
+                  </Text>
+                  <Text
+                    style={[styles.confirmedLocation, { color: colors.ink }]}
+                  >
                     {city}, {state}
                   </Text>
                   <TouchableOpacity
@@ -175,7 +191,11 @@ export const LocationSetupScreen: React.FC = () => {
                     }}
                     style={styles.changeLink}
                   >
-                    <Text style={[styles.changeLinkText, { color: colors.cobalt }]}>Change</Text>
+                    <Text
+                      style={[styles.changeLinkText, { color: colors.cobalt }]}
+                    >
+                      Change
+                    </Text>
                   </TouchableOpacity>
                 </View>
               )}
@@ -184,7 +204,10 @@ export const LocationSetupScreen: React.FC = () => {
               {!locationConfirmed && !showManualEntry && (
                 <View style={styles.locationActions}>
                   <TouchableOpacity
-                    style={[styles.locationButton, { backgroundColor: colors.cobalt }]}
+                    style={[
+                      styles.locationButton,
+                      { backgroundColor: colors.cobalt },
+                    ]}
                     onPress={handleUseMyLocation}
                     disabled={locationLoading}
                     activeOpacity={0.85}
@@ -199,20 +222,31 @@ export const LocationSetupScreen: React.FC = () => {
                         style={styles.locationButtonIcon}
                       />
                     )}
-                    <Text style={[styles.locationButtonText, { color: colors.white }]}>
+                    <Text
+                      style={[
+                        styles.locationButtonText,
+                        { color: colors.white },
+                      ]}
+                    >
                       {locationLoading ? 'Finding you...' : 'Use My Location'}
                     </Text>
                   </TouchableOpacity>
 
                   {locationError && (
-                    <Text style={[styles.errorText, { color: colors.error }]}>{locationError}</Text>
+                    <Text style={[styles.errorText, { color: colors.error }]}>
+                      {locationError}
+                    </Text>
                   )}
 
                   <TouchableOpacity
                     onPress={() => setShowManualEntry(true)}
                     style={styles.manualLink}
                   >
-                    <Text style={[styles.manualLinkText, { color: colors.cobalt }]}>Enter manually</Text>
+                    <Text
+                      style={[styles.manualLinkText, { color: colors.cobalt }]}
+                    >
+                      Enter manually
+                    </Text>
                   </TouchableOpacity>
                 </View>
               )}
@@ -221,9 +255,19 @@ export const LocationSetupScreen: React.FC = () => {
               {!locationConfirmed && showManualEntry && (
                 <View style={styles.manualFields}>
                   <View style={styles.inputContainer}>
-                    <Text style={[styles.inputLabel, { color: colors.inkSecondary }]}>City</Text>
+                    <Text
+                      style={[
+                        styles.inputLabel,
+                        { color: colors.inkSecondary },
+                      ]}
+                    >
+                      City
+                    </Text>
                     <TextInput
-                      style={[styles.textInput, { backgroundColor: colors.bgSubtle, color: colors.ink }]}
+                      style={[
+                        styles.textInput,
+                        { backgroundColor: colors.bgSubtle, color: colors.ink },
+                      ]}
                       value={city}
                       onChangeText={setCity}
                       placeholder="San Francisco"
@@ -232,9 +276,19 @@ export const LocationSetupScreen: React.FC = () => {
                     />
                   </View>
                   <View style={styles.inputContainer}>
-                    <Text style={[styles.inputLabel, { color: colors.inkSecondary }]}>State</Text>
+                    <Text
+                      style={[
+                        styles.inputLabel,
+                        { color: colors.inkSecondary },
+                      ]}
+                    >
+                      State
+                    </Text>
                     <TextInput
-                      style={[styles.textInput, { backgroundColor: colors.bgSubtle, color: colors.ink }]}
+                      style={[
+                        styles.textInput,
+                        { backgroundColor: colors.bgSubtle, color: colors.ink },
+                      ]}
                       value={state}
                       onChangeText={setState}
                       placeholder="CA"
@@ -250,7 +304,9 @@ export const LocationSetupScreen: React.FC = () => {
                     }}
                     style={styles.manualLink}
                   >
-                    <Text style={[styles.manualLinkText, { color: colors.cobalt }]}>
+                    <Text
+                      style={[styles.manualLinkText, { color: colors.cobalt }]}
+                    >
                       Use my location instead
                     </Text>
                   </TouchableOpacity>
@@ -262,15 +318,26 @@ export const LocationSetupScreen: React.FC = () => {
           {/* Bottom */}
           <View style={styles.bottomSection}>
             <TouchableOpacity
-              style={[styles.continueButton, { backgroundColor: colors.cobalt }]}
+              style={[
+                styles.continueButton,
+                { backgroundColor: colors.cobalt },
+              ]}
               onPress={handleContinue}
               activeOpacity={0.85}
             >
-              <Text style={[styles.continueButtonText, { color: colors.white }]}>Continue</Text>
+              <Text
+                style={[styles.continueButtonText, { color: colors.white }]}
+              >
+                Continue
+              </Text>
             </TouchableOpacity>
 
             <TouchableOpacity onPress={handleSkip} style={styles.skipLink}>
-              <Text style={[styles.skipLinkText, { color: colors.inkSecondary }]}>Skip</Text>
+              <Text
+                style={[styles.skipLinkText, { color: colors.inkSecondary }]}
+              >
+                Skip
+              </Text>
             </TouchableOpacity>
           </View>
         </View>
