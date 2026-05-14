@@ -120,12 +120,6 @@ export function useNotifications() {
     refresh();
   }, [refresh]);
 
-  // Auto-refresh every 60 seconds
-  useEffect(() => {
-    const interval = setInterval(refresh, 60000);
-    return () => clearInterval(interval);
-  }, [refresh]);
-
   // Refresh when explicitly triggered (e.g. after debrief submit)
   useEffect(() => {
     return notificationsEventBus.subscribe(refresh);

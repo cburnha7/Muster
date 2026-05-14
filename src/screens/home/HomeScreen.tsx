@@ -1,4 +1,10 @@
-import React, { useState, useCallback, useMemo, useEffect } from 'react';
+import React, {
+  useState,
+  useCallback,
+  useMemo,
+  useEffect,
+  useRef,
+} from 'react';
 import {
   View,
   Text,
@@ -13,7 +19,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useNavigation, useFocusEffect } from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
 import { useSelector } from 'react-redux';
 import { Calendar, DateData } from 'react-native-calendars';
 
@@ -475,27 +481,25 @@ export function HomeScreen() {
     loadOrganizedEvents,
   ]);
 
-  useFocusEffect(
-    useCallback(() => {
-      if (!authLoading && !bootLoading) {
-        refetchBookings();
-        refetchDiscover();
-        loadDebriefEvents();
-        loadInvitations();
-        loadReadyToScheduleLeagues();
-        loadUserTeams();
-        loadOrganizedEvents();
-      }
-    }, [
-      authLoading,
-      bootLoading,
-      loadDebriefEvents,
-      loadInvitations,
-      loadReadyToScheduleLeagues,
-      loadUserTeams,
-      loadOrganizedEvents,
-    ])
-  );
+  // Load data once after boot, and again when active user changes.
+  // No useFocusEffect — data doesn't go stale between tab switches.
+  const hasLoadedRef = useRef(false);
+
+  useEffect(() => {
+    if (!authLoading && !bootLoading && user?.id) {
+      // Skip if this is just the initial mount and we haven't changed users
+      if (hasLoadedRef.current && !activeUserId) return;
+      hasLoadedRef.current = true;
+
+      refetchBookings();
+      refetchDiscover();
+      loadDebriefEvents();
+      loadInvitations();
+      loadReadyToScheduleLeagues();
+      loadUserTeams();
+      loadOrganizedEvents();
+    }
+  }, [authLoading, bootLoading, user?.id, activeUserId]);
 
   useEffect(() => {
     const unsubscribe = searchEventBus.subscribe(() =>
@@ -509,18 +513,6 @@ export function HomeScreen() {
       unsubClose();
     };
   }, []);
-
-  useEffect(() => {
-    if (!authLoading && !bootLoading) {
-      refetchBookings();
-      refetchDiscover();
-      loadDebriefEvents();
-      loadInvitations();
-      loadReadyToScheduleLeagues();
-      loadUserTeams();
-      loadOrganizedEvents();
-    }
-  }, [activeUserId]);
 
   const handleBookingPress = useCallback(
     (booking: Booking) => {
