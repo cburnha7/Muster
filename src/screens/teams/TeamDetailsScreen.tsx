@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   View,
   Text,
@@ -180,8 +180,10 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps) {
   // Header is now handled by EntityHeader — no need for navigation.setOptions
 
   // Sync form state when team loads
+  const formInitializedRef = useRef(false);
   useEffect(() => {
-    if (team) {
+    if (team && !formInitializedRef.current) {
+      formInitializedRef.current = true;
       setFormName(team.name || '');
       setFormDescription(team.description || '');
       setFormSportType(team.sportType || SportType.BASKETBALL);
