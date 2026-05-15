@@ -104,13 +104,13 @@ class SSOService {
         'https://accounts.google.com'
       );
 
-      // Request both access token and id token
+      // Use authorization code flow with PKCE (required for iOS native clients)
       const request = new AuthRequest({
         clientId,
         redirectUri,
         scopes: ['openid', 'profile', 'email'],
-        responseType: ResponseType.Token,
-        usePKCE: false,
+        responseType: ResponseType.Code,
+        usePKCE: true,
       });
 
       const result = await request.promptAsync(discovery);
@@ -118,12 +118,34 @@ class SSOService {
       if (result.type === 'cancel' || result.type === 'dismiss') {
         throw new Error('User cancelled');
       }
-      if (result.type !== 'success' || !result.authentication?.accessToken) {
+      if (result.type !== 'success' || !result.params?.code) {
         throw new Error('Google Sign In failed');
       }
 
-      const accessToken = result.authentication.accessToken;
-      const idToken = result.authentication.idToken || '';
+      // Exchange authorization code for tokens
+      const tokenResponse = await fetch(discovery.tokenEndpoint!, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+          client_id: clientId,
+          code: result.params.code,
+          code_verifier: request.codeVerifier || '',
+          grant_type: 'authorization_code',
+          redirect_uri: redirectUri,
+        }).toString(),
+      });
+
+      if (!tokenResponse.ok) {
+        throw new Error('Failed to exchange authorization code');
+      }
+
+      const tokens = await tokenResponse.json();
+      const accessToken = tokens.access_token;
+      const idToken = tokens.id_token || '';
+
+      if (!accessToken) {
+        throw new Error('No access token received');
+      }
 
       // Fetch profile from Google userinfo endpoint
       const res = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
