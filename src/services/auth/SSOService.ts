@@ -92,10 +92,13 @@ class SSOService {
       // The Web client supports authorization code flow with PKCE via browser.
       const clientId = GOOGLE_WEB_CLIENT_ID;
 
-      // Use the app's custom scheme for the redirect URI.
-      // This must be registered in Google Cloud Console under the Web client's
-      // "Authorized redirect URIs" as: muster://
-      const redirectUri = makeRedirectUri({ scheme: 'muster' });
+      // Redirect URI:
+      // - Web: current page URL (handled by makeRedirectUri)
+      // - Native: Expo auth proxy (registered in Google Cloud Console)
+      const redirectUri =
+        Platform.OS === 'web'
+          ? makeRedirectUri()
+          : 'https://auth.expo.io/@cburnha7/muster';
 
       const discovery = await fetchDiscoveryAsync(
         'https://accounts.google.com'
