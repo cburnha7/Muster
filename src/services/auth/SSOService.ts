@@ -87,24 +87,21 @@ class SSOService {
 
   async signInWithGoogle(): Promise<SSOUserData> {
     try {
-      // On iOS use the iOS client ID, on other platforms use web client ID
-      const clientId =
-        Platform.OS === 'ios' ? GOOGLE_IOS_CLIENT_ID : GOOGLE_WEB_CLIENT_ID;
+      // Always use the Web client ID with expo-auth-session.
+      // iOS client IDs are for the native Google Sign-In SDK only.
+      // The Web client supports authorization code flow with PKCE via browser.
+      const clientId = GOOGLE_WEB_CLIENT_ID;
 
-      // Generate the redirect URI for the current platform
-      let redirectUri: string;
-      if (Platform.OS === 'ios' && GOOGLE_IOS_CLIENT_ID) {
-        const reversed = GOOGLE_IOS_CLIENT_ID.split('.').reverse().join('.');
-        redirectUri = `${reversed}:/oauthredirect`;
-      } else {
-        redirectUri = makeRedirectUri();
-      }
+      // Use the app's custom scheme for the redirect URI.
+      // This must be registered in Google Cloud Console under the Web client's
+      // "Authorized redirect URIs" as: muster://
+      const redirectUri = makeRedirectUri({ scheme: 'muster' });
 
       const discovery = await fetchDiscoveryAsync(
         'https://accounts.google.com'
       );
 
-      // Use authorization code flow with PKCE (required for iOS native clients)
+      // Authorization code flow with PKCE (secure, works on all platforms)
       const request = new AuthRequest({
         clientId,
         redirectUri,
@@ -136,7 +133,10 @@ class SSOService {
       });
 
       if (!tokenResponse.ok) {
-        throw new Error('Failed to exchange authorization code');
+        const errBody = await tokenResponse.text().catch(() => '');
+        throw new Error(
+          `Token exchange failed: ${tokenResponse.status} ${errBody}`
+        );
       }
 
       const tokens = await tokenResponse.json();
