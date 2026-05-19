@@ -1,10 +1,4 @@
-import React, {
-  useState,
-  useCallback,
-  useMemo,
-  useEffect,
-  useRef,
-} from 'react';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import {
   View,
   Text,
@@ -38,14 +32,13 @@ import { MilestoneOverlay } from '../../components/ui/MilestoneOverlay';
 import { useMilestoneCheck } from '../../hooks/useMilestoneCheck';
 
 // Services
-import { debriefService } from '../../services/api/DebriefService';
 import {
-  userService,
   RosterInvitation,
   LeagueInvitation,
   EventInvitation,
   ReadyToScheduleLeague,
 } from '../../services/api/UserService';
+import { useHomeData } from '../../hooks/useHomeData';
 
 // Store
 import {
@@ -180,35 +173,8 @@ export function HomeScreen() {
   }, [discoverData, bookingsData]);
 
   // User teams state
-  const [userTeams, setUserTeams] = useState<Team[]>([]);
-  const [organizedEvents, setOrganizedEvents] = useState<Event[]>([]);
-
-  const loadUserTeams = useCallback(async () => {
-    try {
-      const result = await userService.getUserTeams({ page: 1, limit: 10 });
-      setUserTeams(result.data || []);
-    } catch (err) {
-      console.warn('Failed to fetch user teams:', err);
-      setUserTeams([]);
-    }
-  }, []);
-
-  const loadOrganizedEvents = useCallback(async () => {
-    try {
-      const result = await userService.getUserEvents(undefined, {
-        page: 1,
-        limit: 100,
-      });
-      const bookedEventIds = new Set(
-        (bookingsData?.data || []).map(b => b.eventId)
-      );
-      setOrganizedEvents(
-        (result.data || []).filter((e: Event) => !bookedEventIds.has(e.id))
-      );
-    } catch {
-      setOrganizedEvents([]);
-    }
-  }, [bookingsData]);
+  // User teams from cached hook
+  const userTeams = homeData.userTeams as Team[];
 
   // DependentToggle state
   const activeFilter: PersonFilter = useMemo(() => {
@@ -401,22 +367,14 @@ export function HomeScreen() {
 
   const isLoading = bookingsLoading;
 
-  // Debrief state
-  const [debriefEvents, setDebriefEvents] = useState<Booking[]>([]);
-
-  // Invitations state
-  const [rosterInvitations, setRosterInvitations] = useState<
-    RosterInvitation[]
-  >([]);
-  const [leagueInvitations, setLeagueInvitations] = useState<
-    LeagueInvitation[]
-  >([]);
-  const [eventInvitations, setEventInvitations] = useState<EventInvitation[]>(
-    []
-  );
-  const [readyToScheduleLeagues, setReadyToScheduleLeagues] = useState<
-    ReadyToScheduleLeague[]
-  >([]);
+  // ── Cached data via SWR hook (instant render from cache, background refresh) ──
+  const homeData = useHomeData();
+  const debriefEvents = homeData.debriefEvents as Booking[];
+  const rosterInvitations = homeData.rosterInvitations;
+  const leagueInvitations = homeData.leagueInvitations;
+  const eventInvitations = homeData.eventInvitations;
+  const readyToScheduleLeagues = homeData.readyToScheduleLeagues;
+  const organizedEvents = homeData.organizedEvents;
   const [error, setError] = useState<string | null>(null);
 
   const inboxCount =
@@ -427,79 +385,16 @@ export function HomeScreen() {
     debriefEvents.length +
     cancelRequests.length;
 
-  const loadDebriefEvents = useCallback(async () => {
-    try {
-      const result = await debriefService.getDebriefEvents();
-      setDebriefEvents(result.data || []);
-    } catch (err) {
-      setDebriefEvents([]);
-      setError('Failed to load debrief events. Pull down to refresh.');
-    }
-  }, []);
-
-  const loadInvitations = useCallback(async () => {
-    try {
-      const result = await userService.getInvitations();
-      setRosterInvitations(result.rosterInvitations || []);
-      setLeagueInvitations(result.leagueInvitations || []);
-      setEventInvitations(result.eventInvitations || []);
-    } catch (err) {
-      setError('Failed to load invitations. Pull down to refresh.');
-    }
-  }, []);
-
-  const loadReadyToScheduleLeagues = useCallback(async () => {
-    try {
-      const result = await userService.getLeaguesReadyToSchedule();
-      setReadyToScheduleLeagues(result || []);
-    } catch (err) {
-      setReadyToScheduleLeagues([]);
-      setError('Failed to load league data. Pull down to refresh.');
-    }
-  }, []);
-
   const handleRefresh = useCallback(async () => {
     setIsRefreshing(true);
     setError(null);
     await Promise.all([
       refetchBookings(),
       refetchDiscover(),
-      loadDebriefEvents(),
-      loadInvitations(),
-      loadReadyToScheduleLeagues(),
-      loadUserTeams(),
-      loadOrganizedEvents(),
+      homeData.refresh(),
     ]);
     setIsRefreshing(false);
-  }, [
-    refetchBookings,
-    refetchDiscover,
-    loadDebriefEvents,
-    loadInvitations,
-    loadReadyToScheduleLeagues,
-    loadUserTeams,
-    loadOrganizedEvents,
-  ]);
-
-  // Load data once after boot, and again when active user changes.
-  // No useFocusEffect — data doesn't go stale between tab switches.
-  const hasLoadedRef = useRef(false);
-
-  useEffect(() => {
-    if (!authLoading && !bootLoading && user?.id) {
-      // Skip if this is just the initial mount and we haven't changed users
-      if (hasLoadedRef.current && !activeUserId) return;
-      hasLoadedRef.current = true;
-
-      refetchBookings();
-      refetchDiscover();
-      loadDebriefEvents();
-      loadInvitations();
-      loadReadyToScheduleLeagues();
-      loadUserTeams();
-      loadOrganizedEvents();
-    }
-  }, [authLoading, bootLoading, user?.id, activeUserId]);
+  }, [refetchBookings, refetchDiscover, homeData.refresh]);
 
   useEffect(() => {
     const unsubscribe = searchEventBus.subscribe(() =>

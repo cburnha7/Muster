@@ -195,6 +195,13 @@ export const logoutUser = createAsyncThunk(
     } catch {
       // Best-effort
     }
+    // Clear SWR cache
+    try {
+      const { clearAllCache } = await import('../../utils/cache');
+      await clearAllCache();
+    } catch {
+      // Best-effort
+    }
     // Clear related slices
     const { clearSubscription } = await import('./subscriptionSlice');
     const { resetContext } = await import('./contextSlice');
