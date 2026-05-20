@@ -172,9 +172,7 @@ export function HomeScreen() {
     return events.filter(e => !bookedEventIds.has(e.id));
   }, [discoverData, bookingsData]);
 
-  // User teams state
-  // User teams from cached hook
-  const userTeams = homeData.userTeams as Team[];
+  // User teams state — populated from homeData below
 
   // DependentToggle state
   const activeFilter: PersonFilter = useMemo(() => {
@@ -375,6 +373,7 @@ export function HomeScreen() {
   const eventInvitations = homeData.eventInvitations;
   const readyToScheduleLeagues = homeData.readyToScheduleLeagues;
   const organizedEvents = homeData.organizedEvents;
+  const userTeams = homeData.userTeams as Team[];
   const [error, setError] = useState<string | null>(null);
 
   const inboxCount =
