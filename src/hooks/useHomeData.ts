@@ -3,20 +3,21 @@
  *
  * Uses useCachedFetch for instant rendering from AsyncStorage,
  * with background revalidation from the network.
+ *
+ * Service imports are done lazily inside fetcher functions to avoid
+ * circular dependency issues with the module initialization order.
  */
 
 import { useSelector } from 'react-redux';
 import { selectUser } from '../store/slices/authSlice';
 import { selectActiveUserId } from '../store/slices/contextSlice';
 import { useCachedFetch } from './useCachedFetch';
-import {
-  userService,
+import type {
   RosterInvitation,
   LeagueInvitation,
   EventInvitation,
   ReadyToScheduleLeague,
 } from '../services/api/UserService';
-import { debriefService } from '../services/api/DebriefService';
 
 interface InvitationsData {
   rosterInvitations: RosterInvitation[];
@@ -36,6 +37,7 @@ export function useHomeData() {
   const invitations = useCachedFetch<InvitationsData>(
     `invitations_${scope}`,
     async () => {
+      const { userService } = await import('../services/api/UserService');
       const result = await userService.getInvitations();
       return {
         rosterInvitations: result.rosterInvitations || [],
@@ -48,13 +50,17 @@ export function useHomeData() {
 
   const readyToSchedule = useCachedFetch<ReadyToScheduleLeague[]>(
     `leagues_ready_${scope}`,
-    () => userService.getLeaguesReadyToSchedule(),
+    async () => {
+      const { userService } = await import('../services/api/UserService');
+      return userService.getLeaguesReadyToSchedule();
+    },
     { skip }
   );
 
   const debrief = useCachedFetch<any[]>(
     `debrief_${scope}`,
     async () => {
+      const { debriefService } = await import('../services/api/DebriefService');
       const res = await debriefService.getDebriefEvents();
       return res.data || [];
     },
@@ -64,6 +70,7 @@ export function useHomeData() {
   const userTeams = useCachedFetch<any[]>(
     `user_teams_${scope}`,
     async () => {
+      const { userService } = await import('../services/api/UserService');
       const res = await userService.getUserTeams();
       return res.data || res || [];
     },
@@ -73,6 +80,7 @@ export function useHomeData() {
   const organizedEvents = useCachedFetch<any[]>(
     `organized_events_${scope}`,
     async () => {
+      const { userService } = await import('../services/api/UserService');
       const res = await userService.getUserEvents({ page: 1, limit: 100 });
       return res.data || [];
     },
