@@ -367,13 +367,13 @@ export function HomeScreen() {
 
   // ── Cached data via SWR hook (instant render from cache, background refresh) ──
   const homeData = useHomeData();
-  const debriefEvents = homeData.debriefEvents as Booking[];
-  const rosterInvitations = homeData.rosterInvitations;
-  const leagueInvitations = homeData.leagueInvitations;
-  const eventInvitations = homeData.eventInvitations;
-  const readyToScheduleLeagues = homeData.readyToScheduleLeagues;
-  const organizedEvents = homeData.organizedEvents;
-  const userTeams = homeData.userTeams as Team[];
+  const debriefEvents = (homeData.debriefEvents || []) as Booking[];
+  const rosterInvitations = homeData.rosterInvitations || [];
+  const leagueInvitations = homeData.leagueInvitations || [];
+  const eventInvitations = homeData.eventInvitations || [];
+  const readyToScheduleLeagues = homeData.readyToScheduleLeagues || [];
+  const organizedEvents = (homeData.organizedEvents || []) as Event[];
+  const userTeams = (homeData.userTeams || []) as Team[];
   const [error, setError] = useState<string | null>(null);
 
   const inboxCount =

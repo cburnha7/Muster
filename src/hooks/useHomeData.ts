@@ -98,13 +98,13 @@ export function useHomeData() {
   };
 
   return {
-    rosterInvitations: invitations.data?.rosterInvitations ?? [],
-    leagueInvitations: invitations.data?.leagueInvitations ?? [],
-    eventInvitations: invitations.data?.eventInvitations ?? [],
-    readyToScheduleLeagues: readyToSchedule.data ?? [],
-    debriefEvents: debrief.data ?? [],
-    userTeams: userTeams.data ?? [],
-    organizedEvents: organizedEvents.data ?? [],
+    rosterInvitations: invitations.data?.rosterInvitations || [],
+    leagueInvitations: invitations.data?.leagueInvitations || [],
+    eventInvitations: invitations.data?.eventInvitations || [],
+    readyToScheduleLeagues: readyToSchedule.data || [],
+    debriefEvents: debrief.data || [],
+    userTeams: userTeams.data || [],
+    organizedEvents: organizedEvents.data || [],
     isLoading: invitations.loading && debrief.loading,
     error: invitations.error || debrief.error || null,
     refresh,
