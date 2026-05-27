@@ -23,16 +23,19 @@ interface ErrorBoundaryState {
   hasError: boolean;
   error: Error | null;
   errorInfo: ErrorInfo | null;
+  eventId: string | null;
 }
 
 /** Default error fallback UI — uses hardcoded colors to avoid dependency on ThemeProvider */
 function DefaultErrorFallback({
   error,
   errorInfo,
+  eventId,
   onReset,
 }: {
   error: Error;
   errorInfo: ErrorInfo | null;
+  eventId: string | null;
   onReset: () => void;
 }) {
   // Use hardcoded light-mode colors so this works even if ThemeProvider is unavailable
@@ -55,30 +58,36 @@ function DefaultErrorFallback({
           Oops! Something went wrong
         </Text>
         <Text style={[styles.message, { color: colors.inkSecondary }]}>
-          We're sorry for the inconvenience. The app encountered an unexpected
-          error.
+          Muster ran into an unexpected error. We've been notified and are
+          looking into it. Try again, and if it keeps happening, reach out to
+          support.
         </Text>
 
-        <ScrollView
-          style={[styles.errorDetails, { backgroundColor: colors.errorLight }]}
-        >
-          <Text style={[styles.errorTitle, { color: colors.error }]}>
-            Error:
-          </Text>
-          <Text style={[styles.errorText, { color: colors.error }]}>
-            {error.toString()}
-          </Text>
-          {errorInfo && (
-            <>
-              <Text style={[styles.errorTitle, { color: colors.error }]}>
-                Component Stack:
-              </Text>
-              <Text style={[styles.errorText, { color: colors.error }]}>
-                {errorInfo.componentStack}
-              </Text>
-            </>
-          )}
-        </ScrollView>
+        {__DEV__ && (
+          <ScrollView
+            style={[
+              styles.errorDetails,
+              { backgroundColor: colors.errorLight },
+            ]}
+          >
+            <Text style={[styles.errorTitle, { color: colors.error }]}>
+              Error:
+            </Text>
+            <Text style={[styles.errorText, { color: colors.error }]}>
+              {error.toString()}
+            </Text>
+            {errorInfo && (
+              <>
+                <Text style={[styles.errorTitle, { color: colors.error }]}>
+                  Component Stack:
+                </Text>
+                <Text style={[styles.errorText, { color: colors.error }]}>
+                  {errorInfo.componentStack}
+                </Text>
+              </>
+            )}
+          </ScrollView>
+        )}
 
         <TouchableOpacity
           style={[styles.button, { backgroundColor: colors.cobalt }]}
@@ -88,6 +97,12 @@ function DefaultErrorFallback({
             Try Again
           </Text>
         </TouchableOpacity>
+
+        {!__DEV__ && eventId && (
+          <Text style={[styles.helpText, { color: colors.inkMuted }]}>
+            Reference: {eventId.slice(0, 8)}
+          </Text>
+        )}
 
         <Text style={[styles.helpText, { color: colors.inkMuted }]}>
           If the problem persists, please restart the app or contact support.
@@ -111,6 +126,7 @@ export class ErrorBoundary extends Component<
       hasError: false,
       error: null,
       errorInfo: null,
+      eventId: null,
     };
   }
 
@@ -120,15 +136,20 @@ export class ErrorBoundary extends Component<
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
     console.error('Error Boundary caught an error:', error, errorInfo);
-    Sentry.captureException(error, {
+    const eventId = Sentry.captureException(error, {
       extra: { componentStack: errorInfo.componentStack },
     });
-    this.setState({ errorInfo });
+    this.setState({ errorInfo, eventId: eventId || null });
     this.props.onError?.(error, errorInfo);
   }
 
   resetError = (): void => {
-    this.setState({ hasError: false, error: null, errorInfo: null });
+    this.setState({
+      hasError: false,
+      error: null,
+      errorInfo: null,
+      eventId: null,
+    });
   };
 
   render(): ReactNode {
@@ -145,6 +166,7 @@ export class ErrorBoundary extends Component<
         <DefaultErrorFallback
           error={this.state.error}
           errorInfo={this.state.errorInfo}
+          eventId={this.state.eventId}
           onReset={this.resetError}
         />
       );
