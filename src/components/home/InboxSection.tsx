@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { fonts, useTheme } from '../../theme';
-import {
+import type {
   RosterInvitation,
   LeagueInvitation,
   EventInvitation,

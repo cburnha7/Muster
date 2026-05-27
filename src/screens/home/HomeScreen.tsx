@@ -31,15 +31,14 @@ import { ProfileSelectorModal } from '../../components/ui/ProfileSelectorModal';
 import { MilestoneOverlay } from '../../components/ui/MilestoneOverlay';
 import { useMilestoneCheck } from '../../hooks/useMilestoneCheck';
 
-// Services
-import {
-  userService,
+// Services — types only at top level to avoid circular module initialization.
+// Service singletons are accessed via require() inside loadHomeData.
+import type {
   RosterInvitation,
   LeagueInvitation,
   EventInvitation,
   ReadyToScheduleLeague,
 } from '../../services/api/UserService';
-import { debriefService } from '../../services/api/DebriefService';
 
 // Store
 import {
@@ -380,6 +379,10 @@ export function HomeScreen() {
 
   const loadHomeData = useCallback(async () => {
     if (!user?.id || authLoading || bootLoading) return;
+    // Services are required here (not imported at top level) to avoid
+    // circular module initialization that crashes the web bundle.
+    const { userService } = require('../../services/api/UserService');
+    const { debriefService } = require('../../services/api/DebriefService');
     try {
       const [
         invResult,
