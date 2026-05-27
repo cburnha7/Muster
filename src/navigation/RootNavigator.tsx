@@ -1,5 +1,5 @@
-import React, { useEffect, useRef, Suspense, lazy } from 'react';
-import { View, StyleSheet, Platform } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { View, StyleSheet } from 'react-native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useNavigation } from '@react-navigation/native';
 import * as Linking from 'expo-linking';
@@ -10,24 +10,12 @@ import { selectUser, selectBootLoading } from '../store/slices/authSlice';
 import { useAuthSync } from '../hooks/useAuthSync';
 import { useNetworkState } from '../services/network';
 
-// AuthNavigator stays direct-imported — always needed on cold launch
+// Direct imports for all platforms. The previous React.lazy approach for native
+// caused circular dependency issues on web (require at module scope forced
+// eager evaluation of the entire tab tree before the store was ready).
 import { AuthNavigator } from './AuthNavigator';
-
-// Native: lazy-load TabNavigator + OnboardingNavigator so their top-level
-// module code does not run on the cold launch of an unauthenticated user.
-// Web stays direct-import because Metro's web bundler is unreliable with
-// dynamic import() in this codebase.
-const TabNavigator =
-  Platform.OS === 'web'
-    ? require('./TabNavigator').TabNavigator
-    : lazy(() =>
-        import('./TabNavigator').then(m => ({ default: m.TabNavigator }))
-      );
-
-const OnboardingNavigator =
-  Platform.OS === 'web'
-    ? require('./OnboardingNavigator').default
-    : lazy(() => import('./OnboardingNavigator'));
+import { TabNavigator } from './TabNavigator';
+import OnboardingNavigator from './OnboardingNavigator';
 
 // Import components
 import { OfflineIndicator } from '../components/navigation/OfflineIndicator';
@@ -61,16 +49,6 @@ export function RootNavigator() {
   useAuthSync();
   useNetworkState();
   const pendingInviteHandled = useRef(false);
-
-  // Pre-warm TabNavigator chunk on native so authenticated cold launches
-  // don't see a Suspense flash
-  useEffect(() => {
-    if (Platform.OS === 'web') return;
-    const id = setTimeout(() => {
-      import('./TabNavigator').catch(() => {});
-    }, 0);
-    return () => clearTimeout(id);
-  }, []);
 
   // ── Capture invite code from deep link when not authenticated ──
   useEffect(() => {
@@ -113,38 +91,33 @@ export function RootNavigator() {
   return (
     <View style={styles.container}>
       <OfflineIndicator />
-      <Suspense fallback={<LoadingScreen />}>
-        <Stack.Navigator
-          screenOptions={{
-            headerShown: false,
-            animation: 'fade',
-          }}
-        >
-          {!user ? (
-            <Stack.Screen name="Auth">
-              {props => (
-                <AuthNavigator
-                  {...props}
-                  onAuthSuccess={() => {
-                    // Navigation will happen automatically via AuthContext
-                  }}
-                />
-              )}
+      <Stack.Navigator
+        screenOptions={{
+          headerShown: false,
+          animation: 'fade',
+        }}
+      >
+        {!user ? (
+          <Stack.Screen name="Auth">
+            {props => (
+              <AuthNavigator
+                {...props}
+                onAuthSuccess={() => {
+                  // Navigation will happen automatically via AuthContext
+                }}
+              />
+            )}
+          </Stack.Screen>
+        ) : !user.onboardingComplete ? (
+          <Stack.Screen name="Onboarding" component={OnboardingNavigator} />
+        ) : (
+          <>
+            <Stack.Screen name="Main" options={{ headerBackTitle: 'Home' }}>
+              {props => <TabNavigatorWithInviteRedirect {...props} />}
             </Stack.Screen>
-          ) : !user.onboardingComplete ? (
-            <Stack.Screen
-              name="Onboarding"
-              component={OnboardingNavigator as any}
-            />
-          ) : (
-            <>
-              <Stack.Screen name="Main" options={{ headerBackTitle: 'Home' }}>
-                {props => <TabNavigatorWithInviteRedirect {...props} />}
-              </Stack.Screen>
-            </>
-          )}
-        </Stack.Navigator>
-      </Suspense>
+          </>
+        )}
+      </Stack.Navigator>
     </View>
   );
 }
