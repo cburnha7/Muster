@@ -18,7 +18,7 @@ import { useSelector } from 'react-redux';
 import { selectUser } from '../../store/slices/authSlice';
 import { userService } from '../../services/api/UserService';
 import { API_BASE_URL } from '../../services/api/config';
-import { authService } from '../../services/auth/AuthService';
+import { authService } from '../../services/api/AuthService';
 import { fonts, useTheme } from '../../theme';
 
 // ── Types ──

@@ -108,14 +108,9 @@ export class UserService extends BaseApiService {
     pagination?: PaginationParams,
     skipCache: boolean = false
   ): Promise<PaginatedResponse<Booking>> {
-    // DEVELOPMENT: Add userId as query parameter for mock auth
-    const { authService } = await import('../auth/AuthService');
-    const currentUser = authService.getCurrentUser();
-
     const params = {
       ...pagination,
       status,
-      ...(currentUser?.id && { userId: currentUser.id }), // Add userId to query params
     };
 
     if (__DEV__) {
