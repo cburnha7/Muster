@@ -38,7 +38,6 @@ import {
   EventInvitation,
   ReadyToScheduleLeague,
 } from '../../services/api/UserService';
-import { useHomeData } from '../../hooks/useHomeData';
 
 // Store
 import {
@@ -172,7 +171,7 @@ export function HomeScreen() {
     return events.filter(e => !bookedEventIds.has(e.id));
   }, [discoverData, bookingsData]);
 
-  // User teams state — populated from homeData below
+  // User teams from loadHomeData above
 
   // DependentToggle state
   const activeFilter: PersonFilter = useMemo(() => {
@@ -365,16 +364,67 @@ export function HomeScreen() {
 
   const isLoading = bookingsLoading;
 
-  // ── Cached data via SWR hook (instant render from cache, background refresh) ──
-  const homeData = useHomeData();
-  const debriefEvents = (homeData.debriefEvents || []) as Booking[];
-  const rosterInvitations = homeData.rosterInvitations || [];
-  const leagueInvitations = homeData.leagueInvitations || [];
-  const eventInvitations = homeData.eventInvitations || [];
-  const readyToScheduleLeagues = homeData.readyToScheduleLeagues || [];
-  const organizedEvents = (homeData.organizedEvents || []) as Event[];
-  const userTeams = (homeData.userTeams || []) as Team[];
+  // ── Home data state (simple direct fetches) ──
+  const [debriefEvents, setDebriefEvents] = useState<Booking[]>([]);
+  const [rosterInvitations, setRosterInvitations] = useState<any[]>([]);
+  const [leagueInvitations, setLeagueInvitations] = useState<any[]>([]);
+  const [eventInvitations, setEventInvitations] = useState<any[]>([]);
+  const [readyToScheduleLeagues, setReadyToScheduleLeagues] = useState<any[]>(
+    []
+  );
+  const [organizedEvents, setOrganizedEvents] = useState<Event[]>([]);
+  const [userTeams, setUserTeams] = useState<Team[]>([]);
   const [error, setError] = useState<string | null>(null);
+
+  const loadHomeData = useCallback(async () => {
+    if (!user?.id) return;
+    try {
+      const { userService } = await import('../../services/api/UserService');
+      const { debriefService } =
+        await import('../../services/api/DebriefService');
+
+      const [
+        invResult,
+        leaguesResult,
+        debriefResult,
+        teamsResult,
+        eventsResult,
+      ] = await Promise.all([
+        userService.getInvitations().catch(() => ({
+          rosterInvitations: [],
+          leagueInvitations: [],
+          eventInvitations: [],
+        })),
+        userService.getLeaguesReadyToSchedule().catch(() => []),
+        debriefService
+          .getDebriefEvents()
+          .then(r => r.data || [])
+          .catch(() => []),
+        userService
+          .getUserTeams()
+          .then(r => r.data || r || [])
+          .catch(() => []),
+        userService
+          .getUserEvents({ page: 1, limit: 100 })
+          .then(r => r.data || [])
+          .catch(() => []),
+      ]);
+
+      setRosterInvitations(invResult.rosterInvitations || []);
+      setLeagueInvitations(invResult.leagueInvitations || []);
+      setEventInvitations(invResult.eventInvitations || []);
+      setReadyToScheduleLeagues(leaguesResult || []);
+      setDebriefEvents(debriefResult || []);
+      setUserTeams(teamsResult || []);
+      setOrganizedEvents(eventsResult || []);
+    } catch {
+      // Non-fatal — keep showing whatever we have
+    }
+  }, [user?.id]);
+
+  useEffect(() => {
+    loadHomeData();
+  }, [loadHomeData, activeUserId]);
 
   const inboxCount =
     rosterInvitations.length +
@@ -387,13 +437,9 @@ export function HomeScreen() {
   const handleRefresh = useCallback(async () => {
     setIsRefreshing(true);
     setError(null);
-    await Promise.all([
-      refetchBookings(),
-      refetchDiscover(),
-      homeData.refresh(),
-    ]);
+    await Promise.all([refetchBookings(), refetchDiscover(), loadHomeData()]);
     setIsRefreshing(false);
-  }, [refetchBookings, refetchDiscover, homeData.refresh]);
+  }, [refetchBookings, refetchDiscover, loadHomeData]);
 
   useEffect(() => {
     const unsubscribe = searchEventBus.subscribe(() =>
