@@ -1,0 +1,9 @@
+﻿
+Path                                                 LineNumber Line                            
+----                                                 ---------- ----                            
+C:\Projects\AllRoads\src\navigation\TabNavigator.tsx         59         borderBottomWidth: 1,   
+C:\Projects\AllRoads\src\navigation\TabNavigator.tsx        178               borderTopWidth: 1,
+C:\Projects\AllRoads\src\navigation\TabNavigator.tsx        269     minWidth: 20,               
+C:\Projects\AllRoads\src\navigation\TabNavigator.tsx        273     borderWidth: 2,             
+
+

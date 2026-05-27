@@ -1,0 +1,7 @@
+﻿
+Path                                                 LineNumber Line                                                    
+----                                                 ---------- ----                                                    
+C:\Projects\AllRoads\src\navigation\TabNavigator.tsx        185               fontSize: 10,                             
+C:\Projects\AllRoads\src\navigation\TabNavigator.tsx        275   badgeText: { color: '#FFFFFF', paddingHorizontal: 4 },
+
+

@@ -1,0 +1,14 @@
+﻿
+Path                                                        LineNumber Line                                                         
+----                                                        ---------- ----                                                         
+C:\Projects\AllRoads\src\navigation\OnboardingNavigator.tsx          3 import { useSelector } from 'react-redux';                   
+C:\Projects\AllRoads\src\navigation\OnboardingNavigator.tsx         19   const user = useSelector(selectUser);                      
+C:\Projects\AllRoads\src\navigation\RootNavigator.tsx                8 import { useSelector } from 'react-redux';                   
+C:\Projects\AllRoads\src\navigation\RootNavigator.tsx               45   const user = useSelector(selectUser);                      
+C:\Projects\AllRoads\src\navigation\RootNavigator.tsx               46   const authLoading = useSelector(selectBootLoading);        
+C:\Projects\AllRoads\src\navigation\TabNavigator.tsx                 6 import { useSelector } from 'react-redux';                   
+C:\Projects\AllRoads\src\navigation\TabNavigator.tsx                12 import { HeaderUserSelector } from '../components/navigati...
+C:\Projects\AllRoads\src\navigation\TabNavigator.tsx                75       <HeaderUserSelector />                                 
+C:\Projects\AllRoads\src\navigation\TabNavigator.tsx               101   const unreadCount = useSelector(                           
+
+

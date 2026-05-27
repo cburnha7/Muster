@@ -1,0 +1,8 @@
+﻿
+Path                                                  LineNumber Line                         
+----                                                  ---------- ----                         
+C:\Projects\AllRoads\src\components\SaluteOverlay.tsx         67     justifyContent: 'center',
+C:\Projects\AllRoads\src\navigation\TabNavigator.tsx         262     justifyContent: 'center',
+C:\Projects\AllRoads\src\navigation\TabNavigator.tsx         272     justifyContent: 'center',
+
+

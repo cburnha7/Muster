@@ -1,0 +1,14 @@
+﻿
+Path                                                  LineNumber Line                                                               
+----                                                  ---------- ----                                                               
+C:\Projects\AllRoads\src\navigation\index.ts                   4 export { TabNavigator } from './TabNavigator';                     
+C:\Projects\AllRoads\src\navigation\RootNavigator.tsx         15 import { TabNavigator } from './TabNavigator';                     
+C:\Projects\AllRoads\src\navigation\RootNavigator.tsx         78           // The TabNavigatorWithInviteRedirect component below ...
+C:\Projects\AllRoads\src\navigation\RootNavigator.tsx        114               {props => <TabNavigatorWithInviteRedirect {...prop...
+C:\Projects\AllRoads\src\navigation\RootNavigator.tsx        124 function TabNavigatorWithInviteRedirect(props: any) {              
+C:\Projects\AllRoads\src\navigation\RootNavigator.tsx        146   return <TabNavigator {...props} />;                              
+C:\Projects\AllRoads\src\navigation\TabNavigator.tsx           2 import { createBottomTabNavigator } from '@react-navigation/bott...
+C:\Projects\AllRoads\src\navigation\TabNavigator.tsx          25 const Tab = createBottomTabNavigator<MainTabParamList>();          
+C:\Projects\AllRoads\src\navigation\TabNavigator.tsx          99 export function TabNavigator() {                                   
+
+

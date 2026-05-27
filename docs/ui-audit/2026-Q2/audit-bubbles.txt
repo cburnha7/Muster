@@ -1,0 +1,15 @@
+﻿
+Path                                                  LineNumber Line                                                               
+----                                                  ---------- ----                                                               
+C:\Projects\AllRoads\src\components\SaluteOverlay.tsx         39           styles.badge,                                            
+C:\Projects\AllRoads\src\components\SaluteOverlay.tsx         64   badge: {                                                         
+C:\Projects\AllRoads\src\navigation\TabNavigator.tsx          11 import { HeaderSearchPill } from '../components/navigation/Heade...
+C:\Projects\AllRoads\src\navigation\TabNavigator.tsx          43   // All tabs now use the search pill header                       
+C:\Projects\AllRoads\src\navigation\TabNavigator.tsx          72           <HeaderSearchPill routeName={routeName} />               
+C:\Projects\AllRoads\src\navigation\TabNavigator.tsx         120         iconName = focused ? 'chatbubble' : 'chatbubble-outline';  
+C:\Projects\AllRoads\src\navigation\TabNavigator.tsx         147               s.badge,                                             
+C:\Projects\AllRoads\src\navigation\TabNavigator.tsx         151             <Text style={[s.badgeText, { ...type.labelSm }]}>      
+C:\Projects\AllRoads\src\navigation\TabNavigator.tsx         264   badge: {                                                         
+C:\Projects\AllRoads\src\navigation\TabNavigator.tsx         275   badgeText: { color: '#FFFFFF', paddingHorizontal: 4 },           
+
+

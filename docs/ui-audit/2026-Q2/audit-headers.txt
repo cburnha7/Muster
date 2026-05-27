@@ -1,0 +1,21 @@
+﻿
+Path                                                        LineNumber Line                                                         
+----                                                        ---------- ----                                                         
+C:\Projects\AllRoads\src\navigation\AuthNavigator.tsx               22         headerShown: false,                                  
+C:\Projects\AllRoads\src\navigation\OnboardingNavigator.tsx         27       <Stack.Navigator screenOptions={{ headerShown: false...
+C:\Projects\AllRoads\src\navigation\OnboardingNavigator.tsx         37         headerShown: false,                                  
+C:\Projects\AllRoads\src\navigation\RootNavigator.tsx               94           headerShown: false,                                
+C:\Projects\AllRoads\src\navigation\RootNavigator.tsx              113             <Stack.Screen name="Main" options={{ headerBac...
+C:\Projects\AllRoads\src\navigation\TabNavigator.tsx                11 import { HeaderSearchPill } from '../components/navigation...
+C:\Projects\AllRoads\src\navigation\TabNavigator.tsx                12 import { HeaderUserSelector } from '../components/navigati...
+C:\Projects\AllRoads\src\navigation\TabNavigator.tsx                43   // All tabs now use the search pill header                 
+C:\Projects\AllRoads\src\navigation\TabNavigator.tsx                46 function CustomHeader({ routeName }: { routeName: string }) {
+C:\Projects\AllRoads\src\navigation\TabNavigator.tsx                58         backgroundColor: colors.header,                      
+C:\Projects\AllRoads\src\navigation\TabNavigator.tsx                60         borderBottomColor: colors.headerBorder,              
+C:\Projects\AllRoads\src\navigation\TabNavigator.tsx                72           <HeaderSearchPill routeName={routeName} />         
+C:\Projects\AllRoads\src\navigation\TabNavigator.tsx                75       <HeaderUserSelector />                                 
+C:\Projects\AllRoads\src\navigation\TabNavigator.tsx               165             headerShown: true,                               
+C:\Projects\AllRoads\src\navigation\TabNavigator.tsx               166             header: () =>                                    
+C:\Projects\AllRoads\src\navigation\TabNavigator.tsx               168                 <CustomHeader routeName={route.name} />      
+
+
