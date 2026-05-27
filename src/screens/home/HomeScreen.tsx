@@ -172,7 +172,8 @@ export function HomeScreen() {
 
   // User teams state
   const [userTeams, setUserTeams] = useState<Team[]>([]);
-  const [organizedEvents, setOrganizedEvents] = useState<Event[]>([]);
+  const [organizedEventsState, setOrganizedEvents] = useState<Event[]>([]);
+  const organizedEvents = organizedEventsState || [];
 
   const loadUserTeams = useCallback(async () => {
     try {
