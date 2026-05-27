@@ -8,6 +8,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as Sentry from '@sentry/react-native';
+import { useTheme } from '../../theme';
 
 interface ErrorBoundaryProps {
   children: ReactNode;
@@ -25,7 +26,11 @@ interface ErrorBoundaryState {
   errorInfo: ErrorInfo | null;
 }
 
-/** Default error fallback UI — uses hardcoded colors to avoid dependency on ThemeProvider */
+/**
+ * Default error fallback UI — tries the theme first for dark-mode support,
+ * falls back to hardcoded light-mode colors if ThemeProvider is unreachable
+ * (e.g. the error originated inside the provider itself).
+ */
 function DefaultErrorFallback({
   error,
   errorInfo,
@@ -35,61 +40,97 @@ function DefaultErrorFallback({
   errorInfo: ErrorInfo | null;
   onReset: () => void;
 }) {
-  // Use hardcoded light-mode colors so this works even if ThemeProvider is unavailable
-  const colors = {
-    background: '#F7F4EF',
-    ink: '#1C2320',
-    inkSecondary: '#6B7C76',
-    inkMuted: '#94A3B8',
-    error: '#D0362A',
-    errorLight: '#FDECEA',
-    cobalt: '#2040E0',
-    white: '#FFFFFF',
+  // Try the theme; degrade gracefully if ThemeProvider is unreachable.
+  let themeColors: {
+    background: string;
+    ink: string;
+    inkSecondary: string;
+    inkMuted: string;
+    error: string;
+    errorLight: string;
+    cobalt: string;
+    white: string;
   };
+  try {
+    const theme = useTheme();
+    themeColors = {
+      background: theme.colors.bgScreen,
+      ink: theme.colors.ink,
+      inkSecondary: theme.colors.inkSecondary,
+      inkMuted: theme.colors.inkMuted,
+      error: theme.colors.error,
+      errorLight: theme.colors.errorLight,
+      cobalt: theme.colors.cobalt,
+      white: '#FFFFFF',
+    };
+  } catch {
+    // Hardcoded light-mode fallback — uses documented brand colors
+    themeColors = {
+      background: '#F7F4EF',
+      ink: '#1C2320',
+      inkSecondary: '#6B7C76',
+      inkMuted: '#94A3B8',
+      error: '#D0362A',
+      errorLight: '#FDECEA',
+      cobalt: '#2040E0',
+      white: '#FFFFFF',
+    };
+  }
+
+  const isDev = __DEV__;
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
+    <View
+      style={[styles.container, { backgroundColor: themeColors.background }]}
+    >
       <View style={styles.content}>
-        <Ionicons name="alert-circle" size={64} color={colors.error} />
-        <Text style={[styles.title, { color: colors.ink }]}>
+        <Ionicons name="alert-circle" size={64} color={themeColors.error} />
+        <Text style={[styles.title, { color: themeColors.ink }]}>
           Oops! Something went wrong
         </Text>
-        <Text style={[styles.message, { color: colors.inkSecondary }]}>
+        <Text style={[styles.message, { color: themeColors.inkSecondary }]}>
           We're sorry for the inconvenience. The app encountered an unexpected
           error.
         </Text>
 
-        <ScrollView
-          style={[styles.errorDetails, { backgroundColor: colors.errorLight }]}
-        >
-          <Text style={[styles.errorTitle, { color: colors.error }]}>
-            Error:
-          </Text>
-          <Text style={[styles.errorText, { color: colors.error }]}>
-            {error.toString()}
-          </Text>
-          {errorInfo && (
-            <>
-              <Text style={[styles.errorTitle, { color: colors.error }]}>
-                Component Stack:
-              </Text>
-              <Text style={[styles.errorText, { color: colors.error }]}>
-                {errorInfo.componentStack}
-              </Text>
-            </>
-          )}
-        </ScrollView>
+        {isDev && (
+          <ScrollView
+            style={[
+              styles.errorDetails,
+              { backgroundColor: themeColors.errorLight },
+            ]}
+          >
+            <Text style={[styles.errorTitle, { color: themeColors.error }]}>
+              Error:
+            </Text>
+            <Text style={[styles.errorText, { color: themeColors.error }]}>
+              {error.toString()}
+            </Text>
+            {errorInfo && (
+              <>
+                <Text style={[styles.errorTitle, { color: themeColors.error }]}>
+                  Component Stack:
+                </Text>
+                <Text style={[styles.errorText, { color: themeColors.error }]}>
+                  {errorInfo.componentStack}
+                </Text>
+              </>
+            )}
+          </ScrollView>
+        )}
 
         <TouchableOpacity
-          style={[styles.button, { backgroundColor: colors.cobalt }]}
+          style={[styles.button, { backgroundColor: themeColors.cobalt }]}
           onPress={onReset}
+          accessibilityRole="button"
+          accessibilityLabel="Try Again"
         >
-          <Text style={[styles.buttonText, { color: colors.white }]}>
+          <Text style={[styles.buttonText, { color: themeColors.white }]}>
             Try Again
           </Text>
         </TouchableOpacity>
 
-        <Text style={[styles.helpText, { color: colors.inkMuted }]}>
+        <Text style={[styles.helpText, { color: themeColors.inkMuted }]}>
           If the problem persists, please restart the app or contact support.
         </Text>
       </View>

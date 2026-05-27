@@ -66,24 +66,30 @@ export const FormInput = forwardRef<any, FormInputProps>(
         {label && (
           <Text
             style={[
-              styles.label, { color: colors.ink },
+              styles.label,
+              { color: colors.ink },
               { color: colors.textPrimary },
-              labelStyle]}
+              labelStyle,
+            ]}
           >
             {label}
-            {required && <Text style={[styles.required, { color: colors.error }]}> *</Text>}
+            {required && (
+              <Text style={[styles.required, { color: colors.error }]}> *</Text>
+            )}
           </Text>
         )}
 
         <View
           style={[
-            styles.inputContainer, { backgroundColor: colors.bgSubtle },
+            styles.inputContainer,
             { backgroundColor: colors.bgInput },
             isFocused && [
-              styles.inputContainerFocused,
+              { borderColor: `${colors.cobalt}33` },
               { backgroundColor: colors.bgCard },
             ],
-            error && styles.inputContainerError, error && { backgroundColor: colors.errorLight }]}
+            error && { borderColor: `${colors.error}33` },
+            error && { backgroundColor: colors.errorLight },
+          ]}
         >
           {leftIcon && (
             <Ionicons
@@ -103,12 +109,14 @@ export const FormInput = forwardRef<any, FormInputProps>(
           <TextInput
             ref={inputRef}
             style={[
-              styles.input, { color: colors.ink },
+              styles.input,
+              { color: colors.ink },
               { color: colors.textPrimary },
               leftIcon && styles.inputWithLeftIcon,
               (rightIcon || showPasswordToggle) && styles.inputWithRightIcon,
               Platform.OS === 'web' && { outlineStyle: 'none' as any },
-              inputStyle]}
+              inputStyle,
+            ]}
             secureTextEntry={isSecure}
             onFocus={() => setIsFocused(true)}
             onBlur={() => {
@@ -155,7 +163,11 @@ export const FormInput = forwardRef<any, FormInputProps>(
           )}
         </View>
 
-        {error && <Text style={[styles.error, { color: colors.error }, errorStyle]}>{error}</Text>}
+        {error && (
+          <Text style={[styles.error, { color: colors.error }, errorStyle]}>
+            {error}
+          </Text>
+        )}
       </View>
     );
   }
@@ -180,12 +192,6 @@ const styles = StyleSheet.create({
     borderColor: 'transparent',
     paddingHorizontal: 16,
     minHeight: 52,
-  },
-  inputContainerFocused: {
-    borderColor: 'rgba(0, 82, 255, 0.2)',
-  },
-  inputContainerError: {
-    borderColor: 'rgba(186, 26, 26, 0.2)',
   },
   input: {
     flex: 1,

@@ -22,12 +22,22 @@ import {
 } from './tokens';
 import { typeScale, TypeKey } from './typography';
 
-const THEME_PREF_KEY = '@muster_dark_mode';
+// Storage keys.
+// THEME_MODE_KEY holds the new three-state preference: 'system' | 'light' | 'dark'.
+// LEGACY_DARK_KEY is the old binary boolean — read once on first mount of this
+// build, migrated to the new key, then ignored.
+const THEME_MODE_KEY = '@muster_theme_mode';
+const LEGACY_DARK_KEY = '@muster_dark_mode';
+
+export type ThemeMode = 'system' | 'light' | 'dark';
 
 // ─── Theme shape ─────────────────────────────────────────────
 
 export interface Theme {
+  /** True if the app is currently rendering in dark mode. */
   isDark: boolean;
+  /** Raw user preference. 'system' follows OS; 'light'/'dark' override. */
+  themeMode: ThemeMode;
   colors: SemanticColors;
   status: typeof tokenStatus;
   sport: typeof tokenSport;
@@ -37,7 +47,12 @@ export interface Theme {
   shadow: ReturnType<typeof makeShadows>;
   fonts: typeof tokenFontFamily;
   getAvatarColor: typeof getAvatarColor;
-  /** Toggle dark mode on/off. Persists to AsyncStorage. */
+  /** Set the three-state preference. Persists to AsyncStorage. */
+  setThemeMode: (mode: ThemeMode) => void;
+  /**
+   * Backward-compatible binary setter. true → 'dark', false → 'light'.
+   * Prefer setThemeMode for new code.
+   */
   setDarkMode: (dark: boolean) => void;
 }
 
@@ -48,34 +63,74 @@ const ThemeContext = createContext<Theme | null>(null);
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const systemScheme = useColorScheme(); // 'light' | 'dark' | null
 
-  // null = not yet loaded from storage; use system default
-  const [userPref, setUserPref] = useState<boolean | null>(null);
+  const [themeMode, setThemeModeState] = useState<ThemeMode>('system');
   const [loaded, setLoaded] = useState(false);
 
-  // Load persisted preference on mount
+  // Load persisted preference on mount. Migrates the legacy binary key if
+  // present so users who set a dark-mode preference on prior builds keep it.
   useEffect(() => {
-    AsyncStorage.getItem(THEME_PREF_KEY)
-      .then(val => {
-        if (val === 'true') setUserPref(true);
-        else if (val === 'false') setUserPref(false);
-        // else null — follow system
-      })
-      .catch(() => {})
-      .finally(() => setLoaded(true));
+    let cancelled = false;
+
+    async function loadPref() {
+      try {
+        const stored = await AsyncStorage.getItem(THEME_MODE_KEY);
+        if (cancelled) return;
+        if (stored === 'system' || stored === 'light' || stored === 'dark') {
+          setThemeModeState(stored);
+          setLoaded(true);
+          return;
+        }
+
+        // No new-key value — check legacy boolean.
+        const legacy = await AsyncStorage.getItem(LEGACY_DARK_KEY);
+        if (cancelled) return;
+        if (legacy === 'true') {
+          setThemeModeState('dark');
+          AsyncStorage.setItem(THEME_MODE_KEY, 'dark').catch(() => {});
+        } else if (legacy === 'false') {
+          setThemeModeState('light');
+          AsyncStorage.setItem(THEME_MODE_KEY, 'light').catch(() => {});
+        } else {
+          setThemeModeState('system');
+        }
+      } catch {
+        if (!cancelled) setThemeModeState('system');
+      } finally {
+        if (!cancelled) setLoaded(true);
+      }
+    }
+
+    loadPref();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
-  const setDarkMode = useCallback((dark: boolean) => {
-    setUserPref(dark);
-    AsyncStorage.setItem(THEME_PREF_KEY, String(dark)).catch(() => {});
+  const setThemeMode = useCallback((mode: ThemeMode) => {
+    setThemeModeState(mode);
+    AsyncStorage.setItem(THEME_MODE_KEY, mode).catch(() => {});
   }, []);
 
-  // Resolve: user preference wins, then system, then light
-  const isDark = userPref !== null ? userPref : systemScheme === 'dark';
+  // Backward-compatible binary API. Prefer setThemeMode for new code.
+  const setDarkMode = useCallback(
+    (dark: boolean) => {
+      setThemeMode(dark ? 'dark' : 'light');
+    },
+    [setThemeMode]
+  );
+
+  // Resolve: explicit user preference wins, else follow system, else light.
+  const isDark = useMemo(() => {
+    if (themeMode === 'dark') return true;
+    if (themeMode === 'light') return false;
+    return systemScheme === 'dark';
+  }, [themeMode, systemScheme]);
 
   const theme = useMemo<Theme>(() => {
     const colors = isDark ? darkColors : lightColors;
     return {
       isDark,
+      themeMode,
       colors,
       status: tokenStatus,
       sport: tokenSport,
@@ -85,9 +140,15 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       shadow: makeShadows(isDark),
       fonts: tokenFontFamily,
       getAvatarColor,
+      setThemeMode,
       setDarkMode,
     };
-  }, [isDark, setDarkMode]);
+  }, [isDark, themeMode, setThemeMode, setDarkMode]);
+
+  // Avoid rendering with the wrong theme on first paint by waiting for the
+  // persisted preference to load. The window is short (one async read) and
+  // prevents a flash of light when a dark-mode user reopens the app.
+  if (!loaded) return null;
 
   return (
     <ThemeContext.Provider value={theme}>{children}</ThemeContext.Provider>

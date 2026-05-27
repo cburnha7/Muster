@@ -50,7 +50,7 @@ export { Shadows, getShadow } from './shadows';
 export { ComponentStyles } from './componentStyles';
 
 export { ThemeProvider, useTheme, t } from './ThemeContext';
-export type { Theme } from './ThemeContext';
+export type { Theme, ThemeMode } from './ThemeContext';
 
 export { brand as brandConstants, salute, errorCodes } from './brand';
 export type { ErrorCode } from './brand';
