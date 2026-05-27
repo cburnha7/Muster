@@ -1,5 +1,9 @@
-import { DefaultTheme, Theme as NavTheme } from '@react-navigation/native';
-import { lightColors, SemanticColors } from '../theme/tokens';
+import {
+  DefaultTheme,
+  DarkTheme,
+  Theme as NavTheme,
+} from '@react-navigation/native';
+import { lightColors, darkColors, SemanticColors } from '../theme/tokens';
 
 function buildNavTheme(
   base: typeof DefaultTheme,
@@ -20,3 +24,4 @@ function buildNavTheme(
 }
 
 export const MusterLightTheme = buildNavTheme(DefaultTheme, lightColors);
+export const MusterDarkTheme = buildNavTheme(DarkTheme, darkColors);

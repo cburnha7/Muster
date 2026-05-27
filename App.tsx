@@ -12,8 +12,8 @@ import { ReduxProvider } from './src/store/Provider';
 import { NotificationProvider } from './src/services/notifications';
 import { RootNavigator } from './src/navigation/RootNavigator';
 import { ErrorBoundary } from './src/components/error/ErrorBoundary';
-import { ThemeProvider } from './src/theme';
-import { MusterLightTheme } from './src/navigation/themes';
+import { ThemeProvider, useTheme } from './src/theme';
+import { MusterLightTheme, MusterDarkTheme } from './src/navigation/themes';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
@@ -62,8 +62,12 @@ export default function App() {
 
 /** Inner component — light theme only */
 function AppNavigation() {
+  const { isDark } = useTheme();
   return (
-    <NavigationContainer linking={linking as any} theme={MusterLightTheme}>
+    <NavigationContainer
+      linking={linking as any}
+      theme={isDark ? MusterDarkTheme : MusterLightTheme}
+    >
       <RootNavigator />
     </NavigationContainer>
   );
