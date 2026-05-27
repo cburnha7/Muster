@@ -32,14 +32,12 @@ import { MilestoneOverlay } from '../../components/ui/MilestoneOverlay';
 import { useMilestoneCheck } from '../../hooks/useMilestoneCheck';
 
 // Services
-import {
-  userService,
+import type {
   RosterInvitation,
   LeagueInvitation,
   EventInvitation,
   ReadyToScheduleLeague,
 } from '../../services/api/UserService';
-import { debriefService } from '../../services/api/DebriefService';
 
 // Store
 import {
@@ -381,6 +379,10 @@ export function HomeScreen() {
   const loadHomeData = useCallback(async () => {
     if (!user?.id || authLoading || bootLoading) return;
     try {
+      // Require singletons inside the function to avoid circular module
+      // initialization on web (UserService → BaseApiService → store → authSlice)
+      const { userService } = require('../../services/api/UserService');
+      const { debriefService } = require('../../services/api/DebriefService');
       const [
         invResult,
         leaguesResult,
