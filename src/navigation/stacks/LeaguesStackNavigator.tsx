@@ -13,21 +13,9 @@ import SchedulingScreen from '../../screens/leagues/SchedulingScreen';
 import { ScheduleWizardScreen } from '../../screens/leagues/ScheduleWizardScreen';
 import { LeagueDeletionConfirmScreen } from '../../screens/leagues/LeagueDeletionConfirmScreen';
 import { LeagueTeamManagementScreen } from '../../screens/leagues/LeagueTeamManagementScreen';
-import { fonts } from '../../theme';
+import { detailHeader } from '../headerOptions';
 
 const Stack = createNativeStackNavigator<LeaguesStackParamList>();
-
-const detailHeader = {
-  headerShown: true as const,
-  headerBackVisible: false,
-  headerBackTitleVisible: false,
-  headerTitleAlign: 'center' as const,
-  headerShadowVisible: false,
-  headerTitleStyle: {
-    fontFamily: fonts.headingSemi,
-    fontSize: 17,
-  },
-};
 
 export function LeaguesStackNavigator() {
   return (

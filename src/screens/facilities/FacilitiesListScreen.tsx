@@ -45,6 +45,7 @@ import { Facility, SportType, FacilityFilters } from '../../types';
 import { formatSportType } from '../../utils/formatters';
 import { useRoute, useFocusEffect } from '@react-navigation/native';
 import { useDependentContext } from '../../hooks/useDependentContext';
+import { useContentWidth } from '../../hooks/useContentWidth';
 
 const SPORT_CHIP_OPTIONS = [
   { label: 'All Sports', value: '' },
@@ -65,6 +66,7 @@ export function FacilitiesListScreen() {
   const dispatch = useDispatch();
   const route = useRoute();
   const { width: windowWidth } = useWindowDimensions();
+  const { contentStyle } = useContentWidth();
 
   const facilities = useSelector(selectFacilities);
   const filters = useSelector(selectFacilityFilters);
@@ -525,14 +527,7 @@ export function FacilitiesListScreen() {
 
       <ScrollView
         style={styles.scrollView}
-        contentContainerStyle={[
-          styles.scrollContent,
-          windowWidth > 600 && {
-            maxWidth: 540,
-            alignSelf: 'center' as const,
-            width: '100%' as any,
-          },
-        ]}
+        contentContainerStyle={[styles.scrollContent, contentStyle]}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}

@@ -155,7 +155,7 @@ export const RecordMatchResultScreen: React.FC = () => {
 
   if (loadingData) {
     return (
-      <View style={[styles.container, { backgroundColor: colors.white }, { backgroundColor: colors.bgScreen }]}>
+      <View style={[styles.container, { backgroundColor: colors.bgScreen }]}>
         <ScreenHeader
           title="Record Match Result"
           leftIcon="arrow-back"
@@ -171,7 +171,7 @@ export const RecordMatchResultScreen: React.FC = () => {
 
   if (!match) {
     return (
-      <View style={[styles.container, { backgroundColor: colors.white }, { backgroundColor: colors.bgScreen }]}>
+      <View style={[styles.container, { backgroundColor: colors.bgScreen }]}>
         <ScreenHeader
           title="Record Match Result"
           leftIcon="arrow-back"
@@ -185,7 +185,7 @@ export const RecordMatchResultScreen: React.FC = () => {
   }
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.white }, { backgroundColor: colors.bgScreen }]}>
+    <View style={[styles.container, { backgroundColor: colors.bgScreen }]}>
       <ScreenHeader
         title="Record Match Result"
         leftIcon="arrow-back"

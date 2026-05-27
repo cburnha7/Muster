@@ -11,21 +11,9 @@ import { DependentFormScreen } from '../../screens/profile/DependentFormScreen';
 import { DependentProfileScreen } from '../../screens/profile/DependentProfileScreen';
 import { TransferAccountScreen } from '../../screens/profile/TransferAccountScreen';
 import { RedeemCodeScreen } from '../../screens/profile/RedeemCodeScreen';
-import { fonts } from '../../theme';
+import { detailHeader } from '../headerOptions';
 
 const Stack = createNativeStackNavigator<ProfileStackParamList>();
-
-const detailHeader = {
-  headerShown: true as const,
-  headerBackVisible: false,
-  headerBackTitleVisible: false,
-  headerTitleAlign: 'center' as const,
-  headerShadowVisible: false,
-  headerTitleStyle: {
-    fontFamily: fonts.headingSemi,
-    fontSize: 17,
-  },
-};
 
 export function ProfileStackNavigator(): JSX.Element {
   return (

@@ -14,21 +14,9 @@ import { MyRentalsScreen } from '../../screens/facilities/MyRentalsScreen';
 import { CancellationPolicyScreen } from '../../screens/facilities/CancellationPolicyScreen';
 import { FacilityRentalsScreen } from '../../screens/facilities/FacilityRentalsScreen';
 import { EscrowTransactionsScreen } from '../../screens/facilities/EscrowTransactionsScreen';
-import { fonts } from '../../theme';
+import { detailHeader } from '../headerOptions';
 
 const Stack = createNativeStackNavigator<FacilitiesStackParamList>();
-
-const detailHeader = {
-  headerShown: true as const,
-  headerBackVisible: false,
-  headerBackTitleVisible: false,
-  headerTitleAlign: 'center' as const,
-  headerShadowVisible: false,
-  headerTitleStyle: {
-    fontFamily: fonts.headingSemi,
-    fontSize: 17,
-  },
-};
 
 export function FacilitiesStackNavigator(): JSX.Element {
   return (

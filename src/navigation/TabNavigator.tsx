@@ -148,7 +148,12 @@ export function TabNavigator() {
               { backgroundColor: colors.heart, borderColor: colors.tabBar },
             ]}
           >
-            <Text style={[s.badgeText, { ...type.labelSm }]}>
+            <Text
+              style={[
+                s.badgeText,
+                { ...type.labelSm, color: colors.textInverse },
+              ]}
+            >
               {unreadCount > 99 ? '99+' : unreadCount.toString()}
             </Text>
           </View>
@@ -272,5 +277,5 @@ const s = StyleSheet.create({
     justifyContent: 'center',
     borderWidth: 2,
   },
-  badgeText: { color: '#FFFFFF', paddingHorizontal: 4 },
+  badgeText: { paddingHorizontal: 4 },
 });

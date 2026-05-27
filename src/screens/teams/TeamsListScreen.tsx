@@ -6,7 +6,6 @@ import {
   FlatList,
   RefreshControl,
   TouchableOpacity,
-  useWindowDimensions,
 } from 'react-native';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { useDispatch, useSelector } from 'react-redux';
@@ -27,6 +26,7 @@ import { Team, SportType } from '../../types';
 import { selectUser } from '../../store/slices/authSlice';
 import { useDependentContext } from '../../hooks/useDependentContext';
 import { useActiveUserId } from '../../hooks/useActiveUserId';
+import { useContentWidth } from '../../hooks/useContentWidth';
 import { searchEventBus } from '../../utils/searchEventBus';
 import { MyCrewRow } from '../../components/home/MyCrewRow';
 import { useCrewSelector } from '../../hooks/useCrewSelector';
@@ -67,8 +67,7 @@ export function TeamsListScreen() {
   const user = useSelector(selectUser);
   const { isDependent } = useDependentContext();
   const effectiveUserId = useActiveUserId();
-  const { width: screenWidth } = useWindowDimensions();
-  const isWide = screenWidth > 600;
+  const { contentStyle } = useContentWidth();
   const { crewMembers, selectedCrewId, onSelectCrew, hasDependents } =
     useCrewSelector();
 
@@ -348,14 +347,7 @@ export function TeamsListScreen() {
             currentUserId={user?.id ?? undefined}
           />
         )}
-        contentContainerStyle={[
-          styles.listContent,
-          isWide && {
-            maxWidth: 540,
-            alignSelf: 'center' as const,
-            width: '100%',
-          },
-        ]}
+        contentContainerStyle={[styles.listContent, contentStyle]}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}

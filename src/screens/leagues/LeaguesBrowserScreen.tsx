@@ -30,6 +30,7 @@ import { searchEventBus } from '../../utils/searchEventBus';
 import { useDependentContext } from '../../hooks/useDependentContext';
 import { MyCrewRow } from '../../components/home/MyCrewRow';
 import { useCrewSelector } from '../../hooks/useCrewSelector';
+import { useContentWidth } from '../../hooks/useContentWidth';
 
 type LeagueItem = any;
 
@@ -53,6 +54,7 @@ export function LeaguesBrowserScreen() {
   const activeUserId = useSelector(selectActiveUserId);
   const { isDependent } = useDependentContext();
   const { width: screenWidth } = useWindowDimensions();
+  const { contentStyle } = useContentWidth();
   const { crewMembers, selectedCrewId, onSelectCrew, hasDependents } =
     useCrewSelector();
 
@@ -173,8 +175,6 @@ export function LeaguesBrowserScreen() {
     [navigation]
   );
 
-  const contentMaxWidth = screenWidth > 600 ? 540 : undefined;
-
   if (error && !myLeagues.length) {
     return (
       <View style={styles.container}>
@@ -209,12 +209,7 @@ export function LeaguesBrowserScreen() {
         horizontal
         showsHorizontalScrollIndicator={false}
         style={{ flexGrow: 0 }}
-        contentContainerStyle={[
-          styles.chipRow,
-          contentMaxWidth
-            ? { maxWidth: contentMaxWidth, alignSelf: 'center' as const }
-            : undefined,
-        ]}
+        contentContainerStyle={[styles.chipRow, contentStyle]}
       >
         {SPORTS.map(sport => (
           <TouchableOpacity
@@ -242,17 +237,7 @@ export function LeaguesBrowserScreen() {
         data={activeLeagues}
         keyExtractor={item => item.id}
         renderItem={({ item }) => (
-          <View
-            style={
-              contentMaxWidth
-                ? {
-                    maxWidth: contentMaxWidth,
-                    alignSelf: 'center' as const,
-                    width: '100%',
-                  }
-                : undefined
-            }
-          >
+          <View style={contentStyle ?? undefined}>
             <LeagueCard
               league={item}
               onPress={() => handleLeaguePress(item)}
@@ -271,19 +256,13 @@ export function LeaguesBrowserScreen() {
         showsVerticalScrollIndicator={false}
         ListHeaderComponent={
           activeLeagues.length > 0 ? (
-            <View
-              style={
-                contentMaxWidth
-                  ? {
-                      maxWidth: contentMaxWidth,
-                      alignSelf: 'center' as const,
-                      width: '100%',
-                    }
-                  : undefined
-              }
-            >
+            <View style={contentStyle ?? undefined}>
               <Text
-                style={[styles.sectionTitle, { color: colors.ink }, { color: colors.textPrimary }]}
+                style={[
+                  styles.sectionTitle,
+                  { color: colors.ink },
+                  { color: colors.textPrimary },
+                ]}
               >
                 Active
               </Text>
@@ -293,11 +272,21 @@ export function LeaguesBrowserScreen() {
         ListEmptyComponent={
           <View style={styles.empty}>
             <Ionicons name="trophy-outline" size={40} color={colors.border} />
-            <Text style={[styles.emptyTitle, { color: colors.ink }, { color: colors.textPrimary }]}>
+            <Text
+              style={[
+                styles.emptyTitle,
+                { color: colors.ink },
+                { color: colors.textPrimary },
+              ]}
+            >
               No active leagues
             </Text>
             <Text
-              style={[styles.emptySubtitle, { color: colors.inkSecondary }, { color: colors.textSecondary }]}
+              style={[
+                styles.emptySubtitle,
+                { color: colors.inkSecondary },
+                { color: colors.textSecondary },
+              ]}
             >
               Join or create a league to get started
             </Text>
@@ -305,24 +294,18 @@ export function LeaguesBrowserScreen() {
         }
         ListFooterComponent={
           pastLeagues.length > 0 ? (
-            <View
-              style={
-                contentMaxWidth
-                  ? {
-                      maxWidth: contentMaxWidth,
-                      alignSelf: 'center' as const,
-                      width: '100%',
-                    }
-                  : undefined
-              }
-            >
+            <View style={contentStyle ?? undefined}>
               <TouchableOpacity
                 style={styles.pastHeader}
                 onPress={() => setPastExpanded(v => !v)}
                 activeOpacity={0.7}
               >
                 <Text
-                  style={[styles.sectionTitle, { color: colors.ink }, { color: colors.textPrimary }]}
+                  style={[
+                    styles.sectionTitle,
+                    { color: colors.ink },
+                    { color: colors.textPrimary },
+                  ]}
                 >
                   Past Seasons
                 </Text>
@@ -348,7 +331,13 @@ export function LeaguesBrowserScreen() {
 
       {/* FAB */}
       {!isDependent && (
-        <TouchableOpacity style={[styles.fab, { backgroundColor: colors.cobalt, shadowColor: colors.cobalt }]} onPress={handleCreateLeague}>
+        <TouchableOpacity
+          style={[
+            styles.fab,
+            { backgroundColor: colors.cobalt, shadowColor: colors.cobalt },
+          ]}
+          onPress={handleCreateLeague}
+        >
           <Ionicons name="add" size={26} color={colors.white} />
         </TouchableOpacity>
       )}

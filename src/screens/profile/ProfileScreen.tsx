@@ -17,6 +17,7 @@ import { PressableCard } from '../../components/ui/PressableCard';
 import { SkeletonRow } from '../../components/ui/SkeletonBox';
 import { ProfileCard } from '../../components/profile/ProfileCard';
 import { fonts, useTheme } from '../../theme';
+import { useContentWidth } from '../../hooks/useContentWidth';
 import { useDispatch, useSelector } from 'react-redux';
 import {
   setUser as setReduxUser,
@@ -140,7 +141,7 @@ export function ProfileScreen() {
     }
   };
 
-  const contentMaxWidth = width > 600 ? 540 : undefined;
+  const { contentStyle } = useContentWidth();
 
   if (!authUser) {
     return (
@@ -159,16 +160,7 @@ export function ProfileScreen() {
   return (
     <ScrollView
       style={[styles.container, { backgroundColor: colors.bgScreen }]}
-      contentContainerStyle={[
-        styles.content,
-        contentMaxWidth
-          ? {
-              maxWidth: contentMaxWidth,
-              alignSelf: 'center' as const,
-              width: '100%' as unknown as number,
-            }
-          : undefined,
-      ]}
+      contentContainerStyle={[styles.content, contentStyle]}
       refreshControl={
         <RefreshControl
           refreshing={refreshing}

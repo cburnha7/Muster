@@ -25,6 +25,7 @@ import { API_BASE_URL } from '../../services/api/config';
 import { getSportEmoji } from '../../constants/sports';
 import { getSportColor } from '../../constants/sportColors';
 import { fonts, useTheme } from '../../theme';
+import { useContentWidth } from '../../hooks/useContentWidth';
 import { formatSportType } from '../../utils/formatters';
 import { DependentProfile } from '../../types/dependent';
 
@@ -107,7 +108,7 @@ export function DependentProfileScreen() {
   }, [fetchProfile]);
 
   const canTransfer = profile ? isAge18OrOlder(profile.dateOfBirth) : false;
-  const contentMaxWidth = width > 600 ? 540 : undefined;
+  const { contentStyle } = useContentWidth();
 
   const recentGames = profile?.eventHistory ?? [];
   const rosterMemberships = profile?.rosterMemberships ?? [];
@@ -117,16 +118,7 @@ export function DependentProfileScreen() {
     return (
       <ScrollView
         style={styles.container}
-        contentContainerStyle={[
-          styles.content,
-          contentMaxWidth
-            ? {
-                maxWidth: contentMaxWidth,
-                alignSelf: 'center' as const,
-                width: '100%' as unknown as number,
-              }
-            : undefined,
-        ]}
+        contentContainerStyle={[styles.content, contentStyle]}
       >
         <SkeletonRow />
         <SkeletonRow />
@@ -154,16 +146,7 @@ export function DependentProfileScreen() {
   return (
     <ScrollView
       style={[styles.container, { backgroundColor: colors.bgScreen }]}
-      contentContainerStyle={[
-        styles.content,
-        contentMaxWidth
-          ? {
-              maxWidth: contentMaxWidth,
-              alignSelf: 'center' as const,
-              width: '100%' as unknown as number,
-            }
-          : undefined,
-      ]}
+      contentContainerStyle={[styles.content, contentStyle]}
       refreshControl={
         <RefreshControl
           refreshing={refreshing}

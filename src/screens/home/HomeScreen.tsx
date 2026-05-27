@@ -26,6 +26,7 @@ import { InboxSection } from '../../components/home/InboxSection';
 import { LiveGameBanner } from '../../components/home/LiveGameBanner';
 import { MyCrewRow } from '../../components/home/MyCrewRow';
 import { useCrewSelector } from '../../hooks/useCrewSelector';
+import { useContentWidth } from '../../hooks/useContentWidth';
 import { CrewEventCard } from '../../components/home/CrewEventCard';
 import { ProfileSelectorModal } from '../../components/ui/ProfileSelectorModal';
 import { MilestoneOverlay } from '../../components/ui/MilestoneOverlay';
@@ -98,8 +99,7 @@ export function HomeScreen() {
   const { width: screenWidth } = useWindowDimensions();
   const { pendingMilestone, dismissMilestone } = useMilestoneCheck();
 
-  const isWide = screenWidth > 600;
-  const contentMaxWidth = isWide ? 540 : undefined;
+  const { contentStyle, isWide } = useContentWidth();
 
   // Redux state
   const user = useSelector(selectUser);
@@ -709,7 +709,7 @@ export function HomeScreen() {
         style={styles.scrollView}
         contentContainerStyle={[
           styles.scrollContent,
-          contentMaxWidth && { alignItems: 'center' as const },
+          isWide && { alignItems: 'center' as const },
         ]}
         refreshControl={
           <RefreshControl
@@ -720,12 +720,7 @@ export function HomeScreen() {
         }
         showsVerticalScrollIndicator={false}
       >
-        <View
-          style={[
-            styles.inner,
-            contentMaxWidth && { maxWidth: contentMaxWidth, width: '100%' },
-          ]}
-        >
+        <View style={[styles.inner, contentStyle]}>
           {/* ── Live game banner ────────────────── */}
           {liveGameBooking && (
             <LiveGameBanner

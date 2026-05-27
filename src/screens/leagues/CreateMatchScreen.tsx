@@ -109,7 +109,7 @@ export const CreateMatchScreen: React.FC = () => {
 
   if (loadingData) {
     return (
-      <View style={[styles.container, { backgroundColor: colors.white }, { backgroundColor: colors.bgScreen }]}>
+      <View style={[styles.container, { backgroundColor: colors.bgScreen }]}>
         <ScreenHeader
           title="Create Match"
           leftIcon="arrow-back"
@@ -124,7 +124,7 @@ export const CreateMatchScreen: React.FC = () => {
   }
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.white }, { backgroundColor: colors.bgScreen }]}>
+    <View style={[styles.container, { backgroundColor: colors.bgScreen }]}>
       <ScreenHeader
         title="Create Match"
         leftIcon="arrow-back"

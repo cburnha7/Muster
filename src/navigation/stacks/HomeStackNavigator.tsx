@@ -19,21 +19,9 @@ import { NotificationPreferencesScreen } from '../../screens/profile/Notificatio
 import { TransferAccountScreen } from '../../screens/profile/TransferAccountScreen';
 import { RedeemCodeScreen } from '../../screens/profile/RedeemCodeScreen';
 import { AvailabilityCalendarScreen } from '../../screens/profile/AvailabilityCalendarScreen';
-import { fonts } from '../../theme';
+import { detailHeader } from '../headerOptions';
 
 const Stack = createNativeStackNavigator<HomeStackParamList>();
-
-const detailHeader = {
-  headerShown: true as const,
-  headerBackVisible: false,
-  headerBackTitleVisible: false,
-  headerTitleAlign: 'center' as const,
-  headerShadowVisible: false,
-  headerTitleStyle: {
-    fontFamily: fonts.headingSemi,
-    fontSize: 17,
-  },
-};
 
 export function HomeStackNavigator(): JSX.Element {
   return (

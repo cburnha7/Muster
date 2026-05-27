@@ -7,21 +7,9 @@ import { CreateTeamScreen } from '../../screens/teams/CreateTeamScreen';
 import { JoinTeamScreen } from '../../screens/teams/JoinTeamScreen';
 import { EventDetailsScreen } from '../../screens/events/EventDetailsScreen';
 import { ScheduleReviewScreen } from '../../screens/teams/ScheduleReviewScreen';
-import { fonts } from '../../theme';
+import { detailHeader } from '../headerOptions';
 
 const Stack = createNativeStackNavigator<TeamsStackParamList>();
-
-const detailHeader = {
-  headerShown: true as const,
-  headerBackVisible: false,
-  headerBackTitleVisible: false,
-  headerTitleAlign: 'center' as const,
-  headerShadowVisible: false,
-  headerTitleStyle: {
-    fontFamily: fonts.headingSemi,
-    fontSize: 17,
-  },
-};
 
 export function TeamsStackNavigator(): JSX.Element {
   return (
