@@ -13,7 +13,9 @@ jest.mock('expo-notifications', () => ({
   scheduleNotificationAsync: jest.fn(),
   setNotificationHandler: jest.fn(),
   addNotificationReceivedListener: jest.fn(() => ({ remove: jest.fn() })),
-  addNotificationResponseReceivedListener: jest.fn(() => ({ remove: jest.fn() })),
+  addNotificationResponseReceivedListener: jest.fn(() => ({
+    remove: jest.fn(),
+  })),
   getExpoPushTokenAsync: jest.fn(),
   setNotificationChannelAsync: jest.fn(),
 }));
@@ -26,7 +28,10 @@ jest.mock('react-native-safe-area-context', () => {
     SafeAreaView: ({ children }: { children: React.ReactNode }) => children,
     useSafeAreaInsets: () => inset,
     useSafeAreaFrame: () => ({ x: 0, y: 0, width: 390, height: 844 }),
-    initialWindowMetrics: { insets: inset, frame: { x: 0, y: 0, width: 390, height: 844 } },
+    initialWindowMetrics: {
+      insets: inset,
+      frame: { x: 0, y: 0, width: 390, height: 844 },
+    },
   };
 });
 
@@ -47,12 +52,65 @@ jest.mock('expo-secure-store', () => ({
 }));
 
 // Mock React Navigation
-jest.mock('@react-navigation/native', () => ({
-  useNavigation: () => ({
-    navigate: jest.fn(),
-    goBack: jest.fn(),
-  }),
-  useRoute: () => ({
-    params: {},
-  }),
-}));
+jest.mock('@react-navigation/native', () => {
+  const React = require('react');
+  return {
+    useNavigation: () => ({
+      navigate: jest.fn(),
+      goBack: jest.fn(),
+      setOptions: jest.fn(),
+      addListener: jest.fn(() => jest.fn()),
+      dispatch: jest.fn(),
+    }),
+    useRoute: () => ({
+      params: {},
+    }),
+    useFocusEffect: (cb: () => void) => {
+      // Run the callback once on mount like the real hook
+      const React2 = require('react');
+      React2.useEffect(() => {
+        const cleanup = cb();
+        return typeof cleanup === 'function' ? cleanup : undefined;
+      }, []);
+    },
+    useIsFocused: () => true,
+    NavigationContainer: ({ children }: { children: React.ReactNode }) =>
+      children,
+    getFocusedRouteNameFromRoute: () => undefined,
+    createNavigationContainerRef: () => ({ current: null }),
+  };
+});
+
+// ─── Mock the theme module ───────────────────────────────────
+// Components import { useTheme, fonts, ... } from '../../theme'.
+// The real ThemeProvider has an async gate (AsyncStorage read) that
+// causes components to render null in tests. This mock provides a
+// synchronous useTheme() that returns a valid light-mode theme.
+
+jest.mock('../src/theme/ThemeContext', () => {
+  const actual = jest.requireActual('../src/theme/ThemeContext');
+  const tokens = jest.requireActual('../src/theme/tokens');
+  const typography = jest.requireActual('../src/theme/typography');
+
+  const mockTheme = {
+    isDark: false,
+    themeMode: 'light',
+    colors: tokens.lightColors,
+    status: tokens.tokenStatus,
+    sport: tokens.tokenSport,
+    type: typography.typeScale,
+    spacing: tokens.tokenSpacing,
+    radius: tokens.tokenRadius,
+    shadow: tokens.makeShadows(false),
+    fonts: tokens.tokenFontFamily,
+    getAvatarColor: tokens.getAvatarColor,
+    setThemeMode: jest.fn(),
+    setDarkMode: jest.fn(),
+  };
+
+  return {
+    ...actual,
+    useTheme: () => mockTheme,
+    ThemeProvider: ({ children }: { children: React.ReactNode }) => children,
+  };
+});
