@@ -6,7 +6,17 @@
  */
 
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
-import { authService } from '../../services/api/AuthService';
+// Lazy accessor to break circular dependency:
+// authSlice → AuthService → BaseApiService → store → authSlice
+// The getter defers module resolution until first call (inside a thunk),
+// by which time all modules have finished initializing.
+let _authService: any = null;
+function getAuthService() {
+  if (!_authService) {
+    _authService = require('../../services/api/AuthService').authService;
+  }
+  return _authService;
+}
 import TokenStorage from '../../services/auth/TokenStorage';
 import { loggingService } from '../../services/LoggingService';
 import {
@@ -52,7 +62,7 @@ export const registerUser = createAsyncThunk(
   'auth/register',
   async (data: RegisterData, { rejectWithValue }) => {
     try {
-      const response = await authService.register(data);
+      const response = await getAuthService().register(data);
       return response;
     } catch (error: any) {
       return rejectWithValue(error.message || 'Registration failed');
@@ -68,7 +78,7 @@ export const registerWithSSO = createAsyncThunk(
   'auth/registerSSO',
   async (data: SSORegisterData, { rejectWithValue }) => {
     try {
-      const response = await authService.registerWithSSO(data);
+      const response = await getAuthService().registerWithSSO(data);
       return response;
     } catch (error: any) {
       return rejectWithValue(error.message || 'SSO registration failed');
@@ -84,7 +94,7 @@ export const loginUser = createAsyncThunk(
   'auth/login',
   async (credentials: LoginCredentials, { rejectWithValue }) => {
     try {
-      const response = await authService.login(
+      const response = await getAuthService().login(
         credentials.emailOrUsername,
         credentials.password,
         credentials.rememberMe
@@ -125,7 +135,7 @@ export const loginWithSSO = createAsyncThunk(
   ) => {
     try {
       // Single call — backend finds or creates the account
-      const response = await authService.ssoAuth({
+      const response = await getAuthService().ssoAuth({
         provider,
         providerUserId: userId,
         providerToken: token || undefined,
@@ -163,7 +173,7 @@ export const linkAccount = createAsyncThunk(
     { rejectWithValue }
   ) => {
     try {
-      const response = await authService.linkAccount(
+      const response = await getAuthService().linkAccount(
         email,
         password,
         provider,
@@ -185,7 +195,7 @@ export const logoutUser = createAsyncThunk(
   'auth/logout',
   async (_, { dispatch, rejectWithValue }) => {
     try {
-      await authService.logout();
+      await getAuthService().logout();
     } catch {
       // Continue cleanup even if server logout fails
     }
@@ -243,7 +253,7 @@ export const refreshAccessToken = createAsyncThunk(
   'auth/refreshToken',
   async (refreshToken: string, { rejectWithValue }) => {
     try {
-      const response = await authService.refreshToken(refreshToken);
+      const response = await getAuthService().refreshToken(refreshToken);
       return response;
     } catch (error: any) {
       return rejectWithValue(error.message || 'Token refresh failed');
@@ -259,7 +269,7 @@ export const requestPasswordReset = createAsyncThunk(
   'auth/requestPasswordReset',
   async (email: string, { rejectWithValue }) => {
     try {
-      await authService.requestPasswordReset(email);
+      await getAuthService().requestPasswordReset(email);
     } catch (error: any) {
       return rejectWithValue(error.message || 'Password reset request failed');
     }
@@ -277,7 +287,7 @@ export const resetPassword = createAsyncThunk(
     { rejectWithValue }
   ) => {
     try {
-      await authService.resetPassword(token, newPassword);
+      await getAuthService().resetPassword(token, newPassword);
     } catch (error: any) {
       return rejectWithValue(error.message || 'Password reset failed');
     }
