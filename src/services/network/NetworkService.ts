@@ -12,70 +12,93 @@ class NetworkService {
     isConnected: true,
     isInternetReachable: true,
   };
+  private monitoringStarted = false;
+  private intervalHandle: ReturnType<typeof setInterval> | null = null;
+  private onlineHandler: (() => void) | null = null;
+  private offlineHandler: (() => void) | null = null;
 
   constructor() {
-    this.setupNetworkMonitoring();
+    // No work at construction. Network monitoring boots lazily on the
+    // first subscribe() call. Keeps cold launch off of window event
+    // registration and the 30s polling timer until something actually
+    // needs the network state. Pattern matches the Tier 1 lazy-init
+    // refactor of AuthService.
   }
 
-  private setupNetworkMonitoring() {
-    // Use browser's online/offline events for better detection (web only)
-    if (Platform.OS === 'web') {
-      window.addEventListener('online', () => {
+  private ensureMonitoring(): void {
+    if (this.monitoringStarted) return;
+    this.monitoringStarted = true;
+
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+      this.onlineHandler = () => {
         this.updateNetworkState({
           isConnected: true,
           isInternetReachable: true,
         });
-      });
-
-      window.addEventListener('offline', () => {
+      };
+      this.offlineHandler = () => {
         this.updateNetworkState({
           isConnected: false,
           isInternetReachable: false,
         });
-      });
+      };
+      window.addEventListener('online', this.onlineHandler);
+      window.addEventListener('offline', this.offlineHandler);
     }
 
-    // Initial check
+    // Initial state probe
     this.checkNetworkStatus();
 
-    // Periodic checks (less frequent since we have event listeners)
-    setInterval(() => {
+    // Periodic recheck (existing 30s cadence)
+    this.intervalHandle = setInterval(() => {
       this.checkNetworkStatus();
-    }, 30000); // Check every 30 seconds instead of 5
+    }, 30000);
+  }
+
+  public teardown(): void {
+    if (!this.monitoringStarted) return;
+
+    if (this.intervalHandle !== null) {
+      clearInterval(this.intervalHandle);
+      this.intervalHandle = null;
+    }
+    if (
+      Platform.OS === 'web' &&
+      typeof window !== 'undefined' &&
+      this.onlineHandler &&
+      this.offlineHandler
+    ) {
+      window.removeEventListener('online', this.onlineHandler);
+      window.removeEventListener('offline', this.offlineHandler);
+      this.onlineHandler = null;
+      this.offlineHandler = null;
+    }
+
+    this.monitoringStarted = false;
   }
 
   private async checkNetworkStatus() {
     try {
-      // Check if we're online using the browser's navigator.onLine
-      // This is more reliable and doesn't cause CORS issues
       const isOnline =
         typeof navigator !== 'undefined' ? navigator.onLine : true;
 
       if (!isOnline) {
-        const newState: NetworkState = {
+        this.updateNetworkState({
           isConnected: false,
           isInternetReachable: false,
-        };
-        this.updateNetworkState(newState);
+        });
         return;
       }
 
-      // If online, assume internet is reachable
-      // We'll rely on API call failures to detect actual connectivity issues
-      const newState: NetworkState = {
+      this.updateNetworkState({
         isConnected: true,
         isInternetReachable: true,
-      };
-
-      this.updateNetworkState(newState);
+      });
     } catch (error) {
-      // Fallback: assume we're online
-      const newState: NetworkState = {
+      this.updateNetworkState({
         isConnected: true,
         isInternetReachable: true,
-      };
-
-      this.updateNetworkState(newState);
+      });
     }
   }
 
@@ -95,6 +118,7 @@ class NetworkService {
   }
 
   public subscribe(listener: (state: NetworkState) => void): () => void {
+    this.ensureMonitoring();
     this.listeners.push(listener);
 
     // Immediately call with current state
@@ -106,10 +130,15 @@ class NetworkService {
       if (index > -1) {
         this.listeners.splice(index, 1);
       }
+      // If no more consumers, tear down to free the interval.
+      if (this.listeners.length === 0) {
+        this.teardown();
+      }
     };
   }
 
   public getCurrentState(): NetworkState {
+    this.ensureMonitoring();
     return { ...this.currentState };
   }
 }

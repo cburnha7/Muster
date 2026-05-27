@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View } from 'react-native';
 import { Provider } from 'react-redux';
 import { store, persistor } from './store';
+import { bootSessionFromSecureStore } from './slices/authSlice';
 import { useTheme } from '../theme';
 
 interface ReduxProviderProps {
@@ -18,12 +19,12 @@ export const ReduxProvider: React.FC<ReduxProviderProps> = ({ children }) => {
     const markReady = () => {
       if (!settled) {
         settled = true;
+        // Kick off the SecureStore session restore after rehydration.
+        store.dispatch(bootSessionFromSecureStore() as any);
         setIsReady(true);
       }
     };
 
-    // Manually subscribe to persistor instead of using PersistGate
-    // PersistGate from redux-persist@6 is incompatible with react-redux@9
     const unsubscribe = persistor.subscribe(() => {
       const { bootstrapped } = persistor.getState();
       if (bootstrapped) {
@@ -32,12 +33,10 @@ export const ReduxProvider: React.FC<ReduxProviderProps> = ({ children }) => {
       }
     });
 
-    // Check if already bootstrapped
     if (persistor.getState().bootstrapped) {
       markReady();
     }
 
-    // Safety timeout — render anyway after 2 seconds
     const timeout = setTimeout(markReady, 2000);
 
     return () => {

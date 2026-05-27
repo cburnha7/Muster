@@ -212,6 +212,31 @@ export const logoutUser = createAsyncThunk(
 );
 
 /**
+ * Restore access/refresh tokens from SecureStore on cold launch.
+ * Dispatched once, right after persistStore() finishes hydrating the
+ * profile from AsyncStorage. If SecureStore has no token, we clear the
+ * tentative isAuthenticated state set by the REHYDRATE matcher.
+ */
+export const bootSessionFromSecureStore = createAsyncThunk(
+  'auth/bootSessionFromSecureStore',
+  async (_, { dispatch, rejectWithValue }) => {
+    try {
+      const [accessToken, refreshToken] = await Promise.all([
+        TokenStorage.getAccessToken(),
+        TokenStorage.getRefreshToken(),
+      ]);
+      if (!accessToken) {
+        dispatch(clearAuth());
+        return { accessToken: null, refreshToken: null };
+      }
+      return { accessToken, refreshToken };
+    } catch (error: any) {
+      return rejectWithValue(error?.message ?? 'SecureStore read failed');
+    }
+  }
+);
+
+/**
  * Refresh access token
  * Requirement 8.11: Token refresh
  */
@@ -601,6 +626,22 @@ const authSlice = createSlice({
       .addCase(completeOnboarding.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload as string;
+      });
+
+    // Boot session from SecureStore (cold launch token restore)
+    builder
+      .addCase(bootSessionFromSecureStore.fulfilled, (state, action) => {
+        const { accessToken, refreshToken } = action.payload;
+        if (accessToken) {
+          state.accessToken = accessToken;
+          state.refreshToken = refreshToken ?? null;
+          state.isAuthenticated = !!state.user;
+        }
+      })
+      .addCase(bootSessionFromSecureStore.rejected, state => {
+        state.accessToken = null;
+        state.refreshToken = null;
+        state.isAuthenticated = false;
       });
   },
 });

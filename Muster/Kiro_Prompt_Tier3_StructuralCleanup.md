@@ -1,8 +1,22 @@
 # Kiro Prompt — Tier 3 structural cleanup (Muster 1.0.73 line)
 
+## ⚠️ REVISION NOTE — Phase 3 (Google OAuth) is DELETED
+
+The original prompt included a Phase 3 proposing to switch Google sign-in from the Expo proxy (`https://auth.expo.io/@cburnha7/muster`, Web client ID) to a native redirect using the iOS client ID and the reversed-client-ID custom scheme. **That proposal was wrong** and will re-break Google sign-in. Charles already debugged this exact failure (see commit `2cfaafd` "use Web client ID with PKCE on all platforms, custom scheme redirect URI" — the custom-scheme path failed; the working configuration that landed is Web client + Expo proxy + PKCE).
+
+**Why it fails:** `expo-auth-session` does not provide the bundle-ID attestation Google's iOS OAuth clients require. Custom-scheme redirects from the iOS client get rejected with `unsupported_response_type` / "access blocked". Google's "use the reversed client ID" guidance assumes their **native iOS Sign-In SDK**, not a browser-based flow.
+
+**Valid future paths off the Expo proxy** — neither in scope here:
+1. Migrate to `@react-native-google-signin/google-signin` (the native Google SDK can use custom schemes because it provides attestation).
+2. Host a Muster-owned HTTPS redirect (e.g. `https://muster-ecru.vercel.app/oauth/callback`) and register it on the Web OAuth client.
+
+This prompt now contains three changes (NetworkService lazy-init, SecureStore-only tokens, prod-only RTK checks). The SSOService file is **not touched** in this PR.
+
+---
+
 ## Read this first — context, scope, and standard
 
-You are landing four structural changes that don't move user-visible numbers as dramatically as Tier 1 (crash hardening) or Tier 2 (perceived speed), but each removes a real risk or a real cost from the production app: a singleton with module-load side effects, plaintext tokens in AsyncStorage, an OAuth proxy hop, and an always-on dev-only middleware running in production. The bar is the same as the prior two PRs: no shortcuts, real-hardware verification, before/after measurements where they make sense, no scope drift.
+You are landing three structural changes that don't move user-visible numbers as dramatically as Tier 1 (crash hardening) or Tier 2 (perceived speed), but each removes a real risk or a real cost from the production app: a singleton with module-load side effects, plaintext tokens in AsyncStorage, and an always-on dev-only middleware running in production. The bar is the same as the prior two PRs: no shortcuts, real-hardware verification, before/after measurements where they make sense, no scope drift.
 
 If anything below conflicts with what you observe in the code, stop and surface it — do not "fix it your way."
 
@@ -14,15 +28,13 @@ If anything below conflicts with what you observe in the code, stop and surface 
 
 If either is unmerged, stop and surface that. The token-relocation fix in Phase 2 of this prompt relies on the Tier 1 global handler being present, and the lazy navigators in Tier 2 affect how the NetworkService consumers are evaluated at startup.
 
-**The four problems:**
+**The three problems:**
 
 1. **`src/services/network/NetworkService.ts` runs work in its constructor at module load**: `setupNetworkMonitoring()` adds `window.addEventListener('online'/'offline', ...)` and starts a 30-second `setInterval` from inside `constructor()`. The singleton is instantiated on line 118 at module-eval time, so all of this fires during cold launch before the React tree and the global error handler are in place. (Same anti-pattern Tier 1 addressed for AuthService.) **Separate concern, surfaced for your decision:** on native, this service never actually checks the network — `navigator.onLine` is the only signal it reads, and the codebase never wires it to NetInfo. So on iOS the service is always reporting "connected." Fix #1 in this prompt is *only* the constructor lazy-init. We will flag the dead-NetInfo issue at the end as a separate decision; do not silently expand scope here.
 
 2. **`src/store/store.ts` persists the entire `auth` slice into AsyncStorage** via redux-persist's `whitelist: ['auth', 'subscription']`. That means `accessToken` and `refreshToken` end up in an AsyncStorage plist on iOS, which is **not** in the secure enclave. `TokenStorage` already writes the same tokens to SecureStore (which is the correct place), so we have the right pattern available — we just need to stop duplicating the tokens into the insecure copy. We also need to migrate session restore to read tokens from SecureStore instead of relying on the REHYDRATE matcher.
 
-3. **`src/services/auth/SSOService.ts` Google sign-in uses the `auth.expo.io` proxy** on native (line 101: `'https://auth.expo.io/@cburnha7/muster'`) and runs a live OIDC discovery fetch on every sign-in tap (line 103: `fetchDiscoveryAsync('https://accounts.google.com')`). The proxy adds a third-party hop, a dependency on the Expo proxy being whitelisted in Google Cloud Console, and ~500ms–2s of latency. The discovery fetch hardly ever produces different results; hardcoding the two endpoints we actually use saves another ~200–500ms. The custom URL scheme for native redirect is already registered in `app.json` (line 30, `com.googleusercontent.apps.297265818886-fcm56mh33g7uubur983mgfhbav1jbtpc`).
-
-4. **`src/store/store.ts` runs `serializableCheck` on every dispatch in production builds.** RTK's serializability middleware is valuable in dev — it catches Date/Map/Set bugs and persistence mistakes — but it has a real per-dispatch cost in prod, and the boot path (REHYDRATE + many subsequent slice initializations) hits it hard. Same applies to `immutableCheck`.
+3. **`src/store/store.ts` runs `serializableCheck` on every dispatch in production builds.** RTK's serializability middleware is valuable in dev — it catches Date/Map/Set bugs and persistence mistakes — but it has a real per-dispatch cost in prod, and the boot path (REHYDRATE + many subsequent slice initializations) hits it hard. Same applies to `immutableCheck`.
 
 ---
 
@@ -49,12 +61,6 @@ Select-String -Path "src\**\*.ts","src\**\*.tsx" -Pattern "@react-native-communi
 Select-String -Path "src\store\store.ts" -Pattern "whitelist|blacklist|persistConfig|transform"
 Select-String -Path "src\**\*.ts","src\**\*.tsx" -Pattern "REHYDRATE" -SimpleMatch
 
-# Confirm the only Google OAuth call site
-Select-String -Path "src\**\*.ts","src\**\*.tsx" -Pattern "signInWithGoogle|GoogleAuthProvider|fetchDiscoveryAsync|auth\.expo\.io" -SimpleMatch
-
-# Confirm app.json has the URL scheme
-Select-String -Path "app.json" -Pattern "googleusercontent"
-
 # RTK config
 Select-String -Path "src\store\store.ts" -Pattern "serializableCheck|immutableCheck|getDefaultMiddleware"
 ```
@@ -66,8 +72,6 @@ Read these files end-to-end:
 - `src/store/store.ts` (full file)
 - `src/store/slices/authSlice.ts` (specifically the REHYDRATE matcher around lines 362–378, and the `loadCachedUser` thunk if it has not been deleted yet)
 - `src/services/auth/TokenStorage.ts` (so you know the SecureStore surface)
-- `src/services/auth/SSOService.ts` (full file — 177 lines)
-- `app.json` (confirm bundleIdentifier and the Google URL scheme line by line; you'll need them exact)
 - `eas.json` (confirm `appVersionSource: "remote"`; no changes needed here)
 
 If your diagnostic grep turns up an NetInfo import somewhere we missed, stop and surface it. If `loadCachedUser` is still referenced after Tier 1, stop and surface it (it should already be dead).
@@ -447,196 +451,7 @@ Add a short note in the PR description acknowledging this — anyone whose Secur
 
 ---
 
-## Phase 3 — Fix #3: Drop the auth.expo.io proxy + hardcode Google OIDC endpoints
-
-### Goal
-
-Google sign-in uses a native redirect via the custom URL scheme already registered in `app.json`. The OIDC discovery fetch is replaced with hardcoded endpoint constants. The code path is shorter, faster, and removes a third-party dependency on Expo's proxy.
-
-### Background you'll need
-
-- `app.json` line ~30 already registers the iOS reversed-client-ID URL scheme: `com.googleusercontent.apps.297265818886-fcm56mh33g7uubur983mgfhbav1jbtpc`. This is the iOS-client-ID-derived scheme that Google expects for native redirects when using `expo-auth-session`.
-- `GOOGLE_IOS_CLIENT_ID` is declared in `SSOService.ts` (line 32) but currently unused. The comment correctly says "iOS client IDs are for the native Google Sign-In SDK only" — that comment was right for `@react-native-google-signin/google-signin`, but for `expo-auth-session` on native we *do* want to use the iOS client ID with the iOS reversed-client URL scheme as the redirect. The web client ID + Expo proxy is the older pattern we're replacing.
-- The redirect URI Google expects for native is the reversed-client-ID format: `com.googleusercontent.apps.297265818886-fcm56mh33g7uubur983mgfhbav1jbtpc:/oauthredirect` (note the `:` and `/oauthredirect` suffix — `makeRedirectUri` builds this).
-
-### Exact change set
-
-**File:** `src/services/auth/SSOService.ts`
-
-1. **Hardcode the Google OIDC endpoints** at the top of the file. Remove the `fetchDiscoveryAsync` import:
-
-   ```ts
-   import {
-     makeRedirectUri,
-     AuthRequest,
-     ResponseType,
-   } from 'expo-auth-session';
-   import * as WebBrowser from 'expo-web-browser';
-   import { Platform } from 'react-native';
-   import { SSOUserData } from '../../types/auth';
-
-   // Google's OIDC endpoints rarely change. Hardcoding skips a 200–500ms
-   // discovery fetch on every sign-in. If Google ever rotates these, sign-in
-   // will start failing with a clear "token exchange failed" error and we'll
-   // see it in Sentry. Last confirmed against Google's public discovery doc
-   // at https://accounts.google.com/.well-known/openid-configuration on
-   // <DATE OF THIS PR>. Update the date when re-verifying.
-   const GOOGLE_DISCOVERY = {
-     authorizationEndpoint: 'https://accounts.google.com/o/oauth2/v2/auth',
-     tokenEndpoint: 'https://oauth2.googleapis.com/token',
-     revocationEndpoint: 'https://oauth2.googleapis.com/revoke',
-   };
-   ```
-
-2. **Switch the native redirect URI to the reversed-client-ID scheme**:
-
-   ```ts
-   const GOOGLE_WEB_CLIENT_ID =
-     '297265818886-cn0vu6f658teborvhfdpsjqs0t1q48dl.apps.googleusercontent.com';
-   const GOOGLE_IOS_CLIENT_ID =
-     '297265818886-fcm56mh33g7uubur983mgfhbav1jbtpc.apps.googleusercontent.com';
-
-   // Native redirect uses the reversed iOS client ID scheme registered in
-   // app.json's CFBundleURLTypes. No more auth.expo.io proxy.
-   const GOOGLE_IOS_REDIRECT_SCHEME =
-     'com.googleusercontent.apps.297265818886-fcm56mh33g7uubur983mgfhbav1jbtpc';
-   ```
-
-3. **Rewrite `signInWithGoogle`** to use the new path:
-
-   ```ts
-   async signInWithGoogle(): Promise<SSOUserData> {
-     // Pick client + redirect per platform.
-     // Web: web client ID, browser-page redirect via makeRedirectUri().
-     // Native: iOS client ID, reversed-client-ID custom scheme redirect.
-     const isNative = Platform.OS === 'ios' || Platform.OS === 'android';
-     const clientId = isNative ? GOOGLE_IOS_CLIENT_ID : GOOGLE_WEB_CLIENT_ID;
-     const redirectUri = isNative
-       ? makeRedirectUri({ scheme: GOOGLE_IOS_REDIRECT_SCHEME, path: 'oauthredirect' })
-       : makeRedirectUri();
-
-     const request = new AuthRequest({
-       clientId,
-       redirectUri,
-       scopes: ['openid', 'profile', 'email'],
-       responseType: ResponseType.Code,
-       usePKCE: true,
-     });
-
-     const result = await request.promptAsync(GOOGLE_DISCOVERY);
-
-     if (result.type === 'cancel' || result.type === 'dismiss') {
-       throw new Error('User cancelled');
-     }
-     if (result.type !== 'success' || !result.params?.code) {
-       throw new Error('Google Sign In failed');
-     }
-
-     const tokenResponse = await fetch(GOOGLE_DISCOVERY.tokenEndpoint, {
-       method: 'POST',
-       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-       body: new URLSearchParams({
-         client_id: clientId,
-         code: result.params.code,
-         code_verifier: request.codeVerifier || '',
-         grant_type: 'authorization_code',
-         redirect_uri: redirectUri,
-       }).toString(),
-     });
-
-     if (!tokenResponse.ok) {
-       const errBody = await tokenResponse.text().catch(() => '');
-       throw new Error(
-         `Token exchange failed: ${tokenResponse.status} ${errBody}`
-       );
-     }
-
-     const tokens = await tokenResponse.json();
-     const accessToken = tokens.access_token;
-     const idToken = tokens.id_token || '';
-
-     if (!accessToken) {
-       throw new Error('No access token received');
-     }
-
-     const res = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
-       headers: { Authorization: `Bearer ${accessToken}` },
-     });
-     if (!res.ok) throw new Error('Failed to fetch Google user info');
-     const info = await res.json();
-
-     if (!info.id) throw new Error('No user ID from Google');
-
-     return {
-       provider: 'google',
-       providerId: info.id,
-       providerToken: idToken || accessToken,
-       email: info.email || '',
-       firstName: info.given_name || '',
-       lastName: info.family_name || '',
-     };
-   }
-   ```
-
-4. **Lazy-require Apple Auth too while you're here** (this was a Tier 4 nit but it lives in the same file and the diff is tiny). Move the `require('expo-apple-authentication')` out of module scope into `isAppleSignInAvailable()`/`signInWithApple()`:
-
-   ```ts
-   // Top of file: remove the module-load require block (lines 19–26).
-
-   // Replace isAppleSignInAvailable():
-   async isAppleSignInAvailable(): Promise<boolean> {
-     if (Platform.OS !== 'ios') return false;
-     try {
-       const AppleAuthentication = require('expo-apple-authentication');
-       return await AppleAuthentication.isAvailableAsync();
-     } catch {
-       return false;
-     }
-   }
-
-   // Replace signInWithApple() — first line becomes a fresh require:
-   async signInWithApple(): Promise<SSOUserData> {
-     if (Platform.OS !== 'ios') {
-       throw new Error('Apple Sign In is iOS-only');
-     }
-     let AppleAuthentication: any;
-     try {
-       AppleAuthentication = require('expo-apple-authentication');
-     } catch {
-       throw new Error('Apple Sign In not available');
-     }
-     // ... rest of existing body unchanged from line ~53 onward ...
-   }
-   ```
-
-### Google Cloud Console — coordination step (do NOT skip)
-
-After the code change builds, but **before** you ship to TestFlight, verify in the Google Cloud Console (project `allroads-1282025`):
-
-1. **iOS OAuth client** (`297265818886-fcm56mh33g7uubur983mgfhbav1jbtpc.apps.googleusercontent.com`) — confirm Bundle ID matches `com.muster.app`. No redirect URIs need to be configured on the iOS client itself; the reversed-client-ID custom scheme is implicit.
-2. **Web OAuth client** (`297265818886-cn0vu6f658teborvhfdpsjqs0t1q48dl.apps.googleusercontent.com`) — confirm the authorized redirect URIs include whatever the current web build uses via `makeRedirectUri()`. **Do not remove** the existing `https://auth.expo.io/@cburnha7/muster` redirect URI until you have run a full TestFlight cycle with the new code path and confirmed it works on hardware. Once verified, that legacy URI can be removed in a follow-up change.
-
-Document the state of both clients in the PR description with screenshots from the Google Cloud Console.
-
-### Edge cases to verify
-
-- New Google sign-in on iOS hardware → no Expo proxy hop; browser opens directly via the custom scheme; returns through `oauthredirect` → token exchange succeeds. ✅
-- User cancels the Google sheet → `result.type === 'cancel'` → throws `'User cancelled'` → existing handler in LoginScreen does not show error. ✅
-- Token exchange fails (network drop mid-flow) → caught error → Sentry event (via Tier 1 global handler if untcaught, or via existing catch in LoginScreen). ✅
-- Apple sign-in still works → `require` is now lazy → first SSO tap triggers module init. ✅
-- Apple Auth native module unavailable (rare; corrupted install) → require throws → caught → graceful error. ✅
-- Web Google sign-in → still uses web client + `makeRedirectUri()` (page redirect); no change in behavior. ✅
-- Discovery endpoints rotate (hypothetical) → token exchange fails with a clear error → we see it in Sentry → update constants. Acceptable trade-off for the per-call latency saved.
-
-### Do not change
-
-- `signInWithApple` body internals (only the require placement).
-- The `SSOUserData` return shape.
-- `LoginScreen.handleSSOLogin` — it consumes `SSOUserData` and doesn't care how we got there.
-
----
-
-## Phase 4 — Fix #4: Disable serializableCheck + immutableCheck in production
+## Phase 3 — Fix #3: Disable serializableCheck + immutableCheck in production
 
 ### Goal
 
@@ -702,11 +517,11 @@ Dev builds keep both checks (they're valuable). Production builds skip them.
 
 ---
 
-## Phase 5 — Tests (required, no shortcuts)
+## Phase 4 — Tests (required, no shortcuts)
 
 Add tests under `tests/`. Use existing `jest-expo` + `@testing-library/react-native` patterns.
 
-### 5a. `tests/services/network/NetworkService.lazyInit.test.ts`
+### 4a. `tests/services/network/NetworkService.lazyInit.test.ts`
 
 Required cases:
 
@@ -717,7 +532,7 @@ Required cases:
 5. After teardown, a subsequent `subscribe()` re-arms the interval cleanly.
 6. On web with `window` mocked, `online`/`offline` listeners are attached/detached symmetrically.
 
-### 5b. `tests/store/persistence.tokenStripping.test.ts`
+### 4b. `tests/store/persistence.tokenStripping.test.ts`
 
 Required cases:
 
@@ -726,7 +541,7 @@ Required cases:
 3. Other fields (`user`, `isBootLoading`, etc.) pass through untouched.
 4. Simulate REHYDRATE with a legacy payload that contains tokens → after the transform runs, tokens are not present in the rehydrated state.
 
-### 5c. `tests/store/slices/bootSessionFromSecureStore.test.ts`
+### 4c. `tests/store/slices/bootSessionFromSecureStore.test.ts`
 
 Required cases:
 
@@ -736,26 +551,7 @@ Required cases:
 4. SecureStore throws → `.rejected` case fires → state is cleared; no exception escapes.
 5. The thunk is safely idempotent if dispatched twice (no double-clear).
 
-### 5d. `tests/services/auth/SSOService.google.test.ts`
-
-Required cases:
-
-1. On iOS, `signInWithGoogle` uses the iOS client ID and the reversed-client-ID redirect URI. Mock `AuthRequest`; assert constructor args.
-2. On web, `signInWithGoogle` uses the web client ID and `makeRedirectUri()` (no scheme override).
-3. `fetchDiscoveryAsync` is NOT called anywhere (grep + spy).
-4. Token exchange POSTs to `https://oauth2.googleapis.com/token` (hardcoded), not to a discovery-resolved endpoint.
-5. User-cancel result type bubbles up as `Error('User cancelled')`.
-
-### 5e. `tests/services/auth/SSOService.appleLazy.test.ts`
-
-Required cases:
-
-1. Importing `SSOService` does not load `expo-apple-authentication`. Spy on `require` (or use a manual mock that throws on import) and assert it is not called at module init.
-2. First call to `isAppleSignInAvailable()` triggers the require.
-3. Second call does not re-require (Node module cache handles this naturally).
-4. On non-iOS, `isAppleSignInAvailable` returns `false` without calling the require.
-
-### 5f. `tests/store/middleware.prodGating.test.ts`
+### 4d. `tests/store/middleware.prodGating.test.ts`
 
 Required cases:
 
@@ -763,15 +559,15 @@ Required cases:
 2. With `__DEV__ = false`, the same dispatch does **not** warn.
 3. `devTools` is enabled only in dev.
 
-### 5g. Manual integration tests (real hardware before submission)
+### 4e. Manual integration tests (real hardware before submission)
 
 Do all of these. Document each result in the PR description.
 
 1. **Cold launch authenticated** → user lands on Home; SecureStore restore works; no flicker of LoginScreen.
 2. **Cold launch unauthenticated** → user lands on LoginScreen.
 3. **Cold launch with SecureStore manually wiped** (use the iOS Settings → General → Reset → Reset Keychain on a dev device, or use a debug helper that clears it) → user lands on LoginScreen, not on Home with a stale profile.
-4. **Sign in with Google on iOS hardware** → browser opens directly (no auth.expo.io); successful sign-in; correct profile data returned.
-5. **Sign in with Apple on iOS hardware** → native Apple sheet opens; sign-in works; `expo-apple-authentication` was lazy-loaded.
+4. **Sign in with Google on iOS hardware** → no regression. Existing Expo proxy + Web client path is untouched in this PR.
+5. **Sign in with Apple on iOS hardware** → no regression.
 6. **Sign in with email/password** → no regression.
 7. **Sign out** → tokens cleared from SecureStore (confirm via debug helper); subsequent cold launch is clean.
 8. **Network state UI** → unplug Wi-Fi on a Mac running the web build; confirm `OfflineFeatureWarning` shows; reconnect; warning hides. (On native, this remains a no-op until the NetInfo decision below is made.)
@@ -781,24 +577,22 @@ Do all of these. Document each result in the PR description.
 
 ---
 
-## Phase 6 — Before/after verification
+## Phase 5 — Before/after verification
 
 Attach to the PR:
 
 - **AsyncStorage dump** (before and after). The "after" dump must show no token values under the `auth` key.
-- **Google sign-in network trace** (before and after) on iOS hardware. Before: requests to `auth.expo.io` and `accounts.google.com/.well-known/openid-configuration`. After: neither — only `accounts.google.com/o/oauth2/v2/auth` (browser side) and `oauth2.googleapis.com/token`.
-- **Google sign-in latency** measured tap → home, before vs. after. Expected savings: 500ms–2s.
 - **Cold-launch trace** comparing the dispatch overhead of REHYDRATE in dev vs. prod (Hermes profiler).
-- **Screen recording** of a Google sign-in on the new build, on iOS hardware.
+- **Cold-launch time-to-Home** measurement for an authenticated user, before vs. after. Expected to improve modestly (no constructor work in NetworkService, no `serializableCheck` cost on REHYDRATE-triggered dispatches).
 
 ---
 
-## Phase 7 — Commit, push, rollback
+## Phase 6 — Commit, push, rollback
 
 Commit message (single commit):
 
 ```
-refactor(boot+auth): lazy NetworkService, SecureStore-only tokens, native Google OAuth, prod-only RTK checks
+refactor(boot+auth): lazy NetworkService, SecureStore-only tokens, prod-only RTK checks
 
 - NetworkService no longer registers listeners or a polling timer at module
   load. Monitoring boots on first subscribe(); teardown clears on last
@@ -807,18 +601,12 @@ refactor(boot+auth): lazy NetworkService, SecureStore-only tokens, native Google
   what's written to AsyncStorage. SecureStore (TokenStorage) is now the only
   durable token store. New bootSessionFromSecureStore thunk restores tokens
   into Redux after persistor rehydration, dispatched once by ReduxProvider.
-- SSOService.signInWithGoogle uses native redirect via the iOS reversed-
-  client-ID URL scheme (registered in app.json) instead of auth.expo.io.
-  OIDC discovery is now hardcoded (no per-sign-in fetch). expo-apple-
-  authentication is lazy-required.
 - store.ts disables serializableCheck and immutableCheck in production
   builds. Dev behavior unchanged.
 
 Tests: tests/services/network/NetworkService.lazyInit.test.ts,
        tests/store/persistence.tokenStripping.test.ts,
        tests/store/slices/bootSessionFromSecureStore.test.ts,
-       tests/services/auth/SSOService.google.test.ts,
-       tests/services/auth/SSOService.appleLazy.test.ts,
        tests/store/middleware.prodGating.test.ts
 ```
 
@@ -826,18 +614,17 @@ Then in PowerShell from `C:\Projects\AllRoads`:
 
 ```powershell
 git add .
-git commit -m "refactor(boot+auth): lazy NetworkService, SecureStore-only tokens, native Google OAuth, prod-only RTK checks"
+git commit -m "refactor(boot+auth): lazy NetworkService, SecureStore-only tokens, prod-only RTK checks"
 git pull origin charles-dev --rebase
 git push origin charles-dev
 ```
 
 ### Rollback notes
 
-These four changes share a commit because the token-relocation is interlocked with the redux-persist transform and the new boot thunk — splitting them mid-PR is risky. But they are independently revertable later:
+These three changes share a commit because the token-relocation is interlocked with the redux-persist transform and the new boot thunk — splitting them mid-PR is risky. But they are independently revertable later:
 
 - **NetworkService lazy-init:** safe to revert alone if some consumer broke.
 - **Token relocation:** if rolled back, AsyncStorage starts holding tokens again. Do not roll back without also reverting any auth-state migration assumptions in downstream PRs.
-- **Google OAuth native redirect:** if it breaks for any reason, revert this single change and the previous `auth.expo.io` proxy path resumes — *provided* you have not yet removed the proxy URI from the Web OAuth client in Google Cloud Console. **Do not remove that proxy URI until at least one full TestFlight cycle on the new code path.**
 - **RTK check gating:** trivially safe to revert; only affects performance.
 
 If a partial revert is needed, do it as a separate PR with its own measurement.
@@ -853,16 +640,14 @@ If a partial revert is needed, do it as a separate PR with its own measurement.
 ## What "done" looks like
 
 - All Phase 0 diagnostic output is in the PR description.
-- All four code change sets are in place exactly as specified.
-- All six test files are added and passing locally (`npm test`).
+- All three code change sets are in place exactly as specified (NetworkService lazy-init, SecureStore-only tokens, prod-only RTK checks). **`src/services/auth/SSOService.ts` is unchanged.**
+- All four test files are added and passing locally (`npm test`).
 - All eleven manual integration tests documented with pass/fail in the PR description.
 - AsyncStorage dump (before vs. after) attached.
-- Google sign-in network trace (before vs. after) attached.
-- Cold-launch and Google sign-in latency measurements attached.
-- Google Cloud Console state documented (both iOS + Web clients) with screenshots.
+- Cold-launch time-to-Home measurement attached.
 - The "NetworkService does not use NetInfo on native" question surfaced explicitly in the PR description, with no behavior change in this PR.
 - A successful EAS production build (`eas build --platform ios --profile production`) installed and exercised on physical iPhone hardware.
-- No regressions in: cold launch (auth + authed paths), sign-in (email/pw, Apple, Google), sign-out, onboarding, deep-link invite capture, offline UI (web only; native unchanged per the out-of-scope note above).
+- No regressions in: cold launch (auth + authed paths), sign-in (email/pw, Apple, Google — Google path is unchanged in this PR), sign-out, onboarding, deep-link invite capture, offline UI (web only; native unchanged per the out-of-scope note above).
 - Sentry stays quiet during the manual test pass.
 
 If any of those items is incomplete, the PR is not ready to merge. No exceptions.
