@@ -357,23 +357,20 @@ const authSlice = createSlice({
   },
   extraReducers: builder => {
     // After redux-persist rehydrates, check if we have a valid session.
-    // If user + accessToken are present, trust them and drop the boot gate
-    // immediately — no need for loadCachedUser to re-read from TokenStorage.
-    // If the token is expired, the 401 handler in createAuthenticatedBaseQuery
-    // and BaseApiService will refresh it transparently on the first request.
+    // After redux-persist rehydrates, restore the user profile for display.
+    // Tokens are NOT in AsyncStorage (stripped by the transform) — they come
+    // from SecureStore via bootSessionFromSecureStore. Keep isBootLoading=true
+    // until that thunk resolves so no API calls fire without a token.
     builder.addMatcher(
       action => action.type === 'persist/REHYDRATE',
       (state, action: any) => {
         const persisted = action.payload?.auth;
-        if (persisted?.user && persisted?.accessToken) {
-          // Valid session restored — drop the boot gate
+        if (persisted?.user) {
           state.user = persisted.user;
-          state.accessToken = persisted.accessToken;
-          state.refreshToken = persisted.refreshToken ?? null;
-          state.isAuthenticated = true;
-          state.isBootLoading = false;
+          // isAuthenticated stays false until bootSessionFromSecureStore confirms tokens
+          // isBootLoading stays true until bootSessionFromSecureStore resolves
         } else {
-          // No session — drop the gate too (show login screen)
+          // No user at all — show login screen immediately
           state.isBootLoading = false;
         }
       }
@@ -593,12 +590,16 @@ const authSlice = createSlice({
           state.accessToken = accessToken;
           state.refreshToken = refreshToken ?? null;
           state.isAuthenticated = !!state.user;
+        } else {
+          state.isAuthenticated = false;
         }
+        state.isBootLoading = false;
       })
       .addCase(bootSessionFromSecureStore.rejected, state => {
         state.accessToken = null;
         state.refreshToken = null;
         state.isAuthenticated = false;
+        state.isBootLoading = false;
       });
   },
 });

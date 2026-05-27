@@ -379,7 +379,7 @@ export function HomeScreen() {
   const [error, setError] = useState<string | null>(null);
 
   const loadHomeData = useCallback(async () => {
-    if (!user?.id) return;
+    if (!user?.id || authLoading || bootLoading) return;
     try {
       const [
         invResult,
@@ -418,7 +418,7 @@ export function HomeScreen() {
     } catch {
       // Non-fatal — keep showing whatever we have
     }
-  }, [user?.id]);
+  }, [user?.id, authLoading, bootLoading]);
 
   useEffect(() => {
     loadHomeData();
