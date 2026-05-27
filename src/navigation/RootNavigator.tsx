@@ -10,9 +10,7 @@ import { selectUser, selectBootLoading } from '../store/slices/authSlice';
 import { useAuthSync } from '../hooks/useAuthSync';
 import { useNetworkState } from '../services/network';
 
-// Direct imports for all platforms. The previous React.lazy approach for native
-// caused circular dependency issues on web (require at module scope forced
-// eager evaluation of the entire tab tree before the store was ready).
+// Direct imports instead of lazy loading for web compatibility
 import { AuthNavigator } from './AuthNavigator';
 import { TabNavigator } from './TabNavigator';
 import OnboardingNavigator from './OnboardingNavigator';

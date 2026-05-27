@@ -31,9 +31,8 @@ import { ProfileSelectorModal } from '../../components/ui/ProfileSelectorModal';
 import { MilestoneOverlay } from '../../components/ui/MilestoneOverlay';
 import { useMilestoneCheck } from '../../hooks/useMilestoneCheck';
 
-// Services — types only at top level to avoid circular module initialization.
-// Service singletons are accessed via require() inside loadHomeData.
-import type {
+// Services
+import {
   RosterInvitation,
   LeagueInvitation,
   EventInvitation,
@@ -378,12 +377,12 @@ export function HomeScreen() {
   const [error, setError] = useState<string | null>(null);
 
   const loadHomeData = useCallback(async () => {
-    if (!user?.id || authLoading || bootLoading) return;
-    // Services are required here (not imported at top level) to avoid
-    // circular module initialization that crashes the web bundle.
-    const { userService } = require('../../services/api/UserService');
-    const { debriefService } = require('../../services/api/DebriefService');
+    if (!user?.id) return;
     try {
+      const { userService } = await import('../../services/api/UserService');
+      const { debriefService } =
+        await import('../../services/api/DebriefService');
+
       const [
         invResult,
         leaguesResult,
@@ -421,7 +420,7 @@ export function HomeScreen() {
     } catch {
       // Non-fatal — keep showing whatever we have
     }
-  }, [user?.id, authLoading, bootLoading]);
+  }, [user?.id]);
 
   useEffect(() => {
     loadHomeData();
@@ -618,12 +617,22 @@ export function HomeScreen() {
     [navigation]
   );
 
-  if (authLoading || bootLoading) {
+  if (authLoading || bootLoading || isLoading) {
     return (
       <View
         style={[styles.loadingContainer, { backgroundColor: colors.bgScreen }]}
       >
         <LoadingSpinner size={40} color={colors.cobalt} />
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View
+        style={[styles.loadingContainer, { backgroundColor: colors.bgScreen }]}
+      >
+        <ErrorDisplay message={error} onRetry={handleRefresh} />
       </View>
     );
   }

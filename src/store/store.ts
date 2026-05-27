@@ -22,6 +22,9 @@ import { contextRecoveryMiddleware } from './middleware/contextRecovery';
 import { resetApiCacheListenerMiddleware } from './middleware/resetApiCacheOnLogin';
 
 // Redux Persist configuration — only persist auth + subscription.
+// Server data (events, facilities, teams, bookings, leagues, matches)
+// is owned by RTK Query and the service-layer cache. Persisting it
+// here caused redundant AsyncStorage writes on every list screen.
 const persistConfig = {
   key: 'root',
   storage: AsyncStorage,
@@ -62,28 +65,31 @@ export const store = configureStore({
   reducer: persistedReducer,
   middleware: getDefaultMiddleware =>
     getDefaultMiddleware({
-      serializableCheck: __DEV__
-        ? {
-            ignoredActions: [
-              'persist/PERSIST',
-              'persist/REHYDRATE',
-              eventsApi.reducerPath,
-            ],
-            ignoredPaths: [
-              'events.events',
-              'bookings.bookings',
-              'facilities.facilities',
-              'teams.teams',
-              'leagues.leagues',
-              'matches.matches',
-            ],
-            isSerializable: (value: any) => {
-              if (value instanceof Date) return true;
-              return true;
-            },
+      serializableCheck: {
+        // Ignore these action types
+        ignoredActions: [
+          'persist/PERSIST',
+          'persist/REHYDRATE',
+          eventsApi.reducerPath,
+        ],
+        // Ignore these paths in the state
+        ignoredPaths: [
+          'events.events',
+          'bookings.bookings',
+          'facilities.facilities',
+          'teams.teams',
+          'leagues.leagues',
+          'matches.matches',
+        ],
+        // Ignore Date instances
+        isSerializable: (value: any) => {
+          // Allow Date objects to pass through
+          if (value instanceof Date) {
+            return true;
           }
-        : false,
-      immutableCheck: __DEV__,
+          return true;
+        },
+      },
     }).concat(
       resetApiCacheListenerMiddleware.middleware,
       api.middleware,
@@ -92,7 +98,7 @@ export const store = configureStore({
       insuranceDocumentsApi.middleware,
       contextRecoveryMiddleware
     ),
-  devTools: __DEV__,
+  devTools: process.env.NODE_ENV !== 'production',
 });
 
 // Setup RTK Query listeners for caching and synchronization

@@ -6,17 +6,7 @@
  */
 
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
-// Lazy accessor to break circular dependency:
-// authSlice → AuthService → BaseApiService → store → authSlice
-// The getter defers module resolution until first call (inside a thunk),
-// by which time all modules have finished initializing.
-let _authService: any = null;
-function getAuthService() {
-  if (!_authService) {
-    _authService = require('../../services/api/AuthService').authService;
-  }
-  return _authService;
-}
+import { authService } from '../../services/api/AuthService';
 import TokenStorage from '../../services/auth/TokenStorage';
 import { loggingService } from '../../services/LoggingService';
 import {
@@ -28,6 +18,7 @@ import {
   TokenResponse,
   OnboardingData,
 } from '../../types/auth';
+import { UserService } from '../../services/api/UserService';
 
 // Auth state interface
 export interface AuthState {
@@ -62,7 +53,7 @@ export const registerUser = createAsyncThunk(
   'auth/register',
   async (data: RegisterData, { rejectWithValue }) => {
     try {
-      const response = await getAuthService().register(data);
+      const response = await authService.register(data);
       return response;
     } catch (error: any) {
       return rejectWithValue(error.message || 'Registration failed');
@@ -78,7 +69,7 @@ export const registerWithSSO = createAsyncThunk(
   'auth/registerSSO',
   async (data: SSORegisterData, { rejectWithValue }) => {
     try {
-      const response = await getAuthService().registerWithSSO(data);
+      const response = await authService.registerWithSSO(data);
       return response;
     } catch (error: any) {
       return rejectWithValue(error.message || 'SSO registration failed');
@@ -94,7 +85,7 @@ export const loginUser = createAsyncThunk(
   'auth/login',
   async (credentials: LoginCredentials, { rejectWithValue }) => {
     try {
-      const response = await getAuthService().login(
+      const response = await authService.login(
         credentials.emailOrUsername,
         credentials.password,
         credentials.rememberMe
@@ -135,7 +126,7 @@ export const loginWithSSO = createAsyncThunk(
   ) => {
     try {
       // Single call — backend finds or creates the account
-      const response = await getAuthService().ssoAuth({
+      const response = await authService.ssoAuth({
         provider,
         providerUserId: userId,
         providerToken: token || undefined,
@@ -173,7 +164,7 @@ export const linkAccount = createAsyncThunk(
     { rejectWithValue }
   ) => {
     try {
-      const response = await getAuthService().linkAccount(
+      const response = await authService.linkAccount(
         email,
         password,
         provider,
@@ -195,7 +186,7 @@ export const logoutUser = createAsyncThunk(
   'auth/logout',
   async (_, { dispatch, rejectWithValue }) => {
     try {
-      await getAuthService().logout();
+      await authService.logout();
     } catch {
       // Continue cleanup even if server logout fails
     }
@@ -221,31 +212,6 @@ export const logoutUser = createAsyncThunk(
 );
 
 /**
- * Restore access/refresh tokens from SecureStore on cold launch.
- * Dispatched once, right after persistStore() finishes hydrating the
- * profile from AsyncStorage. If SecureStore has no token, we clear the
- * tentative isAuthenticated state set by the REHYDRATE matcher.
- */
-export const bootSessionFromSecureStore = createAsyncThunk(
-  'auth/bootSessionFromSecureStore',
-  async (_, { dispatch, rejectWithValue }) => {
-    try {
-      const [accessToken, refreshToken] = await Promise.all([
-        TokenStorage.getAccessToken(),
-        TokenStorage.getRefreshToken(),
-      ]);
-      if (!accessToken) {
-        dispatch(clearAuth());
-        return { accessToken: null, refreshToken: null };
-      }
-      return { accessToken, refreshToken };
-    } catch (error: any) {
-      return rejectWithValue(error?.message ?? 'SecureStore read failed');
-    }
-  }
-);
-
-/**
  * Refresh access token
  * Requirement 8.11: Token refresh
  */
@@ -253,7 +219,7 @@ export const refreshAccessToken = createAsyncThunk(
   'auth/refreshToken',
   async (refreshToken: string, { rejectWithValue }) => {
     try {
-      const response = await getAuthService().refreshToken(refreshToken);
+      const response = await authService.refreshToken(refreshToken);
       return response;
     } catch (error: any) {
       return rejectWithValue(error.message || 'Token refresh failed');
@@ -269,7 +235,7 @@ export const requestPasswordReset = createAsyncThunk(
   'auth/requestPasswordReset',
   async (email: string, { rejectWithValue }) => {
     try {
-      await getAuthService().requestPasswordReset(email);
+      await authService.requestPasswordReset(email);
     } catch (error: any) {
       return rejectWithValue(error.message || 'Password reset request failed');
     }
@@ -287,9 +253,32 @@ export const resetPassword = createAsyncThunk(
     { rejectWithValue }
   ) => {
     try {
-      await getAuthService().resetPassword(token, newPassword);
+      await authService.resetPassword(token, newPassword);
     } catch (error: any) {
       return rejectWithValue(error.message || 'Password reset failed');
+    }
+  }
+);
+
+/**
+ * Load cached user data on app start
+ * Requirement 8.12: Cache user data
+ */
+export const loadCachedUser = createAsyncThunk(
+  'auth/loadCachedUser',
+  async (_, { rejectWithValue }) => {
+    try {
+      const user = await authService.getStoredUser();
+      const accessToken = await authService.getStoredToken();
+      const refreshToken = await TokenStorage.getRefreshToken();
+
+      if (user && accessToken) {
+        return { user, accessToken, refreshToken };
+      }
+
+      return null;
+    } catch (error: any) {
+      return rejectWithValue(error.message || 'Failed to load cached user');
     }
   }
 );
@@ -301,7 +290,6 @@ export const completeOnboarding = createAsyncThunk(
   'auth/completeOnboarding',
   async (data: OnboardingData, { rejectWithValue }) => {
     try {
-      const { UserService } = require('../../services/api/UserService');
       const userService = new UserService();
       const response = await userService.completeOnboarding(data);
       const updatedUser = response.user;
@@ -367,22 +355,23 @@ const authSlice = createSlice({
   },
   extraReducers: builder => {
     // After redux-persist rehydrates, check if we have a valid session.
-    // If user + accessToken are present in the persisted payload, restore
-    // the session immediately and drop the boot gate.
+    // If user + accessToken are present, trust them and drop the boot gate
+    // immediately — no need for loadCachedUser to re-read from TokenStorage.
+    // If the token is expired, the 401 handler in createAuthenticatedBaseQuery
+    // and BaseApiService will refresh it transparently on the first request.
     builder.addMatcher(
       action => action.type === 'persist/REHYDRATE',
       (state, action: any) => {
         const persisted = action.payload?.auth;
         if (persisted?.user && persisted?.accessToken) {
+          // Valid session restored — drop the boot gate
           state.user = persisted.user;
           state.accessToken = persisted.accessToken;
           state.refreshToken = persisted.refreshToken ?? null;
           state.isAuthenticated = true;
           state.isBootLoading = false;
-        } else if (persisted?.user) {
-          state.user = persisted.user;
-          state.isBootLoading = false;
         } else {
+          // No session — drop the gate too (show login screen)
           state.isBootLoading = false;
         }
       }
@@ -575,6 +564,26 @@ const authSlice = createSlice({
         state.error = action.payload as string;
       });
 
+    // Load cached user
+    builder
+      .addCase(loadCachedUser.pending, state => {
+        state.isBootLoading = true;
+      })
+      .addCase(loadCachedUser.fulfilled, (state, action) => {
+        if (action.payload) {
+          state.user = action.payload.user;
+          state.accessToken = action.payload.accessToken;
+          state.refreshToken = action.payload.refreshToken || null;
+          state.isAuthenticated = true;
+        }
+        state.isBootLoading = false;
+        state.isLoading = false;
+      })
+      .addCase(loadCachedUser.rejected, state => {
+        state.isBootLoading = false;
+        state.isLoading = false;
+      });
+
     // Complete onboarding
     builder
       .addCase(completeOnboarding.pending, state => {
@@ -592,26 +601,6 @@ const authSlice = createSlice({
       .addCase(completeOnboarding.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload as string;
-      });
-
-    // Boot session from SecureStore (cold launch token restore)
-    builder
-      .addCase(bootSessionFromSecureStore.fulfilled, (state, action) => {
-        const { accessToken, refreshToken } = action.payload;
-        if (accessToken) {
-          state.accessToken = accessToken;
-          state.refreshToken = refreshToken ?? null;
-          state.isAuthenticated = !!state.user;
-        } else {
-          state.isAuthenticated = false;
-        }
-        state.isBootLoading = false;
-      })
-      .addCase(bootSessionFromSecureStore.rejected, state => {
-        state.accessToken = null;
-        state.refreshToken = null;
-        state.isAuthenticated = false;
-        state.isBootLoading = false;
       });
   },
 });

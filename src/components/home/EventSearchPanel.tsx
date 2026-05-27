@@ -16,6 +16,7 @@ import { FormSelect, SelectOption } from '../forms/FormSelect';
 import { EventsMapViewWrapper } from '../maps/EventsMapViewWrapper';
 import { fonts, Spacing, useTheme } from '../../theme';
 import { Event, SportType, EventType, EventStatus } from '../../types';
+import { eventService } from '../../services/api/EventService';
 import { searchEventBus } from '../../utils/searchEventBus';
 
 const SPORT_OPTIONS: SelectOption[] = [
@@ -107,7 +108,6 @@ export function EventSearchPanel({
     const timer = setTimeout(async () => {
       setLoading(true);
       try {
-        const { eventService } = require('../../services/api/EventService');
         const filters: any = { status: EventStatus.ACTIVE };
         if (sportFilter) filters.sportType = sportFilter;
         const res = await eventService.getEvents(filters, {
@@ -231,13 +231,7 @@ export function EventSearchPanel({
   if (!visible) return null;
 
   return (
-    <View
-      style={[
-        styles.container,
-        { backgroundColor: colors.white },
-        { backgroundColor: colors.bgScreen },
-      ]}
-    >
+    <View style={[styles.container, { backgroundColor: colors.white }, { backgroundColor: colors.bgScreen }]}>
       {/* Filters */}
       <View style={styles.filterRow}>
         <View style={{ flex: 1 }}>
@@ -272,15 +266,7 @@ export function EventSearchPanel({
       {/* Age filter */}
       <View style={styles.ageRow}>
         <TextInput
-          style={[
-            styles.ageInput,
-            {
-              backgroundColor: colors.white,
-              color: colors.ink,
-              borderColor: colors.border,
-              shadowColor: colors.black,
-            },
-          ]}
+          style={[styles.ageInput, { backgroundColor: colors.white, color: colors.ink, borderColor: colors.border, shadowColor: colors.black }]}
           placeholder="Min age"
           placeholderTextColor={colors.inkFaint}
           value={minAgeFilter}
@@ -288,15 +274,7 @@ export function EventSearchPanel({
           keyboardType="number-pad"
         />
         <TextInput
-          style={[
-            styles.ageInput,
-            {
-              backgroundColor: colors.white,
-              color: colors.ink,
-              borderColor: colors.border,
-              shadowColor: colors.black,
-            },
-          ]}
+          style={[styles.ageInput, { backgroundColor: colors.white, color: colors.ink, borderColor: colors.border, shadowColor: colors.black }]}
           placeholder="Max age"
           placeholderTextColor={colors.inkFaint}
           value={maxAgeFilter}
@@ -307,12 +285,7 @@ export function EventSearchPanel({
 
       {/* Location */}
       <View style={styles.locationRow}>
-        <View
-          style={[
-            styles.locationInput,
-            { backgroundColor: colors.white, borderColor: colors.white },
-          ]}
-        >
+        <View style={[styles.locationInput, { backgroundColor: colors.white, borderColor: colors.white }]}>
           <Ionicons name="location-outline" size={16} color={colors.inkFaint} />
           <TextInput
             style={[styles.locationText, { color: colors.ink }]}
@@ -329,10 +302,7 @@ export function EventSearchPanel({
           />
         </View>
         <TouchableOpacity
-          style={[
-            styles.gpsBtn,
-            { backgroundColor: colors.white, borderColor: colors.white },
-          ]}
+          style={[styles.gpsBtn, { backgroundColor: colors.white, borderColor: colors.white }]}
           onPress={handleUseCurrentLocation}
           disabled={locationLoading}
         >
@@ -347,9 +317,7 @@ export function EventSearchPanel({
       {/* Reset link */}
       {hasFilters && (
         <TouchableOpacity onPress={handleReset} style={styles.resetRow}>
-          <Text style={[styles.resetText, { color: colors.heart }]}>
-            Reset Filters
-          </Text>
+          <Text style={[styles.resetText, { color: colors.heart }]}>Reset Filters</Text>
         </TouchableOpacity>
       )}
 
@@ -383,10 +351,12 @@ export function EventSearchPanel({
         onPress={onCreateEvent}
         activeOpacity={0.85}
       >
-        <Ionicons name="add-circle-outline" size={20} color={colors.white} />
-        <Text style={[styles.createBtnText, { color: colors.white }]}>
-          Create Event
-        </Text>
+        <Ionicons
+          name="add-circle-outline"
+          size={20}
+          color={colors.white}
+        />
+        <Text style={[styles.createBtnText, { color: colors.white }]}>Create Event</Text>
       </TouchableOpacity>
     </View>
   );

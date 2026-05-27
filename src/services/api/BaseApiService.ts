@@ -18,30 +18,8 @@ import TokenStorage from '../auth/TokenStorage';
 import { acquireRefresh, performTokenRefresh } from '../auth/tokenRefreshLock';
 import { cacheService, CacheService } from './CacheService';
 import { ApiError } from '../../types';
-
-// Lazy store access to break the circular dependency:
-// BaseApiService → store → slices → authSlice → AuthService → BaseApiService
-// The store and actions are resolved on first use (inside async request methods),
-// by which time all modules have finished initializing.
-let _store: any = null;
-let _setTokens: any = null;
-let _clearAuth: any = null;
-
-function getStore() {
-  if (!_store) {
-    _store = require('../../store/store').store;
-  }
-  return _store;
-}
-
-function getAuthActions() {
-  if (!_setTokens) {
-    const actions = require('../../store/slices/authSlice');
-    _setTokens = actions.setTokens;
-    _clearAuth = actions.clearAuth;
-  }
-  return { setTokens: _setTokens, clearAuth: _clearAuth };
-}
+import { store } from '../../store/store';
+import { setTokens, clearAuth } from '../../store/slices/authSlice';
 
 export interface ApiServiceConfig {
   baseURL: string;
@@ -108,7 +86,7 @@ export class BaseApiService {
       : `${this.config.baseURL}${url.startsWith('/') ? '' : '/'}${url}`;
 
     const token =
-      getStore().getState()?.auth?.accessToken ??
+      store.getState()?.auth?.accessToken ??
       (await TokenStorage.getAccessToken());
     const headers: Record<string, string> = {
       ...(body instanceof FormData
@@ -159,8 +137,8 @@ export class BaseApiService {
           const newAccess = await TokenStorage.getAccessToken();
           const newRefresh = await TokenStorage.getRefreshToken();
           if (newAccess && newRefresh) {
-            getStore().dispatch(
-              getAuthActions().setTokens({ accessToken: newAccess, refreshToken: newRefresh })
+            store.dispatch(
+              setTokens({ accessToken: newAccess, refreshToken: newRefresh })
             );
           }
           return this.request<T>(method, url, body, extraHeaders, 1);
@@ -175,13 +153,13 @@ export class BaseApiService {
                 {
                   text: 'OK',
                   onPress: () => {
-                    getStore().dispatch(getAuthActions().clearAuth());
+                    store.dispatch(clearAuth());
                   },
                 },
               ]
             );
           } else {
-            getStore().dispatch(getAuthActions().clearAuth());
+            store.dispatch(clearAuth());
             if (typeof window?.dispatchEvent === 'function') {
               window.dispatchEvent(new CustomEvent('auth:sessionExpired'));
             }

@@ -22,6 +22,8 @@ export const ReduxProvider: React.FC<ReduxProviderProps> = ({ children }) => {
       }
     };
 
+    // Manually subscribe to persistor instead of using PersistGate
+    // PersistGate from redux-persist@6 is incompatible with react-redux@9
     const unsubscribe = persistor.subscribe(() => {
       const { bootstrapped } = persistor.getState();
       if (bootstrapped) {
@@ -30,10 +32,12 @@ export const ReduxProvider: React.FC<ReduxProviderProps> = ({ children }) => {
       }
     });
 
+    // Check if already bootstrapped
     if (persistor.getState().bootstrapped) {
       markReady();
     }
 
+    // Safety timeout — render anyway after 2 seconds
     const timeout = setTimeout(markReady, 2000);
 
     return () => {
