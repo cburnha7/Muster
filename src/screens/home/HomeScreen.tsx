@@ -33,11 +33,13 @@ import { useMilestoneCheck } from '../../hooks/useMilestoneCheck';
 
 // Services
 import {
+  userService,
   RosterInvitation,
   LeagueInvitation,
   EventInvitation,
   ReadyToScheduleLeague,
 } from '../../services/api/UserService';
+import { debriefService } from '../../services/api/DebriefService';
 
 // Store
 import {
@@ -379,10 +381,6 @@ export function HomeScreen() {
   const loadHomeData = useCallback(async () => {
     if (!user?.id) return;
     try {
-      const { userService } = await import('../../services/api/UserService');
-      const { debriefService } =
-        await import('../../services/api/DebriefService');
-
       const [
         invResult,
         leaguesResult,
