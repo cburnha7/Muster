@@ -12,13 +12,18 @@ import { ReduxProvider } from './src/store/Provider';
 import { NotificationProvider } from './src/services/notifications';
 import { RootNavigator } from './src/navigation/RootNavigator';
 import { ErrorBoundary } from './src/components/error/ErrorBoundary';
-import { ThemeProvider, useTheme } from './src/theme';
-import { MusterLightTheme, MusterDarkTheme } from './src/navigation/themes';
+import { ThemeProvider } from './src/theme';
+import { MusterLightTheme } from './src/navigation/themes';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
 const linking = {
-  prefixes: [Linking.createURL('/'), 'https://muster.app', 'muster://'],
+  prefixes: [
+    Linking.createURL('/'),
+    'https://playmuster.com',
+    'https://muster-ecru.vercel.app',
+    'muster://',
+  ],
   config: {
     screens: {
       Main: {
@@ -55,14 +60,10 @@ export default function App() {
   );
 }
 
-/** Inner component that reads theme context for NavigationContainer */
+/** Inner component — light theme only */
 function AppNavigation() {
-  const { isDark } = useTheme();
   return (
-    <NavigationContainer
-      linking={linking as any}
-      theme={isDark ? MusterDarkTheme : MusterLightTheme}
-    >
+    <NavigationContainer linking={linking as any} theme={MusterLightTheme}>
       <RootNavigator />
     </NavigationContainer>
   );

@@ -1,11 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
 import { API_BASE_URL } from '../services/api/config';
-import { authService } from '../services/auth/AuthService';
+import { authService } from '../services/api/AuthService';
 
 interface DateWindow {
-  date: string;      // YYYY-MM-DD
+  date: string; // YYYY-MM-DD
   startTime: string; // HH:MM
-  endTime: string;   // HH:MM
+  endTime: string; // HH:MM
 }
 
 /**
@@ -15,9 +15,11 @@ interface DateWindow {
 export function useAvailabilityCheck(
   userIds: string[],
   rosterIds: string[],
-  dates: DateWindow[],
+  dates: DateWindow[]
 ) {
-  const [availability, setAvailability] = useState<Record<string, boolean[]>>({});
+  const [availability, setAvailability] = useState<Record<string, boolean[]>>(
+    {}
+  );
   const [loading, setLoading] = useState(false);
   const prevKey = useRef('');
 
@@ -26,7 +28,10 @@ export function useAvailabilityCheck(
     if (key === prevKey.current) return;
     prevKey.current = key;
 
-    if ((userIds.length === 0 && rosterIds.length === 0) || dates.length === 0) {
+    if (
+      (userIds.length === 0 && rosterIds.length === 0) ||
+      dates.length === 0
+    ) {
       setAvailability({});
       return;
     }
@@ -56,7 +61,10 @@ export function useAvailabilityCheck(
     };
 
     const timer = setTimeout(check, 300); // debounce
-    return () => { cancelled = true; clearTimeout(timer); };
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
   }, [userIds, rosterIds, dates]);
 
   return { availability, loading };

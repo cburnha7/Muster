@@ -286,29 +286,6 @@ export const resetPassword = createAsyncThunk(
 );
 
 /**
- * Load cached user data on app start
- * Requirement 8.12: Cache user data
- */
-export const loadCachedUser = createAsyncThunk(
-  'auth/loadCachedUser',
-  async (_, { rejectWithValue }) => {
-    try {
-      const user = await authService.getStoredUser();
-      const accessToken = await authService.getStoredToken();
-      const refreshToken = await TokenStorage.getRefreshToken();
-
-      if (user && accessToken) {
-        return { user, accessToken, refreshToken };
-      }
-
-      return null;
-    } catch (error: any) {
-      return rejectWithValue(error.message || 'Failed to load cached user');
-    }
-  }
-);
-
-/**
  * Complete onboarding flow
  */
 export const completeOnboarding = createAsyncThunk(
@@ -587,26 +564,6 @@ const authSlice = createSlice({
       .addCase(resetPassword.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload as string;
-      });
-
-    // Load cached user
-    builder
-      .addCase(loadCachedUser.pending, state => {
-        state.isBootLoading = true;
-      })
-      .addCase(loadCachedUser.fulfilled, (state, action) => {
-        if (action.payload) {
-          state.user = action.payload.user;
-          state.accessToken = action.payload.accessToken;
-          state.refreshToken = action.payload.refreshToken || null;
-          state.isAuthenticated = true;
-        }
-        state.isBootLoading = false;
-        state.isLoading = false;
-      })
-      .addCase(loadCachedUser.rejected, state => {
-        state.isBootLoading = false;
-        state.isLoading = false;
       });
 
     // Complete onboarding
