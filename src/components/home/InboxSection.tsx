@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { fonts, useTheme } from '../../theme';
-import {
+import type {
   RosterInvitation,
   LeagueInvitation,
   EventInvitation,
@@ -107,13 +107,21 @@ export function InboxSection({
       {items.map(item => (
         <TouchableOpacity
           key={item.id}
-          style={[styles.card, { backgroundColor: colors.surface, shadowColor: colors.ink }]}
+          style={[
+            styles.card,
+            { backgroundColor: colors.surface, shadowColor: colors.ink },
+          ]}
           onPress={item.onPress}
           activeOpacity={0.7}
         >
           <View style={styles.cardBody}>
-            <Text style={[styles.task, { color: colors.inkFaint }]}>{item.task}</Text>
-            <Text style={[styles.name, { color: colors.ink }]} numberOfLines={1}>
+            <Text style={[styles.task, { color: colors.inkFaint }]}>
+              {item.task}
+            </Text>
+            <Text
+              style={[styles.name, { color: colors.ink }]}
+              numberOfLines={1}
+            >
               {item.name}
             </Text>
           </View>

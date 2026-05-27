@@ -18,7 +18,6 @@ import {
   TokenResponse,
   OnboardingData,
 } from '../../types/auth';
-import { UserService } from '../../services/api/UserService';
 
 // Auth state interface
 export interface AuthState {
@@ -292,6 +291,7 @@ export const completeOnboarding = createAsyncThunk(
   'auth/completeOnboarding',
   async (data: OnboardingData, { rejectWithValue }) => {
     try {
+      const { UserService } = require('../../services/api/UserService');
       const userService = new UserService();
       const response = await userService.completeOnboarding(data);
       const updatedUser = response.user;
