@@ -1,6 +1,6 @@
 import { configureStore, combineReducers } from '@reduxjs/toolkit';
 import { setupListeners } from '@reduxjs/toolkit/query';
-import { persistStore, persistReducer, createTransform } from 'redux-persist';
+import { persistStore, persistReducer } from 'redux-persist';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { api } from './api';
 import { eventsApi } from './api/eventsApi';
@@ -21,28 +21,6 @@ import messagingReducer from './slices/messagingSlice';
 import { contextRecoveryMiddleware } from './middleware/contextRecovery';
 import { resetApiCacheListenerMiddleware } from './middleware/resetApiCacheOnLogin';
 
-/**
- * Strip access/refresh tokens before writing the auth slice to AsyncStorage.
- * Tokens live in SecureStore (TokenStorage) only. On rehydrate we restore the
- * user profile from AsyncStorage and the tokens from SecureStore via a boot
- * thunk dispatched after persistStore() completes.
- */
-const stripTokensTransform = createTransform(
-  // inbound (state → storage): scrub tokens
-  (inboundState: any) => ({
-    ...inboundState,
-    accessToken: null,
-    refreshToken: null,
-  }),
-  // outbound (storage → state): also scrub, in case an older build wrote tokens
-  (outboundState: any) => ({
-    ...outboundState,
-    accessToken: null,
-    refreshToken: null,
-  }),
-  { whitelist: ['auth'] }
-);
-
 // Redux Persist configuration — only persist auth + subscription.
 const persistConfig = {
   key: 'root',
@@ -56,7 +34,6 @@ const persistConfig = {
     'context',
   ],
   throttle: 1000,
-  transforms: [stripTokensTransform],
 };
 
 // Root reducer combining all slices

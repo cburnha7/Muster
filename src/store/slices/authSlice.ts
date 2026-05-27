@@ -367,20 +367,22 @@ const authSlice = createSlice({
   },
   extraReducers: builder => {
     // After redux-persist rehydrates, check if we have a valid session.
-    // After redux-persist rehydrates, restore the user profile for display.
-    // Tokens are NOT in AsyncStorage (stripped by the transform) — they come
-    // from SecureStore via bootSessionFromSecureStore. Keep isBootLoading=true
-    // until that thunk resolves so no API calls fire without a token.
+    // If user + accessToken are present in the persisted payload, restore
+    // the session immediately and drop the boot gate.
     builder.addMatcher(
       action => action.type === 'persist/REHYDRATE',
       (state, action: any) => {
         const persisted = action.payload?.auth;
-        if (persisted?.user) {
+        if (persisted?.user && persisted?.accessToken) {
           state.user = persisted.user;
-          // isAuthenticated stays false until bootSessionFromSecureStore confirms tokens
-          // isBootLoading stays true until bootSessionFromSecureStore resolves
+          state.accessToken = persisted.accessToken;
+          state.refreshToken = persisted.refreshToken ?? null;
+          state.isAuthenticated = true;
+          state.isBootLoading = false;
+        } else if (persisted?.user) {
+          state.user = persisted.user;
+          state.isBootLoading = false;
         } else {
-          // No user at all — show login screen immediately
           state.isBootLoading = false;
         }
       }

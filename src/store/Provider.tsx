@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { View } from 'react-native';
 import { Provider } from 'react-redux';
 import { store, persistor } from './store';
-import { bootSessionFromSecureStore } from './slices/authSlice';
 import { useTheme } from '../theme';
 
 interface ReduxProviderProps {
@@ -19,8 +18,6 @@ export const ReduxProvider: React.FC<ReduxProviderProps> = ({ children }) => {
     const markReady = () => {
       if (!settled) {
         settled = true;
-        // Kick off the SecureStore session restore after rehydration.
-        store.dispatch(bootSessionFromSecureStore() as any);
         setIsReady(true);
       }
     };
