@@ -5,11 +5,11 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-  Alert,
   TouchableOpacity,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useDispatch } from 'react-redux';
+import * as Haptics from 'expo-haptics';
 import { MusterIcon } from '../../theme/MusterIcon';
 import { FormInput } from '../../components/forms/FormInput';
 import { FormButton } from '../../components/forms/FormButton';
@@ -17,7 +17,7 @@ import { Checkbox } from '../../components/forms/Checkbox';
 import { SSOButton } from '../../components/auth/SSOButton';
 import SSOService from '../../services/auth/SSOService';
 import { loginUser, loginWithSSO } from '../../store/slices/authSlice';
-import { ErrorMessages, SuccessMessages } from '../../constants/errorMessages';
+import { ErrorMessages } from '../../constants/errorMessages';
 import { useTheme } from '../../theme';
 import { loggingService } from '../../services/LoggingService';
 
@@ -61,7 +61,9 @@ export function LoginScreen() {
       await dispatch(
         loginUser({ emailOrUsername: username.trim(), password, rememberMe })
       ).unwrap();
-      Alert.alert('Success', SuccessMessages.login.success);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(
+        () => {}
+      );
     } catch (error: any) {
       if (error.status === 401) {
         setErrors({ general: ErrorMessages.auth.invalidCredentials });
@@ -96,7 +98,9 @@ export function LoginScreen() {
           lastName: userData.lastName,
         })
       ).unwrap();
-      Alert.alert('Success', SuccessMessages.login.ssoSuccess);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(
+        () => {}
+      );
     } catch (error: any) {
       if (error.message !== 'User cancelled' && error !== 'User cancelled') {
         const providerName = provider === 'apple' ? 'Apple' : 'Google';

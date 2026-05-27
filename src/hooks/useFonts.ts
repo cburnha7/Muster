@@ -31,7 +31,7 @@ const fontAssets = {
   Nunito_700Bold,
 };
 
-const FONT_TIMEOUT_MS = 3000;
+const FONT_TIMEOUT_MS = 1500;
 
 function hideSplash() {
   if (Platform.OS !== 'web') {
@@ -58,7 +58,7 @@ export function useFonts() {
     const timer = setTimeout(() => {
       if (!resolved) {
         console.warn(
-          'Font loading timed out after 3s — proceeding with system fonts'
+          'Font loading timed out after 1.5s — proceeding with system fonts'
         );
         resolve();
       }

@@ -617,22 +617,12 @@ export function HomeScreen() {
     [navigation]
   );
 
-  if (authLoading || bootLoading || isLoading) {
+  if (authLoading || bootLoading) {
     return (
       <View
         style={[styles.loadingContainer, { backgroundColor: colors.bgScreen }]}
       >
         <LoadingSpinner size={40} color={colors.cobalt} />
-      </View>
-    );
-  }
-
-  if (error) {
-    return (
-      <View
-        style={[styles.loadingContainer, { backgroundColor: colors.bgScreen }]}
-      >
-        <ErrorDisplay message={error} onRetry={handleRefresh} />
       </View>
     );
   }
