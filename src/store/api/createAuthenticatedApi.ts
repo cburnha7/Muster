@@ -16,24 +16,14 @@ import type {
   FetchArgs,
   FetchBaseQueryError,
 } from '@reduxjs/toolkit/query';
-import type { RootState } from '../store';
+import { RootState } from '../store';
 import { API_BASE_URL } from '../../services/api/config';
 import TokenStorage from '../../services/auth/TokenStorage';
 import {
   acquireRefresh,
   performTokenRefresh,
 } from '../../services/auth/tokenRefreshLock';
-
-// Lazy access to break circular dependency:
-// createAuthenticatedApi → authSlice → AuthService → BaseApiService → store → createAuthenticatedApi
-let _authActions: { clearAuth: any; setTokens: any } | null = null;
-function getAuthActions() {
-  if (!_authActions) {
-    const slice = require('../slices/authSlice');
-    _authActions = { clearAuth: slice.clearAuth, setTokens: slice.setTokens };
-  }
-  return _authActions;
-}
+import { clearAuth, setTokens } from '../slices/authSlice';
 
 const rawBaseQuery = fetchBaseQuery({
   baseUrl: API_BASE_URL,
@@ -97,7 +87,7 @@ export function createAuthenticatedBaseQuery(): BaseQueryFn<
           const latestToken = (api.getState() as RootState).auth.accessToken;
           if (!latestToken || latestToken === failedToken) {
             await TokenStorage.clearAll();
-            api.dispatch(getAuthActions().clearAuth());
+            api.dispatch(clearAuth());
           }
           return result;
         }
@@ -109,7 +99,7 @@ export function createAuthenticatedBaseQuery(): BaseQueryFn<
 
         // Update Redux state with new tokens
         api.dispatch(
-          getAuthActions().setTokens({
+          setTokens({
             accessToken: tokenData.accessToken,
             refreshToken: tokenData.refreshToken,
           })
@@ -123,7 +113,7 @@ export function createAuthenticatedBaseQuery(): BaseQueryFn<
         const latestToken = (api.getState() as RootState).auth.accessToken;
         if (!latestToken || latestToken === failedToken) {
           await TokenStorage.clearAll();
-          api.dispatch(getAuthActions().clearAuth());
+          api.dispatch(clearAuth());
         }
       }
     }

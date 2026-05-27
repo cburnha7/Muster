@@ -85,9 +85,7 @@ export class BaseApiService {
       ? url
       : `${this.config.baseURL}${url.startsWith('/') ? '' : '/'}${url}`;
 
-    const token =
-      store.getState()?.auth?.accessToken ??
-      (await TokenStorage.getAccessToken());
+    const token = await TokenStorage.getAccessToken();
     const headers: Record<string, string> = {
       ...(body instanceof FormData
         ? {}
@@ -143,26 +141,17 @@ export class BaseApiService {
           }
           return this.request<T>(method, url, body, extraHeaders, 1);
         } catch {
-          // Refresh failed — clear session and navigate to login
+          // Refresh failed — clear session and signal the app
           await TokenStorage.clearAll();
+          store.dispatch(clearAuth());
           if (Platform.OS !== 'web') {
             Alert.alert(
               'Session Expired',
               'Please sign in again to continue.',
-              [
-                {
-                  text: 'OK',
-                  onPress: () => {
-                    store.dispatch(clearAuth());
-                  },
-                },
-              ]
+              [{ text: 'OK' }]
             );
-          } else {
-            store.dispatch(clearAuth());
-            if (typeof window?.dispatchEvent === 'function') {
-              window.dispatchEvent(new CustomEvent('auth:sessionExpired'));
-            }
+          } else if (typeof window?.dispatchEvent === 'function') {
+            window.dispatchEvent(new CustomEvent('auth:sessionExpired'));
           }
           // fall through to throw the 401 error
         }
@@ -329,7 +318,7 @@ export class BaseApiService {
   }
 
   public async clearCache(): Promise<void> {
-    this.cache.clear();
+    this.cache.clearAll();
   }
 
   protected async getCacheStats(): Promise<any> {

@@ -13,7 +13,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { useSelector } from 'react-redux';
 import { Calendar, DateData } from 'react-native-calendars';
 
@@ -32,7 +32,9 @@ import { MilestoneOverlay } from '../../components/ui/MilestoneOverlay';
 import { useMilestoneCheck } from '../../hooks/useMilestoneCheck';
 
 // Services
+import { debriefService } from '../../services/api/DebriefService';
 import {
+  userService,
   RosterInvitation,
   LeagueInvitation,
   EventInvitation,
@@ -77,7 +79,7 @@ import {
 } from '../../utils/eventsCalendarUtils';
 import {
   formatDateForCalendar,
-  buildCalendarTheme,
+  calendarTheme,
 } from '../../utils/calendarUtils';
 import { searchEventBus } from '../../utils/searchEventBus';
 import { getSportEmoji } from '../../constants/sports';
@@ -108,9 +110,6 @@ export function HomeScreen() {
   const [selectedDate, setSelectedDate] = useState<string>(
     formatDateForCalendar(new Date())
   );
-
-  // Dynamic calendar theme (responds to dark mode)
-  const calendarTheme = useMemo(() => buildCalendarTheme(colors), [colors]);
 
   // My Crew selection — shared across all tabs via Redux
   const {
@@ -171,7 +170,36 @@ export function HomeScreen() {
     return events.filter(e => !bookedEventIds.has(e.id));
   }, [discoverData, bookingsData]);
 
-  // User teams from loadHomeData above
+  // User teams state
+  const [userTeams, setUserTeams] = useState<Team[]>([]);
+  const [organizedEvents, setOrganizedEvents] = useState<Event[]>([]);
+
+  const loadUserTeams = useCallback(async () => {
+    try {
+      const result = await userService.getUserTeams({ page: 1, limit: 10 });
+      setUserTeams(result.data || []);
+    } catch (err) {
+      console.warn('Failed to fetch user teams:', err);
+      setUserTeams([]);
+    }
+  }, []);
+
+  const loadOrganizedEvents = useCallback(async () => {
+    try {
+      const result = await userService.getUserEvents(undefined, {
+        page: 1,
+        limit: 100,
+      });
+      const bookedEventIds = new Set(
+        (bookingsData?.data || []).map(b => b.eventId)
+      );
+      setOrganizedEvents(
+        (result.data || []).filter((e: Event) => !bookedEventIds.has(e.id))
+      );
+    } catch {
+      setOrganizedEvents([]);
+    }
+  }, [bookingsData]);
 
   // DependentToggle state
   const activeFilter: PersonFilter = useMemo(() => {
@@ -364,67 +392,23 @@ export function HomeScreen() {
 
   const isLoading = bookingsLoading;
 
-  // ── Home data state (simple direct fetches) ──
+  // Debrief state
   const [debriefEvents, setDebriefEvents] = useState<Booking[]>([]);
-  const [rosterInvitations, setRosterInvitations] = useState<any[]>([]);
-  const [leagueInvitations, setLeagueInvitations] = useState<any[]>([]);
-  const [eventInvitations, setEventInvitations] = useState<any[]>([]);
-  const [readyToScheduleLeagues, setReadyToScheduleLeagues] = useState<any[]>(
+
+  // Invitations state
+  const [rosterInvitations, setRosterInvitations] = useState<
+    RosterInvitation[]
+  >([]);
+  const [leagueInvitations, setLeagueInvitations] = useState<
+    LeagueInvitation[]
+  >([]);
+  const [eventInvitations, setEventInvitations] = useState<EventInvitation[]>(
     []
   );
-  const [organizedEvents, setOrganizedEvents] = useState<Event[]>([]);
-  const [userTeams, setUserTeams] = useState<Team[]>([]);
+  const [readyToScheduleLeagues, setReadyToScheduleLeagues] = useState<
+    ReadyToScheduleLeague[]
+  >([]);
   const [error, setError] = useState<string | null>(null);
-
-  const loadHomeData = useCallback(async () => {
-    if (!user?.id) return;
-    try {
-      const { userService } = await import('../../services/api/UserService');
-      const { debriefService } =
-        await import('../../services/api/DebriefService');
-
-      const [
-        invResult,
-        leaguesResult,
-        debriefResult,
-        teamsResult,
-        eventsResult,
-      ] = await Promise.all([
-        userService.getInvitations().catch(() => ({
-          rosterInvitations: [],
-          leagueInvitations: [],
-          eventInvitations: [],
-        })),
-        userService.getLeaguesReadyToSchedule().catch(() => []),
-        debriefService
-          .getDebriefEvents()
-          .then(r => r.data || [])
-          .catch(() => []),
-        userService
-          .getUserTeams()
-          .then(r => r.data || r || [])
-          .catch(() => []),
-        userService
-          .getUserEvents({ page: 1, limit: 100 })
-          .then(r => r.data || [])
-          .catch(() => []),
-      ]);
-
-      setRosterInvitations(invResult.rosterInvitations || []);
-      setLeagueInvitations(invResult.leagueInvitations || []);
-      setEventInvitations(invResult.eventInvitations || []);
-      setReadyToScheduleLeagues(leaguesResult || []);
-      setDebriefEvents(debriefResult || []);
-      setUserTeams(teamsResult || []);
-      setOrganizedEvents(eventsResult || []);
-    } catch {
-      // Non-fatal — keep showing whatever we have
-    }
-  }, [user?.id]);
-
-  useEffect(() => {
-    loadHomeData();
-  }, [loadHomeData, activeUserId]);
 
   const inboxCount =
     rosterInvitations.length +
@@ -434,12 +418,81 @@ export function HomeScreen() {
     debriefEvents.length +
     cancelRequests.length;
 
+  const loadDebriefEvents = useCallback(async () => {
+    try {
+      const result = await debriefService.getDebriefEvents();
+      setDebriefEvents(result.data || []);
+    } catch (err) {
+      setDebriefEvents([]);
+      setError('Failed to load debrief events. Pull down to refresh.');
+    }
+  }, []);
+
+  const loadInvitations = useCallback(async () => {
+    try {
+      const result = await userService.getInvitations();
+      setRosterInvitations(result.rosterInvitations || []);
+      setLeagueInvitations(result.leagueInvitations || []);
+      setEventInvitations(result.eventInvitations || []);
+    } catch (err) {
+      setError('Failed to load invitations. Pull down to refresh.');
+    }
+  }, []);
+
+  const loadReadyToScheduleLeagues = useCallback(async () => {
+    try {
+      const result = await userService.getLeaguesReadyToSchedule();
+      setReadyToScheduleLeagues(result || []);
+    } catch (err) {
+      setReadyToScheduleLeagues([]);
+      setError('Failed to load league data. Pull down to refresh.');
+    }
+  }, []);
+
   const handleRefresh = useCallback(async () => {
     setIsRefreshing(true);
     setError(null);
-    await Promise.all([refetchBookings(), refetchDiscover(), loadHomeData()]);
+    await Promise.all([
+      refetchBookings(),
+      refetchDiscover(),
+      loadDebriefEvents(),
+      loadInvitations(),
+      loadReadyToScheduleLeagues(),
+      loadUserTeams(),
+      loadOrganizedEvents(),
+    ]);
     setIsRefreshing(false);
-  }, [refetchBookings, refetchDiscover, loadHomeData]);
+  }, [
+    refetchBookings,
+    refetchDiscover,
+    loadDebriefEvents,
+    loadInvitations,
+    loadReadyToScheduleLeagues,
+    loadUserTeams,
+    loadOrganizedEvents,
+  ]);
+
+  useFocusEffect(
+    useCallback(() => {
+      if (!authLoading && !bootLoading) {
+        refetchBookings();
+        refetchDiscover();
+        loadDebriefEvents();
+        loadInvitations();
+        loadReadyToScheduleLeagues();
+        loadUserTeams();
+        loadOrganizedEvents();
+      }
+    }, [
+      authLoading,
+      bootLoading,
+      loadDebriefEvents,
+      loadInvitations,
+      loadReadyToScheduleLeagues,
+      loadUserTeams,
+      loadOrganizedEvents,
+    ])
+  );
 
   useEffect(() => {
     const unsubscribe = searchEventBus.subscribe(() =>
@@ -453,6 +506,18 @@ export function HomeScreen() {
       unsubClose();
     };
   }, []);
+
+  useEffect(() => {
+    if (!authLoading && !bootLoading) {
+      refetchBookings();
+      refetchDiscover();
+      loadDebriefEvents();
+      loadInvitations();
+      loadReadyToScheduleLeagues();
+      loadUserTeams();
+      loadOrganizedEvents();
+    }
+  }, [activeUserId]);
 
   const handleBookingPress = useCallback(
     (booking: Booking) => {

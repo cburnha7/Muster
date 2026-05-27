@@ -500,8 +500,8 @@ function AccountsTab({
         Platform.OS === 'web'
           ? typeof window !== 'undefined'
             ? window.location.href
-            : 'https://muster-ecru.vercel.app/settings'
-          : 'https://muster-ecru.vercel.app/settings';
+            : 'https://muster.app'
+          : 'muster://settings/accounts';
       const res = await fetch(`${API_BASE_URL}/stripe/connect/onboard`, {
         method: 'POST',
         headers: {
@@ -625,8 +625,8 @@ function AccountsTab({
           Platform.OS === 'web'
             ? typeof window !== 'undefined'
               ? window.location.href
-              : 'https://muster-ecru.vercel.app/settings'
-            : 'https://muster-ecru.vercel.app/settings';
+              : 'https://muster.app'
+            : 'muster://settings/accounts';
 
         const res = await fetch(`${API_BASE_URL}/connect/onboard`, {
           method: 'POST',
@@ -876,7 +876,7 @@ interface PreferencesTabProps {
 }
 
 function PreferencesTab({ intents, onToggleIntent }: PreferencesTabProps) {
-  const { colors, isDark, setDarkMode } = useTheme();
+  const { isDark, setDarkMode } = useTheme();
   const [locationServices, setLocationServices] = useState(true);
 
   return (

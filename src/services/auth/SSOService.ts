@@ -87,30 +87,34 @@ class SSOService {
 
   async signInWithGoogle(): Promise<SSOUserData> {
     try {
-      // Always use the Web client ID with expo-auth-session.
-      // iOS client IDs are for the native Google Sign-In SDK only.
-      // The Web client supports authorization code flow with PKCE via browser.
-      const clientId = GOOGLE_WEB_CLIENT_ID;
+      // On iOS use the iOS client ID, on other platforms use web client ID
+      const clientId =
+        Platform.OS === 'ios' ? GOOGLE_IOS_CLIENT_ID : GOOGLE_WEB_CLIENT_ID;
 
-      // Redirect URI:
-      // - Web: current page URL (handled by makeRedirectUri)
-      // - Native: Expo auth proxy (registered in Google Cloud Console)
-      const redirectUri =
-        Platform.OS === 'web'
-          ? makeRedirectUri()
-          : 'https://auth.expo.io/@cburnha7/muster';
+      // Generate the redirect URI for the current platform
+      let redirectUri: string;
+      if (Platform.OS === 'ios' && GOOGLE_IOS_CLIENT_ID) {
+        const reversed = GOOGLE_IOS_CLIENT_ID.split('.').reverse().join('.');
+        redirectUri = `${reversed}:/oauthredirect`;
+      } else {
+        redirectUri = makeRedirectUri();
+      }
 
       const discovery = await fetchDiscoveryAsync(
         'https://accounts.google.com'
       );
 
-      // Authorization code flow with PKCE (secure, works on all platforms)
+      // Request both access token and id token
       const request = new AuthRequest({
         clientId,
         redirectUri,
         scopes: ['openid', 'profile', 'email'],
-        responseType: ResponseType.Code,
-        usePKCE: true,
+        responseType: ResponseType.Token,
+        usePKCE: false,
+        extraParams: {
+          // Request id_token alongside access_token
+          nonce: Math.random().toString(36).substring(2),
+        },
       });
 
       const result = await request.promptAsync(discovery);
@@ -118,37 +122,12 @@ class SSOService {
       if (result.type === 'cancel' || result.type === 'dismiss') {
         throw new Error('User cancelled');
       }
-      if (result.type !== 'success' || !result.params?.code) {
+      if (result.type !== 'success' || !result.authentication?.accessToken) {
         throw new Error('Google Sign In failed');
       }
 
-      // Exchange authorization code for tokens
-      const tokenResponse = await fetch(discovery.tokenEndpoint!, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: new URLSearchParams({
-          client_id: clientId,
-          code: result.params.code,
-          code_verifier: request.codeVerifier || '',
-          grant_type: 'authorization_code',
-          redirect_uri: redirectUri,
-        }).toString(),
-      });
-
-      if (!tokenResponse.ok) {
-        const errBody = await tokenResponse.text().catch(() => '');
-        throw new Error(
-          `Token exchange failed: ${tokenResponse.status} ${errBody}`
-        );
-      }
-
-      const tokens = await tokenResponse.json();
-      const accessToken = tokens.access_token;
-      const idToken = tokens.id_token || '';
-
-      if (!accessToken) {
-        throw new Error('No access token received');
-      }
+      const accessToken = result.authentication.accessToken;
+      const idToken = result.authentication.idToken || '';
 
       // Fetch profile from Google userinfo endpoint
       const res = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {

@@ -14,10 +14,10 @@ function buildNavTheme(
     colors: {
       ...base.colors,
       primary: colors.cobalt,
-      background: colors.bgScreen,
-      card: colors.header,
+      background: colors.background,
+      card: colors.surface,
       text: colors.ink,
-      border: colors.headerBorder,
+      border: colors.border,
       notification: colors.error,
     },
   };
