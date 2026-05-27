@@ -18,7 +18,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useDispatch, useSelector } from 'react-redux';
 import * as StoreReview from 'expo-store-review';
-import { fonts, Spacing, useTheme, ThemeMode } from '../../theme';
+import { fonts, Spacing, useTheme } from '../../theme';
 import { selectUser, selectAccessToken } from '../../store/slices/authSlice';
 import { useDependentContext } from '../../hooks/useDependentContext';
 import { userService } from '../../services/api/UserService';
@@ -876,106 +876,11 @@ interface PreferencesTabProps {
 }
 
 function PreferencesTab({ intents, onToggleIntent }: PreferencesTabProps) {
-  const { colors, themeMode, setThemeMode } = useTheme();
+  const { colors, isDark, setDarkMode } = useTheme();
   const [locationServices, setLocationServices] = useState(true);
 
   return (
     <ScrollView contentContainerStyle={{ paddingBottom: 40 }}>
-      {/* ── Appearance picker ────────────────────── */}
-      <Text style={[s.sectionLabel, { color: colors.inkSoft }]}>
-        Appearance
-      </Text>
-      <View
-        style={[
-          s.card,
-          { backgroundColor: colors.bgCard, shadowColor: colors.ink },
-        ]}
-      >
-        <View style={{ paddingHorizontal: 16, paddingVertical: 14 }}>
-          <View
-            style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              marginBottom: 10,
-            }}
-          >
-            <Ionicons
-              name="moon-outline"
-              size={20}
-              color={colors.ink}
-              style={{ marginRight: 10 }}
-            />
-            <Text
-              style={{
-                fontFamily: fonts.body,
-                fontSize: 15,
-                color: colors.ink,
-              }}
-            >
-              Theme
-            </Text>
-          </View>
-          <View
-            style={{
-              flexDirection: 'row',
-              backgroundColor: colors.surface,
-              borderRadius: 10,
-              padding: 3,
-            }}
-          >
-            {[
-              { value: 'system' as ThemeMode, label: 'System' },
-              { value: 'light' as ThemeMode, label: 'Light' },
-              { value: 'dark' as ThemeMode, label: 'Dark' },
-            ].map(opt => {
-              const selected = themeMode === opt.value;
-              return (
-                <TouchableOpacity
-                  key={opt.value}
-                  onPress={() => setThemeMode(opt.value)}
-                  style={{
-                    flex: 1,
-                    paddingVertical: 8,
-                    borderRadius: 7,
-                    backgroundColor: selected ? colors.cobalt : 'transparent',
-                    alignItems: 'center',
-                  }}
-                  accessibilityRole="button"
-                  accessibilityState={{ selected }}
-                  accessibilityLabel={`Appearance: ${opt.label}`}
-                >
-                  <Text
-                    style={{
-                      fontFamily: selected ? fonts.label : fonts.body,
-                      fontSize: 14,
-                      color: selected ? '#FFFFFF' : colors.ink,
-                    }}
-                  >
-                    {opt.label}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
-          <Text
-            style={{
-              fontFamily: fonts.body,
-              color: colors.inkSoft,
-              marginTop: 8,
-              fontSize: 12,
-              lineHeight: 16,
-            }}
-          >
-            {themeMode === 'system'
-              ? "Muster will follow your device's appearance setting."
-              : themeMode === 'dark'
-                ? 'Always use dark mode in Muster.'
-                : 'Always use light mode in Muster.'}
-          </Text>
-        </View>
-      </View>
-
-      {/* ── Preferences ────────────────────── */}
       <Text style={[s.sectionLabel, { color: colors.inkSoft }]}>
         Preferences
       </Text>
@@ -985,6 +890,13 @@ function PreferencesTab({ intents, onToggleIntent }: PreferencesTabProps) {
           { backgroundColor: colors.bgCard, shadowColor: colors.ink },
         ]}
       >
+        <ToggleRow
+          icon="moon-outline"
+          iconBg={colors.surface}
+          label="Dark Mode"
+          value={isDark}
+          onValueChange={setDarkMode}
+        />
         <ToggleRow
           icon="location-outline"
           iconBg={colors.surface}

@@ -15,6 +15,16 @@ import {
 import * as WebBrowser from 'expo-web-browser';
 import { SSOUserData } from '../../types/auth';
 
+// Conditionally import Apple Authentication (iOS only)
+let AppleAuthentication: any = null;
+if (Platform.OS === 'ios') {
+  try {
+    AppleAuthentication = require('expo-apple-authentication');
+  } catch {
+    console.warn('expo-apple-authentication not available');
+  }
+}
+
 WebBrowser.maybeCompleteAuthSession();
 
 const GOOGLE_WEB_CLIENT_ID =
@@ -26,31 +36,24 @@ class SSOService {
   // ── Apple ──────────────────────────────────────────
 
   async isAppleSignInAvailable(): Promise<boolean> {
-    if (Platform.OS !== 'ios') return false;
-    try {
-      const AppleAuth = require('expo-apple-authentication');
-      return await AppleAuth.isAvailableAsync();
-    } catch {
-      return false;
+    if (Platform.OS === 'ios' && AppleAuthentication) {
+      try {
+        return await AppleAuthentication.isAvailableAsync();
+      } catch {
+        return false;
+      }
     }
+    return false;
   }
 
   async signInWithApple(): Promise<SSOUserData> {
-    if (Platform.OS !== 'ios') {
-      throw new Error('Apple Sign In is iOS-only');
-    }
-    let AppleAuth: any;
     try {
-      AppleAuth = require('expo-apple-authentication');
-    } catch {
-      throw new Error('Apple Sign In not available');
-    }
+      if (!AppleAuthentication) throw new Error('Apple Sign In not available');
 
-    try {
-      const credential = await AppleAuth.signInAsync({
+      const credential = await AppleAuthentication.signInAsync({
         requestedScopes: [
-          AppleAuth.AppleAuthenticationScope.FULL_NAME,
-          AppleAuth.AppleAuthenticationScope.EMAIL,
+          AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
+          AppleAuthentication.AppleAuthenticationScope.EMAIL,
         ],
       });
 

@@ -39,43 +39,27 @@ class AuthService {
   private tokenExpirationTime: number | null = null;
 
   constructor() {
-    // No work at construction. Token cache is loaded lazily on the first
-    // call to ensureInitialized(). This keeps cold-launch off of SecureStore
-    // until after the React tree, ErrorBoundary, and global error handler
-    // are all in place. Related: incident 2B176A02.
+    // Initialize token cache on construction
+    this.initPromise = this.initializeTokenCache();
   }
 
   private async initializeTokenCache(): Promise<void> {
     try {
       const token = await TokenStorage.getAccessToken();
-      this.tokenCache =
-        typeof token === 'string' && token.length > 0 ? token : null;
-      console.log('🔐 AuthService initialized');
+      this.tokenCache = token;
+      console.log(
+        '🔐 AuthService initialized, token cache:',
+        token ? `${token.substring(0, 20)}...` : 'null'
+      );
     } catch (error) {
-      const tag = error instanceof Error ? error.name : 'unknown';
-      console.warn(`[AuthService] tokenCache init failed (${tag})`);
-      this.tokenCache = null;
-      throw error;
+      console.error('Failed to initialize token cache:', error);
     }
   }
 
   async ensureInitialized(): Promise<void> {
     if (this.initPromise) {
-      return this.initPromise;
+      await this.initPromise;
     }
-    this.initPromise = this.initializeTokenCache().catch(err => {
-      // Reset so a later caller can retry; do not poison the singleton.
-      this.initPromise = null;
-      // Surface to Sentry but never throw — the app must still be usable
-      // even if SecureStore briefly fails (cold launch, locked device, etc.)
-      try {
-        const Sentry = require('@sentry/react-native');
-        Sentry.captureException(err, {
-          tags: { surface: 'auth.initializeTokenCache' },
-        });
-      } catch {}
-    });
-    return this.initPromise;
   }
 
   /**
@@ -430,7 +414,6 @@ class AuthService {
    */
   async getStoredToken(): Promise<string | null> {
     try {
-      await this.ensureInitialized();
       console.log('📥 getStoredToken() called');
 
       // Check if token needs refresh
@@ -471,9 +454,14 @@ class AuthService {
 
   /**
    * Synchronous method for interceptors (backward compatibility)
-   * Note: returns null if ensureInitialized hasn't been called yet.
    */
   getToken(): string | null {
+    if (__DEV__) {
+      console.log(
+        '🔑 getToken() called, cache:',
+        this.tokenCache ? `${this.tokenCache.substring(0, 20)}...` : 'null'
+      );
+    }
     return this.tokenCache;
   }
 
@@ -483,7 +471,6 @@ class AuthService {
    */
   async getStoredUser(): Promise<User | null> {
     try {
-      await this.ensureInitialized();
       const user = await TokenStorage.getUser();
       return user;
     } catch (error) {
@@ -497,7 +484,6 @@ class AuthService {
    * Requirement 8.11: Authentication check
    */
   async isAuthenticated(): Promise<boolean> {
-    await this.ensureInitialized();
     const token = await this.getStoredToken();
     return !!token;
   }
