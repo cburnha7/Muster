@@ -29,7 +29,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import * as ImagePicker from 'expo-image-picker';
 import { ImageService } from '../../services/ImageService';
 import * as Location from 'expo-location';
-import DateTimePicker from '@react-native-community/datetimepicker';
+import { DatePickerInput } from '../../components/forms/DatePickerInput';
 import { useTheme } from '../../theme';
 import { tokenFontFamily, tokenSpacing, tokenRadius } from '../../theme/tokens';
 import { selectUser, completeOnboarding } from '../../store/slices/authSlice';
@@ -40,7 +40,7 @@ const TOTAL_STEPS = 5;
 interface FormData {
   firstName: string;
   lastName: string;
-  dateOfBirth: Date | null;
+  dateOfBirth: string; // "YYYY-MM-DD" or ""
   locationCity: string;
   locationState: string;
   locationLat: number | null;
@@ -64,7 +64,7 @@ export function SSOOnboardingFlow() {
   const [form, setForm] = useState<FormData>({
     firstName: user?.firstName || '',
     lastName: user?.lastName || '',
-    dateOfBirth: null,
+    dateOfBirth: '',
     locationCity: '',
     locationState: '',
     locationLat: null,
@@ -116,7 +116,11 @@ export function SSOOnboardingFlow() {
         firstName: form.firstName.trim(),
         lastName: form.lastName.trim(),
         ...(form.dateOfBirth
-          ? { dateOfBirth: form.dateOfBirth.toISOString() }
+          ? {
+              dateOfBirth: new Date(
+                form.dateOfBirth + 'T00:00:00'
+              ).toISOString(),
+            }
           : {}),
         ...(form.phoneNumber.trim()
           ? { phoneNumber: form.phoneNumber.trim() }
@@ -229,20 +233,13 @@ export function SSOOnboardingFlow() {
   // ─── Screen 2: Birthday ────────────────────────────────────
 
   const BirthdayScreen = () => {
-    const [showPicker, setShowPicker] = useState(Platform.OS === 'ios');
     const minAge = 13;
     const maxDate = new Date();
     maxDate.setFullYear(maxDate.getFullYear() - minAge);
 
     const canContinue =
-      form.dateOfBirth !== null && form.dateOfBirth <= maxDate;
-
-    const formatDate = (d: Date) =>
-      d.toLocaleDateString('en-US', {
-        month: 'long',
-        day: 'numeric',
-        year: 'numeric',
-      });
+      form.dateOfBirth !== '' &&
+      new Date(form.dateOfBirth + 'T00:00:00') <= maxDate;
 
     return (
       <>
@@ -253,68 +250,14 @@ export function SSOOnboardingFlow() {
           Used to match you with age-appropriate events
         </Text>
 
-        {Platform.OS === 'ios' ? (
-          <View
-            style={[
-              s.datePickerContainer,
-              { backgroundColor: colors.surface, borderColor: colors.border },
-            ]}
-          >
-            <DateTimePicker
-              value={form.dateOfBirth || maxDate}
-              mode="date"
-              display="spinner"
-              maximumDate={maxDate}
-              minimumDate={new Date(1920, 0, 1)}
-              onChange={(_, date) => {
-                if (date) updateForm({ dateOfBirth: date });
-              }}
-              textColor={colors.ink}
-            />
-          </View>
-        ) : (
-          <>
-            <TouchableOpacity
-              style={[
-                s.dateButton,
-                {
-                  backgroundColor: colors.bgSubtle,
-                  borderColor: colors.border,
-                },
-              ]}
-              onPress={() => setShowPicker(true)}
-            >
-              <Ionicons
-                name="calendar-outline"
-                size={20}
-                color={colors.inkSecondary}
-              />
-              <Text
-                style={[
-                  s.dateButtonText,
-                  { color: form.dateOfBirth ? colors.ink : colors.inkMuted },
-                ]}
-              >
-                {form.dateOfBirth
-                  ? formatDate(form.dateOfBirth)
-                  : 'Select your birthday'}
-              </Text>
-            </TouchableOpacity>
-            {showPicker && (
-              <DateTimePicker
-                value={form.dateOfBirth || maxDate}
-                mode="date"
-                display="default"
-                maximumDate={maxDate}
-                minimumDate={new Date(1920, 0, 1)}
-                onChange={(_, date) => {
-                  setShowPicker(false);
-                  if (date) updateForm({ dateOfBirth: date });
-                }}
-              />
-            )}
-          </>
-        )}
+        <DatePickerInput
+          label="Date of birth"
+          value={form.dateOfBirth}
+          onChange={next => updateForm({ dateOfBirth: next })}
+          minimumDate={new Date(1920, 0, 1)}
+          maximumDate={maxDate}
+          required
+        />
 
         <View style={s.bottom}>
           <TouchableOpacity
@@ -803,26 +746,6 @@ const s = StyleSheet.create({
     lineHeight: 18,
     marginTop: 8,
     fontStyle: 'italic',
-  },
-  datePickerContainer: {
-    borderRadius: tokenRadius.lg,
-    borderWidth: 1,
-    overflow: 'hidden',
-    marginBottom: 20,
-  },
-  dateButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderRadius: tokenRadius.lg,
-    borderWidth: 2,
-    paddingHorizontal: 18,
-    paddingVertical: 16,
-    gap: 10,
-    marginBottom: 20,
-  },
-  dateButtonText: {
-    fontSize: 16,
-    fontFamily: tokenFontFamily.uiRegular,
   },
   bottom: {
     marginTop: 'auto' as any,
