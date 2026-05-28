@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { PressableCard } from './PressableCard';
 import { tokenSpacing, tokenRadius, tokenFontFamily } from '../../theme/tokens';
 import { useTheme } from '../../theme';
+import { StatusBadge } from './StatusBadge';
 import { getSportIcon, formatSport } from '../../utils/sportUtils';
 import { getSportColor } from '../../constants/sportColors';
 
@@ -43,19 +44,7 @@ const LeagueCardInner: React.FC<LeagueCardProps> = ({
             {seasonName}
           </Text>
           {isOwner && (
-            <View
-              style={[
-                styles.commissionerBadge,
-                {
-                  backgroundColor: colors.cobaltLight,
-                  borderColor: colors.cobalt,
-                },
-              ]}
-            >
-              <Text style={[styles.commissionerText, { color: colors.cobalt }]}>
-                Commissioner
-              </Text>
-            </View>
+            <StatusBadge variant="commissioner">Commissioner</StatusBadge>
           )}
         </View>
         <Text style={[styles.meta, { color: colors.inkSecondary }]}>
@@ -100,17 +89,6 @@ const styles = StyleSheet.create({
     fontFamily: tokenFontFamily.uiSemiBold,
     fontSize: 15,
     flexShrink: 1,
-  },
-  commissionerBadge: {
-    paddingHorizontal: tokenSpacing.sm,
-    paddingVertical: 2,
-    borderRadius: tokenRadius.pill,
-    borderWidth: 1,
-  },
-  commissionerText: {
-    fontSize: 10,
-    fontFamily: tokenFontFamily.uiSemiBold,
-    letterSpacing: 0.4,
   },
   meta: {
     fontFamily: tokenFontFamily.uiRegular,

@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { StatusBadge } from './StatusBadge';
 import { Booking, BookingStatus, PaymentStatus } from '../../types';
 import { tokenSpacing, tokenRadius, tokenFontFamily } from '../../theme/tokens';
 import { useTheme } from '../../theme';
@@ -84,38 +85,18 @@ export const BookingCard: React.FC<BookingCardProps> = ({
       {/* Bubble stack — top-right, vertical */}
       <View style={styles.bubbleStack}>
         {isCancelled && (
-          <View
-            style={[styles.cancelledBadge, { backgroundColor: colors.error }]}
-          >
-            <Text style={[styles.cancelledBadgeText, { color: colors.white }]}>
-              Cancelled
-            </Text>
-          </View>
+          <StatusBadge variant="cancelled">Cancelled</StatusBadge>
         )}
         {isLive && (
-          <View
-            style={[styles.liveBadgePill, { backgroundColor: colors.gold }]}
-          >
-            <View style={[styles.liveDot, { backgroundColor: colors.white }]} />
-            <Text style={[styles.liveBadgePillText, { color: colors.white }]}>
-              Live
-            </Text>
-          </View>
+          <StatusBadge variant="live" dot>
+            Live
+          </StatusBadge>
         )}
-        {isPast && (
-          <View style={[styles.pastBadge, { backgroundColor: colors.ink }]}>
-            <Text style={[styles.pastBadgeText, { color: colors.white }]}>
-              Past
-            </Text>
-          </View>
-        )}
+        {isPast && <StatusBadge variant="past">Past</StatusBadge>}
         {booking.status === BookingStatus.PENDING_APPROVAL && (
-          <View style={styles.pendingApprovalBadge}>
-            <Ionicons name="time-outline" size={11} color={colors.gold} />
-            <Text style={[styles.pendingApprovalText, { color: colors.gold }]}>
-              PENDING
-            </Text>
-          </View>
+          <StatusBadge variant="pendingFilled" icon="time-outline">
+            PENDING
+          </StatusBadge>
         )}
       </View>
 
@@ -267,44 +248,6 @@ const styles = StyleSheet.create({
     fontFamily: tokenFontFamily.uiSemiBold,
     flex: 1,
   },
-  liveBadgePill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 10,
-    paddingVertical: 3,
-    borderRadius: 10,
-    gap: 5,
-  },
-  liveDot: {
-    width: 7,
-    height: 7,
-    borderRadius: 4,
-  },
-  liveBadgePillText: {
-    fontSize: 11,
-    fontFamily: tokenFontFamily.display,
-    letterSpacing: 0.5,
-  },
-  cancelledBadge: {
-    paddingHorizontal: 10,
-    paddingVertical: 3,
-    borderRadius: 10,
-  },
-  cancelledBadgeText: {
-    fontSize: 11,
-    fontFamily: tokenFontFamily.display,
-    letterSpacing: 0.5,
-  },
-  pastBadge: {
-    paddingHorizontal: 10,
-    paddingVertical: 3,
-    borderRadius: 10,
-  },
-  pastBadgeText: {
-    fontSize: 11,
-    fontFamily: tokenFontFamily.display,
-    letterSpacing: 0.5,
-  },
   details: {
     marginBottom: tokenSpacing.md,
   },
@@ -360,19 +303,5 @@ const styles = StyleSheet.create({
   bookingDate: {
     fontSize: 12,
     fontFamily: tokenFontFamily.uiRegular,
-  },
-  pendingApprovalBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(196, 168, 130, 0.15)',
-    paddingHorizontal: tokenSpacing.sm,
-    paddingVertical: 3,
-    borderRadius: 10,
-    gap: 5,
-  },
-  pendingApprovalText: {
-    fontSize: 11,
-    fontFamily: tokenFontFamily.display,
-    letterSpacing: 0.5,
   },
 });

@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { PressableCard } from './PressableCard';
+import { StatusBadge } from './StatusBadge';
 import { Event, SportType, SkillLevel } from '../../types';
 import { EventEligibilityService } from '../../services/events/EventEligibilityService';
 import { tokenSpacing, tokenRadius, tokenFontFamily } from '../../theme/tokens';
@@ -112,25 +113,14 @@ const EventCardInner: React.FC<EventCardProps> = ({
       {/* Bubble stack — top-right, vertical */}
       <View style={styles.bubbleStack}>
         {event.scheduledStatus === 'unscheduled' && (
-          <View
-            style={[
-              styles.pendingBadge,
-              { backgroundColor: colors.goldLight, borderColor: colors.gold },
-            ]}
-          >
-            <Ionicons name="time-outline" size={10} color={colors.gold} />
-            <Text style={[styles.pendingBadgeText, { color: colors.gold }]}>
-              Pending
-            </Text>
-          </View>
+          <StatusBadge variant="pending" icon="time-outline">
+            Pending
+          </StatusBadge>
         )}
         {isHost && (
-          <View style={[styles.hostBadge, { backgroundColor: colors.success }]}>
-            <Ionicons name="star" size={10} color={colors.white} />
-            <Text style={[styles.hostBadgeText, { color: colors.white }]}>
-              Host
-            </Text>
-          </View>
+          <StatusBadge variant="host" icon="star">
+            Host
+          </StatusBadge>
         )}
         {isInviteOnly && (
           <View
@@ -299,23 +289,9 @@ const EventCardInner: React.FC<EventCardProps> = ({
         <Text style={[styles.price, { color: colors.cobalt }]}>
           {event.price > 0 ? `${event.price.toFixed(2)}` : 'Free'}
         </Text>
-        <View
-          style={[
-            styles.statusBadge,
-            { backgroundColor: colors.successLight },
-            isFullyBooked && { backgroundColor: colors.errorLight },
-          ]}
-        >
-          <Text
-            style={[
-              styles.statusText,
-              { color: colors.success },
-              isFullyBooked && { color: colors.error },
-            ]}
-          >
-            {isFullyBooked ? 'Full' : `${availableSpots} spots left`}
-          </Text>
-        </View>
+        <StatusBadge variant="spots" isFull={isFullyBooked}>
+          {isFullyBooked ? 'Full' : `${availableSpots} spots left`}
+        </StatusBadge>
       </View>
 
       {wasAutoOpened && (
@@ -449,15 +425,6 @@ const styles = StyleSheet.create({
     fontFamily: tokenFontFamily.heading,
     fontSize: 18,
   },
-  statusBadge: {
-    paddingHorizontal: tokenSpacing.md,
-    paddingVertical: 6,
-    borderRadius: tokenRadius.lg,
-  },
-  statusText: {
-    fontFamily: tokenFontFamily.uiSemiBold,
-    fontSize: 12,
-  },
   eligibilityText: {
     fontFamily: tokenFontFamily.uiRegular,
     fontSize: 13,
@@ -491,30 +458,5 @@ const styles = StyleSheet.create({
     fontFamily: tokenFontFamily.uiRegular,
     fontSize: 12,
     marginLeft: 6,
-  },
-  hostBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: tokenSpacing.sm,
-    paddingVertical: 3,
-    borderRadius: tokenRadius.pill,
-    gap: tokenSpacing.xs,
-  },
-  hostBadgeText: {
-    fontFamily: tokenFontFamily.uiSemiBold,
-    fontSize: 10,
-  },
-  pendingBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: tokenSpacing.sm,
-    paddingVertical: 3,
-    borderRadius: tokenRadius.pill,
-    borderWidth: 1,
-    gap: tokenSpacing.xs,
-  },
-  pendingBadgeText: {
-    fontFamily: tokenFontFamily.uiSemiBold,
-    fontSize: 10,
   },
 });
