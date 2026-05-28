@@ -7,3 +7,4 @@ export type { StatItem } from './QuickStatsRow';
 export { PersonRow } from './PersonRow';
 export { DetailCard } from './DetailCard';
 export { FixedBottomCTA } from './FixedBottomCTA';
+export { PropertyRow } from './PropertyRow';

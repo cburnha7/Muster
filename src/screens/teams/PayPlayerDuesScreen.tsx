@@ -12,6 +12,7 @@ import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { useSelector } from 'react-redux';
 import { Ionicons } from '@expo/vector-icons';
 import { ScreenHeader } from '../../components/navigation/ScreenHeader';
+import { PropertyRow } from '../../components/detail/PropertyRow';
 import { selectUser } from '../../store/slices/authSlice';
 import { useDependentContext } from '../../hooks/useDependentContext';
 import { fonts, Spacing, useTheme } from '../../theme';
@@ -171,18 +172,12 @@ export const PayPlayerDuesScreen: React.FC = () => {
             Season Dues
           </Text>
 
-          <View
-            style={[styles.detailRow, { borderBottomColor: colors.surface }]}
-          >
-            <Text style={[styles.detailLabel, { color: colors.inkFaint }]}>
-              AMOUNT
-            </Text>
-            <Text style={[styles.detailValue, { color: colors.ink }]}>
-              {duesAmountCents > 0
-                ? formatCurrency(duesAmountCents)
-                : 'Not set'}
-            </Text>
-          </View>
+          <PropertyRow
+            label="AMOUNT"
+            value={
+              duesAmountCents > 0 ? formatCurrency(duesAmountCents) : 'Not set'
+            }
+          />
 
           <View
             style={[styles.detailRow, { borderBottomColor: colors.surface }]}

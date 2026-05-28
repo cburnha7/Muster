@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { userService } from '../../services/api/UserService';
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
 import { ErrorDisplay } from '../../components/ui/ErrorDisplay';
+import { PropertyRow } from '../../components/detail/PropertyRow';
 import { fonts, useTheme } from '../../theme';
 import { formatSport } from '../../utils/sportUtils';
 
@@ -73,30 +74,66 @@ export function UserStatsScreen(): JSX.Element {
       contentContainerStyle={styles.content}
     >
       {/* Overview Stats */}
-      <Text style={[styles.sectionHeader, { color: colors.inkSecondary }]}>Overview</Text>
+      <Text style={[styles.sectionHeader, { color: colors.inkSecondary }]}>
+        Overview
+      </Text>
       <View style={styles.statsRow}>
-        <View style={[styles.statCard, { backgroundColor: colors.bgCard, shadowColor: colors.ink }]}>
+        <View
+          style={[
+            styles.statCard,
+            { backgroundColor: colors.bgCard, shadowColor: colors.ink },
+          ]}
+        >
           <Ionicons name="calendar-outline" size={24} color={colors.cobalt} />
-          <Text style={[styles.statValue, { color: colors.ink }]}>{stats.totalBookings}</Text>
-          <Text style={[styles.statLabel, { color: colors.inkSecondary }]}>Bookings</Text>
+          <Text style={[styles.statValue, { color: colors.ink }]}>
+            {stats.totalBookings}
+          </Text>
+          <Text style={[styles.statLabel, { color: colors.inkSecondary }]}>
+            Bookings
+          </Text>
         </View>
-        <View style={[styles.statCard, { backgroundColor: colors.bgCard, shadowColor: colors.ink }]}>
+        <View
+          style={[
+            styles.statCard,
+            { backgroundColor: colors.bgCard, shadowColor: colors.ink },
+          ]}
+        >
           <Ionicons name="flag-outline" size={24} color={colors.pine} />
-          <Text style={[styles.statValue, { color: colors.ink }]}>{stats.totalEventsOrganized}</Text>
-          <Text style={[styles.statLabel, { color: colors.inkSecondary }]}>Organized</Text>
+          <Text style={[styles.statValue, { color: colors.ink }]}>
+            {stats.totalEventsOrganized}
+          </Text>
+          <Text style={[styles.statLabel, { color: colors.inkSecondary }]}>
+            Organized
+          </Text>
         </View>
-        <View style={[styles.statCard, { backgroundColor: colors.bgCard, shadowColor: colors.ink }]}>
+        <View
+          style={[
+            styles.statCard,
+            { backgroundColor: colors.bgCard, shadowColor: colors.ink },
+          ]}
+        >
           <Ionicons name="people-outline" size={24} color={colors.cobalt} />
-          <Text style={[styles.statValue, { color: colors.ink }]}>{stats.totalTeams}</Text>
-          <Text style={[styles.statLabel, { color: colors.inkSecondary }]}>Teams</Text>
+          <Text style={[styles.statValue, { color: colors.ink }]}>
+            {stats.totalTeams}
+          </Text>
+          <Text style={[styles.statLabel, { color: colors.inkSecondary }]}>
+            Teams
+          </Text>
         </View>
       </View>
 
       {/* Rating */}
       {stats.averageRating != null && (
         <>
-          <Text style={[styles.sectionHeader, { color: colors.inkSecondary }]}>Rating</Text>
-          <View style={[styles.card, { backgroundColor: colors.bgCard, shadowColor: colors.ink }]}>
+          <Text style={[styles.sectionHeader, { color: colors.inkSecondary }]}>
+            Rating
+          </Text>
+          <View
+            style={[
+              styles.card,
+              { backgroundColor: colors.bgCard, shadowColor: colors.ink },
+            ]}
+          >
             <View style={styles.ratingRow}>
               <Ionicons name="star" size={20} color={colors.gold} />
               <Text style={[styles.ratingValue, { color: colors.ink }]}>
@@ -112,18 +149,38 @@ export function UserStatsScreen(): JSX.Element {
       )}
 
       {/* Financial */}
-      <Text style={[styles.sectionHeader, { color: colors.inkSecondary }]}>Financial</Text>
-      <View style={[styles.card, { backgroundColor: colors.bgCard, shadowColor: colors.ink }]}>
+      <Text style={[styles.sectionHeader, { color: colors.inkSecondary }]}>
+        Financial
+      </Text>
+      <View
+        style={[
+          styles.card,
+          { backgroundColor: colors.bgCard, shadowColor: colors.ink },
+        ]}
+      >
         <View style={styles.financialRow}>
           <View style={styles.financialItem}>
-            <Text style={[styles.financialLabel, { color: colors.inkSecondary }]}>Total Spent</Text>
+            <Text
+              style={[styles.financialLabel, { color: colors.inkSecondary }]}
+            >
+              Total Spent
+            </Text>
             <Text style={[styles.financialValue, { color: colors.error }]}>
               ${stats.totalSpent.toFixed(2)}
             </Text>
           </View>
-          <View style={[styles.financialDivider, { backgroundColor: colors.border }]} />
+          <View
+            style={[
+              styles.financialDivider,
+              { backgroundColor: colors.border },
+            ]}
+          />
           <View style={styles.financialItem}>
-            <Text style={[styles.financialLabel, { color: colors.inkSecondary }]}>Total Earned</Text>
+            <Text
+              style={[styles.financialLabel, { color: colors.inkSecondary }]}
+            >
+              Total Earned
+            </Text>
             <Text style={[styles.financialValue, { color: colors.pine }]}>
               ${stats.totalEarned.toFixed(2)}
             </Text>
@@ -134,12 +191,27 @@ export function UserStatsScreen(): JSX.Element {
       {/* Favorite Sports */}
       {stats.favoritesSports && stats.favoritesSports.length > 0 && (
         <>
-          <Text style={[styles.sectionHeader, { color: colors.inkSecondary }]}>Favorite Sports</Text>
-          <View style={[styles.card, { backgroundColor: colors.bgCard, shadowColor: colors.ink }]}>
+          <Text style={[styles.sectionHeader, { color: colors.inkSecondary }]}>
+            Favorite Sports
+          </Text>
+          <View
+            style={[
+              styles.card,
+              { backgroundColor: colors.bgCard, shadowColor: colors.ink },
+            ]}
+          >
             <View style={styles.sportsList}>
               {stats.favoritesSports.map((sport, index) => (
-                <View key={index} style={[styles.sportTag, { backgroundColor: colors.cobaltLight }]}>
-                  <Text style={[styles.sportTagText, { color: colors.cobalt }]}>{formatSport(sport)}</Text>
+                <View
+                  key={index}
+                  style={[
+                    styles.sportTag,
+                    { backgroundColor: colors.cobaltLight },
+                  ]}
+                >
+                  <Text style={[styles.sportTagText, { color: colors.cobalt }]}>
+                    {formatSport(sport)}
+                  </Text>
                 </View>
               ))}
             </View>
@@ -148,34 +220,62 @@ export function UserStatsScreen(): JSX.Element {
       )}
 
       {/* Achievements */}
-      <Text style={[styles.sectionHeader, { color: colors.inkSecondary }]}>Achievements</Text>
-      <View style={[styles.card, { backgroundColor: colors.bgCard, shadowColor: colors.ink }]}>
+      <Text style={[styles.sectionHeader, { color: colors.inkSecondary }]}>
+        Achievements
+      </Text>
+      <View
+        style={[
+          styles.card,
+          { backgroundColor: colors.bgCard, shadowColor: colors.ink },
+        ]}
+      >
         {achievements.length === 0 ? (
           <View style={styles.emptySection}>
-            <Ionicons
-              name="medal-outline"
-              size={40}
-              color={colors.border}
-            />
-            <Text style={[styles.emptyText, { color: colors.inkSecondary }]}>No achievements yet</Text>
+            <Ionicons name="medal-outline" size={40} color={colors.border} />
+            <Text style={[styles.emptyText, { color: colors.inkSecondary }]}>
+              No achievements yet
+            </Text>
             <Text style={[styles.emptySubtext, { color: colors.inkSecondary }]}>
               Keep playing to unlock achievements!
             </Text>
           </View>
         ) : (
           achievements.map(achievement => (
-            <View key={achievement.id} style={[styles.achievementRow, { borderBottomColor: colors.border + '60' }]}>
-              <View style={[styles.achievementIcon, { backgroundColor: colors.cobaltLight }]}>
+            <View
+              key={achievement.id}
+              style={[
+                styles.achievementRow,
+                { borderBottomColor: colors.border + '60' },
+              ]}
+            >
+              <View
+                style={[
+                  styles.achievementIcon,
+                  { backgroundColor: colors.cobaltLight },
+                ]}
+              >
                 <Text style={styles.achievementEmoji}>{achievement.icon}</Text>
               </View>
               <View style={styles.achievementInfo}>
-                <Text style={[styles.achievementName, { color: colors.ink }]}>{achievement.name}</Text>
-                <Text style={[styles.achievementDesc, { color: colors.inkSecondary }]}>
+                <Text style={[styles.achievementName, { color: colors.ink }]}>
+                  {achievement.name}
+                </Text>
+                <Text
+                  style={[
+                    styles.achievementDesc,
+                    { color: colors.inkSecondary },
+                  ]}
+                >
                   {achievement.description}
                 </Text>
                 {achievement.progress != null && achievement.maxProgress && (
                   <View style={styles.progressRow}>
-                    <View style={[styles.progressTrack, { backgroundColor: colors.border }]}>
+                    <View
+                      style={[
+                        styles.progressTrack,
+                        { backgroundColor: colors.border },
+                      ]}
+                    >
                       <View
                         style={[
                           styles.progressFill,
@@ -186,7 +286,12 @@ export function UserStatsScreen(): JSX.Element {
                         ]}
                       />
                     </View>
-                    <Text style={[styles.progressText, { color: colors.inkSecondary }]}>
+                    <Text
+                      style={[
+                        styles.progressText,
+                        { color: colors.inkSecondary },
+                      ]}
+                    >
                       {achievement.progress}/{achievement.maxProgress}
                     </Text>
                   </View>
@@ -198,12 +303,20 @@ export function UserStatsScreen(): JSX.Element {
       </View>
 
       {/* Activity */}
-      <Text style={[styles.sectionHeader, { color: colors.inkSecondary }]}>Activity</Text>
-      <View style={[styles.card, { backgroundColor: colors.bgCard, shadowColor: colors.ink }]}>
-        <View style={styles.summaryRow}>
-          <Text style={[styles.summaryLabel, { color: colors.ink }]}>Reviews Given</Text>
-          <Text style={[styles.summaryValue, { color: colors.cobalt }]}>{stats.reviewCount}</Text>
-        </View>
+      <Text style={[styles.sectionHeader, { color: colors.inkSecondary }]}>
+        Activity
+      </Text>
+      <View
+        style={[
+          styles.card,
+          { backgroundColor: colors.bgCard, shadowColor: colors.ink },
+        ]}
+      >
+        <PropertyRow
+          label="Reviews Given"
+          value={String(stats.reviewCount)}
+          separator={false}
+        />
       </View>
 
       <View style={{ height: 32 }} />
