@@ -17,6 +17,8 @@ interface TimePickerInputProps {
   onChange: (time: string) => void;
   error?: string | undefined;
   required?: boolean;
+  /** Minute interval for the picker wheel (e.g. 15 for 15-minute steps) */
+  minuteInterval?: number;
   containerStyle?: any;
 }
 
@@ -30,6 +32,7 @@ export function TimePickerInput({
   onChange,
   error,
   required,
+  minuteInterval,
   containerStyle,
 }: TimePickerInputProps) {
   const { colors } = useTheme();
@@ -70,21 +73,40 @@ export function TimePickerInput({
     <View style={[styles.container, containerStyle]}>
       <Text style={[styles.label, { color: colors.ink }]}>
         {label}
-        {required && <Text style={[styles.required, { color: colors.heart }]}> *</Text>}
+        {required && (
+          <Text style={[styles.required, { color: colors.heart }]}> *</Text>
+        )}
       </Text>
       <TouchableOpacity
-        style={[styles.trigger, { backgroundColor: colors.surface, borderColor: colors.inkFaint + '40' }, error ? styles.triggerError : null, error ? { borderColor: colors.heart } : {}]}
+        style={[
+          styles.trigger,
+          {
+            backgroundColor: colors.surface,
+            borderColor: colors.inkFaint + '40',
+          },
+          error ? styles.triggerError : null,
+          error ? { borderColor: colors.heart } : {},
+        ]}
         onPress={() => setShowPicker(true)}
         activeOpacity={0.7}
         accessibilityRole="button"
         accessibilityLabel={`${label}: ${formatDisplay(value)}`}
       >
         <Ionicons name="time-outline" size={18} color={colors.inkFaint} />
-        <Text style={[styles.triggerText, { color: colors.ink }, !value && styles.placeholder, !value && { color: colors.inkFaint }]}>
+        <Text
+          style={[
+            styles.triggerText,
+            { color: colors.ink },
+            !value && styles.placeholder,
+            !value && { color: colors.inkFaint },
+          ]}
+        >
           {formatDisplay(value)}
         </Text>
       </TouchableOpacity>
-      {error ? <Text style={[styles.error, { color: colors.heart }]}>{error}</Text> : null}
+      {error ? (
+        <Text style={[styles.error, { color: colors.heart }]}>{error}</Text>
+      ) : null}
 
       {showPicker && (
         <>
@@ -94,13 +116,16 @@ export function TimePickerInput({
             is24Hour={false}
             display={Platform.OS === 'ios' ? 'spinner' : 'default'}
             onChange={handleChange}
+            {...(minuteInterval ? { minuteInterval } : {})}
           />
           {Platform.OS === 'ios' && (
             <TouchableOpacity
               style={styles.doneButton}
               onPress={handleConfirmIOS}
             >
-              <Text style={[styles.doneText, { color: colors.cobalt }]}>Done</Text>
+              <Text style={[styles.doneText, { color: colors.cobalt }]}>
+                Done
+              </Text>
             </TouchableOpacity>
           )}
         </>

@@ -10,8 +10,8 @@ import {
   Platform,
   FlatList,
 } from 'react-native';
-import DateTimePicker from '../../components/ui/CrossPlatformDateTimePicker';
-type DateTimePickerEvent = { type: string };
+import { DatePickerInput } from '../forms/DatePickerInput';
+import { TimePickerInput } from '../forms/TimePickerInput';
 import { Ionicons } from '@expo/vector-icons';
 import { ScheduleEvent } from '../../store/slices/scheduleSlice';
 import { RosterInfo } from '../../types/scheduling';
@@ -28,7 +28,7 @@ export interface ScheduleEventEditorProps {
 const generateId = (): string =>
   `evt_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
 
-/** Parse "YYYY-MM-DD" into a Date (UTC). */
+/** Parse "YYYY-MM-DD" into a Date (UTC) — used only for handleSave. */
 const parseDateString = (str: string): Date => {
   const parts = str.split('-').map(Number);
   return new Date(
@@ -36,15 +36,7 @@ const parseDateString = (str: string): Date => {
   );
 };
 
-/** Parse "HH:MM" into a Date for the time picker (UTC). */
-const parseTimeString = (str: string): Date => {
-  const date = new Date();
-  const parts = str.split(':').map(Number);
-  date.setUTCHours(parts[0] ?? 0, parts[1] ?? 0, 0, 0);
-  return date;
-};
-
-/** Format a Date to "YYYY-MM-DD" using UTC. */
+/** Format a Date to "YYYY-MM-DD" using UTC — used for pre-populating from event. */
 const formatDateValue = (d: Date): string => {
   const y = d.getUTCFullYear();
   const m = String(d.getUTCMonth() + 1).padStart(2, '0');
@@ -52,36 +44,11 @@ const formatDateValue = (d: Date): string => {
   return `${y}-${m}-${day}`;
 };
 
-/** Format a Date to "HH:MM" (24-hour) using UTC. */
+/** Format a Date to "HH:MM" (24-hour) using UTC — used for pre-populating from event. */
 const formatTimeValue = (d: Date): string => {
   const h = String(d.getUTCHours()).padStart(2, '0');
   const min = String(d.getUTCMinutes()).padStart(2, '0');
   return `${h}:${min}`;
-};
-
-/** Display-friendly date string. */
-const formatDateDisplay = (str: string): string => {
-  if (!str) return 'Select date';
-  const d = parseDateString(str);
-  return d.toLocaleDateString('en-US', {
-    weekday: 'short',
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-    timeZone: 'UTC',
-  });
-};
-
-/** Display-friendly time string. */
-const formatTimeDisplay = (str: string): string => {
-  if (!str) return 'Select time';
-  const d = parseTimeString(str);
-  return d.toLocaleTimeString('en-US', {
-    hour: 'numeric',
-    minute: '2-digit',
-    hour12: true,
-    timeZone: 'UTC',
-  });
 };
 
 export const ScheduleEventEditor: React.FC<ScheduleEventEditorProps> = ({
@@ -102,8 +69,6 @@ export const ScheduleEventEditor: React.FC<ScheduleEventEditorProps> = ({
   // Picker visibility
   const [showHomePicker, setShowHomePicker] = useState(false);
   const [showAwayPicker, setShowAwayPicker] = useState(false);
-  const [showDatePicker, setShowDatePicker] = useState(false);
-  const [showTimePicker, setShowTimePicker] = useState(false);
 
   // Pre-populate in edit mode
   useEffect(() => {
@@ -145,20 +110,6 @@ export const ScheduleEventEditor: React.FC<ScheduleEventEditorProps> = ({
     onSave(saved);
   };
 
-  // --- Date picker handlers ---
-  const handleDateChange = (_evt: DateTimePickerEvent, selected?: Date) => {
-    if (Platform.OS === 'android') setShowDatePicker(false);
-    if (selected) setDate(formatDateValue(selected));
-  };
-  const handleDateConfirmIOS = () => setShowDatePicker(false);
-
-  // --- Time picker handlers ---
-  const handleTimeChange = (_evt: DateTimePickerEvent, selected?: Date) => {
-    if (Platform.OS === 'android') setShowTimePicker(false);
-    if (selected) setTime(formatTimeValue(selected));
-  };
-  const handleTimeConfirmIOS = () => setShowTimePicker(false);
-
   // --- Roster picker sub-modal ---
   const renderRosterPicker = (
     visible: boolean,
@@ -174,12 +125,23 @@ export const ScheduleEventEditor: React.FC<ScheduleEventEditorProps> = ({
       presentationStyle="pageSheet"
       onRequestClose={onClose}
     >
-      <SafeAreaView style={[styles.pickerModal, { backgroundColor: colors.white }]}>
-        <View style={[styles.pickerHeader, { borderBottomColor: colors.inkFaint + '20' }]}>
+      <SafeAreaView
+        style={[styles.pickerModal, { backgroundColor: colors.white }]}
+      >
+        <View
+          style={[
+            styles.pickerHeader,
+            { borderBottomColor: colors.inkFaint + '20' },
+          ]}
+        >
           <TouchableOpacity onPress={onClose} accessibilityRole="button">
-            <Text style={[styles.pickerCancelText, { color: colors.cobalt }]}>Cancel</Text>
+            <Text style={[styles.pickerCancelText, { color: colors.cobalt }]}>
+              Cancel
+            </Text>
           </TouchableOpacity>
-          <Text style={[styles.pickerTitle, { color: colors.ink }]}>{title}</Text>
+          <Text style={[styles.pickerTitle, { color: colors.ink }]}>
+            {title}
+          </Text>
           <View style={styles.pickerHeaderSpacer} />
         </View>
         <FlatList
@@ -191,9 +153,12 @@ export const ScheduleEventEditor: React.FC<ScheduleEventEditorProps> = ({
             return (
               <TouchableOpacity
                 style={[
-                  styles.pickerOption, { borderBottomColor: colors.inkFaint + '10' },
-                  isSelected && styles.pickerOptionSelected, isSelected && { backgroundColor: colors.cobalt + '10' },
-                  isExcluded && styles.pickerOptionDisabled]}
+                  styles.pickerOption,
+                  { borderBottomColor: colors.inkFaint + '10' },
+                  isSelected && styles.pickerOptionSelected,
+                  isSelected && { backgroundColor: colors.cobalt + '10' },
+                  isExcluded && styles.pickerOptionDisabled,
+                ]}
                 onPress={() => {
                   if (!isExcluded) {
                     onSelect(item);
@@ -205,9 +170,13 @@ export const ScheduleEventEditor: React.FC<ScheduleEventEditorProps> = ({
               >
                 <Text
                   style={[
-                    styles.pickerOptionText, { color: colors.ink },
-                    isSelected && styles.pickerOptionTextSelected, isSelected && { color: colors.cobalt },
-                    isExcluded && styles.pickerOptionTextDisabled, isExcluded && { color: colors.inkFaint }]}
+                    styles.pickerOptionText,
+                    { color: colors.ink },
+                    isSelected && styles.pickerOptionTextSelected,
+                    isSelected && { color: colors.cobalt },
+                    isExcluded && styles.pickerOptionTextDisabled,
+                    isExcluded && { color: colors.inkFaint },
+                  ]}
                 >
                   {item.name}
                 </Text>
@@ -229,13 +198,27 @@ export const ScheduleEventEditor: React.FC<ScheduleEventEditorProps> = ({
       presentationStyle="pageSheet"
       onRequestClose={onCancel}
     >
-      <SafeAreaView style={[styles.container, { backgroundColor: colors.white }]}>
+      <SafeAreaView
+        style={[styles.container, { backgroundColor: colors.white }]}
+      >
         {/* Header */}
-        <View style={[styles.header, { borderBottomColor: colors.inkFaint + '20', backgroundColor: colors.white }]}>
+        <View
+          style={[
+            styles.header,
+            {
+              borderBottomColor: colors.inkFaint + '20',
+              backgroundColor: colors.white,
+            },
+          ]}
+        >
           <TouchableOpacity onPress={onCancel} accessibilityRole="button">
-            <Text style={[styles.cancelText, { color: colors.cobalt }]}>Cancel</Text>
+            <Text style={[styles.cancelText, { color: colors.cobalt }]}>
+              Cancel
+            </Text>
           </TouchableOpacity>
-          <Text style={[styles.title, { color: colors.ink }]}>{isEdit ? 'Edit Game' : 'Add Game'}</Text>
+          <Text style={[styles.title, { color: colors.ink }]}>
+            {isEdit ? 'Edit Game' : 'Add Game'}
+          </Text>
           <View style={styles.headerSpacer} />
         </View>
 
@@ -245,35 +228,64 @@ export const ScheduleEventEditor: React.FC<ScheduleEventEditorProps> = ({
           keyboardShouldPersistTaps="handled"
         >
           {/* Home Roster */}
-          <Text style={[styles.fieldLabel, { color: colors.ink }]}>Home Roster</Text>
+          <Text style={[styles.fieldLabel, { color: colors.ink }]}>
+            Home Roster
+          </Text>
           <TouchableOpacity
-            style={[styles.fieldTrigger, { backgroundColor: colors.white, borderColor: colors.inkFaint + '40' }]}
+            style={[
+              styles.fieldTrigger,
+              {
+                backgroundColor: colors.white,
+                borderColor: colors.inkFaint + '40',
+              },
+            ]}
             onPress={() => setShowHomePicker(true)}
             accessibilityRole="button"
             accessibilityLabel={`Home Roster: ${homeRoster?.name ?? 'Select'}`}
           >
             <Ionicons name="shield-outline" size={18} color={colors.inkFaint} />
-            <Text style={[styles.fieldText, { color: colors.ink }, !homeRoster && styles.placeholder, !homeRoster && { color: colors.inkFaint }]}>
+            <Text
+              style={[
+                styles.fieldText,
+                { color: colors.ink },
+                !homeRoster && styles.placeholder,
+                !homeRoster && { color: colors.inkFaint },
+              ]}
+            >
               {homeRoster?.name ?? 'Select home roster'}
             </Text>
             <Ionicons name="chevron-down" size={18} color={colors.inkFaint} />
           </TouchableOpacity>
 
           {/* Away Roster */}
-          <Text style={[styles.fieldLabel, { color: colors.ink }]}>Away Roster</Text>
+          <Text style={[styles.fieldLabel, { color: colors.ink }]}>
+            Away Roster
+          </Text>
           <TouchableOpacity
             style={[
-              styles.fieldTrigger, { backgroundColor: colors.white, borderColor: colors.inkFaint + '40' },
+              styles.fieldTrigger,
+              {
+                backgroundColor: colors.white,
+                borderColor: colors.inkFaint + '40',
+              },
               homeRosterId !== '' &&
                 awayRosterId !== '' &&
                 homeRosterId === awayRosterId &&
-                styles.fieldTriggerError]}
+                styles.fieldTriggerError,
+            ]}
             onPress={() => setShowAwayPicker(true)}
             accessibilityRole="button"
             accessibilityLabel={`Away Roster: ${awayRoster?.name ?? 'Select'}`}
           >
             <Ionicons name="shield-outline" size={18} color={colors.inkFaint} />
-            <Text style={[styles.fieldText, { color: colors.ink }, !awayRoster && styles.placeholder, !awayRoster && { color: colors.inkFaint }]}>
+            <Text
+              style={[
+                styles.fieldText,
+                { color: colors.ink },
+                !awayRoster && styles.placeholder,
+                !awayRoster && { color: colors.inkFaint },
+              ]}
+            >
               {awayRoster?.name ?? 'Select away roster'}
             </Text>
             <Ionicons name="chevron-down" size={18} color={colors.inkFaint} />
@@ -287,79 +299,29 @@ export const ScheduleEventEditor: React.FC<ScheduleEventEditorProps> = ({
             )}
 
           {/* Date */}
-          <Text style={[styles.fieldLabel, { color: colors.ink }]}>Date</Text>
-          <TouchableOpacity
-            style={[styles.fieldTrigger, { backgroundColor: colors.white, borderColor: colors.inkFaint + '40' }]}
-            onPress={() => setShowDatePicker(true)}
-            accessibilityRole="button"
-            accessibilityLabel={`Date: ${formatDateDisplay(date)}`}
-          >
-            <Ionicons
-              name="calendar-outline"
-              size={18}
-              color={colors.inkFaint}
-            />
-            <Text style={[styles.fieldText, { color: colors.ink }, !date && styles.placeholder, !date && { color: colors.inkFaint }]}>
-              {formatDateDisplay(date)}
-            </Text>
-          </TouchableOpacity>
-          {showDatePicker && (
-            <View>
-              <DateTimePicker
-                value={date ? parseDateString(date) : new Date()}
-                mode="date"
-                display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                onChange={handleDateChange}
-              />
-              {Platform.OS === 'ios' && (
-                <TouchableOpacity
-                  style={styles.doneButton}
-                  onPress={handleDateConfirmIOS}
-                >
-                  <Text style={[styles.doneText, { color: colors.cobalt }]}>Done</Text>
-                </TouchableOpacity>
-              )}
-            </View>
-          )}
+          <DatePickerInput label="Date" value={date} onChange={setDate} />
 
           {/* Time */}
-          <Text style={[styles.fieldLabel, { color: colors.ink }]}>Time</Text>
-          <TouchableOpacity
-            style={[styles.fieldTrigger, { backgroundColor: colors.white, borderColor: colors.inkFaint + '40' }]}
-            onPress={() => setShowTimePicker(true)}
-            accessibilityRole="button"
-            accessibilityLabel={`Time: ${formatTimeDisplay(time)}`}
-          >
-            <Ionicons name="time-outline" size={18} color={colors.inkFaint} />
-            <Text style={[styles.fieldText, { color: colors.ink }, !time && styles.placeholder, !time && { color: colors.inkFaint }]}>
-              {formatTimeDisplay(time)}
-            </Text>
-          </TouchableOpacity>
-          {showTimePicker && (
-            <View>
-              <DateTimePicker
-                value={time ? parseTimeString(time) : new Date()}
-                mode="time"
-                is24Hour={false}
-                display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                onChange={handleTimeChange}
-              />
-              {Platform.OS === 'ios' && (
-                <TouchableOpacity
-                  style={styles.doneButton}
-                  onPress={handleTimeConfirmIOS}
-                >
-                  <Text style={[styles.doneText, { color: colors.cobalt }]}>Done</Text>
-                </TouchableOpacity>
-              )}
-            </View>
-          )}
+          <TimePickerInput label="Start time" value={time} onChange={setTime} />
         </ScrollView>
 
         {/* Save button */}
-        <View style={[styles.footer, { backgroundColor: colors.white, borderTopColor: colors.inkFaint + '20' }]}>
+        <View
+          style={[
+            styles.footer,
+            {
+              backgroundColor: colors.white,
+              borderTopColor: colors.inkFaint + '20',
+            },
+          ]}
+        >
           <TouchableOpacity
-            style={[styles.saveButton, { backgroundColor: colors.cobalt }, !allFilled && styles.saveButtonDisabled, !allFilled && { backgroundColor: colors.inkFaint + '40' }]}
+            style={[
+              styles.saveButton,
+              { backgroundColor: colors.cobalt },
+              !allFilled && styles.saveButtonDisabled,
+              !allFilled && { backgroundColor: colors.inkFaint + '40' },
+            ]}
             onPress={handleSave}
             disabled={!allFilled}
             accessibilityRole="button"
@@ -368,8 +330,11 @@ export const ScheduleEventEditor: React.FC<ScheduleEventEditorProps> = ({
           >
             <Text
               style={[
-                styles.saveButtonText, { color: colors.white },
-                !allFilled && styles.saveButtonTextDisabled, !allFilled && { color: colors.white + '80' }]}
+                styles.saveButtonText,
+                { color: colors.white },
+                !allFilled && styles.saveButtonTextDisabled,
+                !allFilled && { color: colors.white + '80' },
+              ]}
             >
               Save
             </Text>

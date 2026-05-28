@@ -16,7 +16,7 @@ import {
   Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import CrossPlatformDateTimePicker from '../../../components/ui/CrossPlatformDateTimePicker';
+import { DatePickerInput } from '../../../components/forms/DatePickerInput';
 import { ScheduleCalendar } from '../../../components/ui/ScheduleCalendar';
 import { useCreateLeague } from './CreateLeagueContext';
 import { DayOfWeek, getSeasonFromDate } from './types';
@@ -126,11 +126,15 @@ export function Step4Preview() {
 
   // ── Start date (defaults to today) ──
   const startDate = state.startDate ?? new Date();
-  const [showDatePicker, setShowDatePicker] = useState(false);
+  const startDateStr = `${startDate.getFullYear()}-${String(startDate.getMonth() + 1).padStart(2, '0')}-${String(startDate.getDate()).padStart(2, '0')}`;
 
-  const handleDateChange = (_: any, date?: Date) => {
-    if (Platform.OS !== 'ios') setShowDatePicker(false);
-    if (date) dispatch({ type: 'SET_FIELD', field: 'startDate', value: date });
+  const handleDateChange = (dateStr: string) => {
+    const [y, m, d] = dateStr.split('-').map(Number);
+    dispatch({
+      type: 'SET_FIELD',
+      field: 'startDate',
+      value: new Date(y, m - 1, d),
+    });
   };
 
   // ── Round generation ──
@@ -395,34 +399,12 @@ export function Step4Preview() {
       </View>
       {/* Part 1: Start Date Picker */}
       <View style={styles.dateSection}>
-        <Text style={[styles.fieldLabel, { color: colors.ink }]}>
-          Start Date
-        </Text>
-        <TouchableOpacity
-          style={[
-            styles.dateField,
-            { backgroundColor: colors.surface, borderColor: colors.border },
-          ]}
-          onPress={() => setShowDatePicker(true)}
-          activeOpacity={0.7}
-        >
-          <Ionicons
-            name="calendar-outline"
-            size={18}
-            color={colors.inkSecondary}
-          />
-          <Text style={[styles.dateText, { color: colors.ink }]}>
-            {formatDateFull(startDate)}
-          </Text>
-        </TouchableOpacity>
-        {showDatePicker && (
-          <CrossPlatformDateTimePicker
-            value={startDate}
-            mode="date"
-            minimumDate={new Date()}
-            onChange={handleDateChange}
-          />
-        )}
+        <DatePickerInput
+          label="Start Date"
+          value={startDateStr}
+          onChange={handleDateChange}
+          minimumDate={new Date()}
+        />
       </View>
       {/* Part 2: Round Cards */}
       {totalRounds > 0 ? (

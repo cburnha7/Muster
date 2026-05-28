@@ -10,7 +10,7 @@ import {
   Platform,
 } from 'react-native';
 import { Calendar, DateData } from 'react-native-calendars';
-import CrossPlatformDateTimePicker from '../../../components/ui/CrossPlatformDateTimePicker';
+import { TimePickerInput } from '../../../components/forms/TimePickerInput';
 import { FormSelect, SelectOption } from '../../../components/forms/FormSelect';
 import { useCreateEvent } from './CreateEventContext';
 import { ALL_DAYS } from './types';
@@ -43,9 +43,6 @@ export function Step3When() {
   const startTime = state.startTime ?? new Date();
   const endTime = state.endTime ?? new Date();
   const selectedDateStr = formatDateStr(startDate);
-
-  const [showStartPicker, setShowStartPicker] = useState(false);
-  const [showEndPicker, setShowEndPicker] = useState(false);
 
   const dayMismatch = useMemo(() => {
     if (
@@ -169,112 +166,47 @@ export function Step3When() {
         style={[styles.calendar, { backgroundColor: colors.surface }]}
       />
 
-      {/* Start Time / End Time — each label centered above its button */}
-      <View
-        style={{
-          flexDirection: 'row',
-          justifyContent: 'space-around',
-          alignItems: 'flex-start',
-          width: '100%',
-          marginTop: 24,
-        }}
-      >
-        <View style={{ alignItems: 'center', flex: 1 }}>
-          <Text
-            style={{
-              fontFamily: fonts.body,
-              fontSize: 14,
-              color: colors.inkSecondary,
-              marginBottom: 8,
-            }}
-          >
-            Start Time
-          </Text>
-          <TouchableOpacity
-            onPress={() => setShowStartPicker(true)}
-            style={{
-              backgroundColor: colors.bgSubtle,
-              borderRadius: 999,
-              paddingVertical: 10,
-              paddingHorizontal: 20,
-            }}
-          >
-            <Text
-              style={{
-                fontFamily: fonts.body,
-                fontSize: 15,
-                color: colors.ink,
-              }}
-            >
-              {formatTime(startTime)}
-            </Text>
-          </TouchableOpacity>
-        </View>
-
-        <View style={{ alignItems: 'center', flex: 1 }}>
-          <Text
-            style={{
-              fontFamily: fonts.body,
-              fontSize: 14,
-              color: colors.inkSecondary,
-              marginBottom: 8,
-            }}
-          >
-            End Time
-          </Text>
-          <TouchableOpacity
-            onPress={() => setShowEndPicker(true)}
-            style={{
-              backgroundColor: colors.bgSubtle,
-              borderRadius: 999,
-              paddingVertical: 10,
-              paddingHorizontal: 20,
-            }}
-          >
-            <Text
-              style={{
-                fontFamily: fonts.body,
-                fontSize: 15,
-                color: colors.ink,
-              }}
-            >
-              {formatTime(endTime)}
-            </Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-
-      {/* Native time pickers — render one at a time below the row */}
-      {showStartPicker && (
-        <CrossPlatformDateTimePicker
-          value={startTime}
-          mode="time"
-          minuteInterval={15}
-          onChange={(_, date) => {
-            if (date) {
-              dispatch({ type: 'SET_FIELD', field: 'startTime', value: date });
+      {/* Start Time / End Time */}
+      <View style={{ flexDirection: 'row', gap: 12, marginTop: 24 }}>
+        <View style={{ flex: 1 }}>
+          <TimePickerInput
+            label="Start Time"
+            value={
+              startTime
+                ? `${String(startTime.getHours()).padStart(2, '0')}:${String(startTime.getMinutes()).padStart(2, '0')}`
+                : ''
+            }
+            onChange={timeStr => {
+              const [h, m] = timeStr.split(':').map(Number);
+              const d = new Date(startTime);
+              d.setHours(h, m, 0, 0);
+              dispatch({ type: 'SET_FIELD', field: 'startTime', value: d });
               // Auto-set end time to start + 1 hour
-              const autoEnd = new Date(date.getTime());
+              const autoEnd = new Date(d.getTime());
               autoEnd.setHours(autoEnd.getHours() + 1);
               dispatch({ type: 'SET_FIELD', field: 'endTime', value: autoEnd });
+            }}
+            minuteInterval={15}
+          />
+        </View>
+        <View style={{ flex: 1 }}>
+          <TimePickerInput
+            label="End Time"
+            value={
+              endTime
+                ? `${String(endTime.getHours()).padStart(2, '0')}:${String(endTime.getMinutes()).padStart(2, '0')}`
+                : ''
             }
-            if (Platform.OS !== 'ios') setShowStartPicker(false);
-          }}
-        />
-      )}
-      {showEndPicker && (
-        <CrossPlatformDateTimePicker
-          value={endTime}
-          mode="time"
-          minuteInterval={15}
-          onChange={(_, date) => {
-            if (date) {
-              dispatch({ type: 'SET_FIELD', field: 'endTime', value: date });
-            }
-            if (Platform.OS !== 'ios') setShowEndPicker(false);
-          }}
-        />
-      )}
+            onChange={timeStr => {
+              const [h, m] = timeStr.split(':').map(Number);
+              const d = new Date(endTime);
+              d.setHours(h, m, 0, 0);
+              dispatch({ type: 'SET_FIELD', field: 'endTime', value: d });
+            }}
+            minuteInterval={15}
+          />
+        </View>
+      </View>
 
       <View style={styles.recurringRow}>
         <Text
