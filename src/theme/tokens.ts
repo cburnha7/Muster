@@ -161,8 +161,8 @@ export const darkColors: SemanticColors = {
 
   ink: '#E8ECF0',
   inkSecondary: '#9BA8A3',
-  inkMuted: '#5C6B66',
-  inkFaint: '#5C6B66',
+  inkMuted: '#8A9A94', // T-1 contrast fix; ~5.4:1 on bgCard (#1A2020)
+  inkFaint: '#8A9A94', // alias of inkMuted — T-1
   inkSoft: '#9BA8A3',
   border: '#2A3530',
   surface: '#1A2020',
@@ -196,8 +196,8 @@ export const darkColors: SemanticColors = {
   borderError: '#E85A50',
   textPrimary: '#E8ECF0',
   textSecondary: '#9BA8A3',
-  textMuted: '#5C6B66',
-  textTertiary: '#5C6B66',
+  textMuted: '#8A9A94', // T-1 — alias of inkMuted
+  textTertiary: '#8A9A94', // T-1 — alias of inkMuted
   textInverse: '#111816',
   cobaltTint: '#1A2340',
   pineTint: '#132A1E',
