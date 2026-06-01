@@ -3,6 +3,7 @@ import { View } from 'react-native';
 import { Provider } from 'react-redux';
 import { store, persistor } from './store';
 import { useTheme } from '../theme';
+import { loadCachedUser } from './slices/authSlice';
 
 interface ReduxProviderProps {
   children: React.ReactNode;
@@ -19,6 +20,11 @@ export const ReduxProvider: React.FC<ReduxProviderProps> = ({ children }) => {
       if (!settled) {
         settled = true;
         setIsReady(true);
+        // Dispatch loadCachedUser so isBootLoading gets cleared.
+        // The thunk reads stored user/token from SecureStore; its
+        // .fulfilled or .rejected case sets isBootLoading = false,
+        // which unblocks RootNavigator from <LoadingScreen/>.
+        store.dispatch(loadCachedUser() as any);
       }
     };
 

@@ -335,6 +335,11 @@ const authSlice = createSlice({
       }
     },
 
+    // Force boot loading to false (watchdog / safety valve)
+    forceBootComplete: state => {
+      state.isBootLoading = false;
+    },
+
     // Set error state
     setError: (state, action: PayloadAction<string>) => {
       state.error = action.payload;
@@ -593,6 +598,7 @@ export const {
   setTokens,
   clearAuth,
   setLoading,
+  forceBootComplete,
   setError,
   clearError,
 } = authSlice.actions;

@@ -6,22 +6,18 @@
  */
 
 import { Platform } from 'react-native';
-import {
-  makeRedirectUri,
-  AuthRequest,
-  ResponseType,
-  fetchDiscoveryAsync,
-} from 'expo-auth-session';
+import { makeRedirectUri, AuthRequest, ResponseType } from 'expo-auth-session';
 import * as WebBrowser from 'expo-web-browser';
 import { SSOUserData } from '../../types/auth';
 
-// Conditionally import Apple Authentication (iOS only)
-let AppleAuthentication: any = null;
-if (Platform.OS === 'ios') {
+// Lazy getter for Apple Authentication (iOS only).
+// Avoids native module work at module-eval time.
+function getAppleAuth(): any {
+  if (Platform.OS !== 'ios') return null;
   try {
-    AppleAuthentication = require('expo-apple-authentication');
+    return require('expo-apple-authentication');
   } catch {
-    console.warn('expo-apple-authentication not available');
+    return null;
   }
 }
 
@@ -32,13 +28,28 @@ const GOOGLE_WEB_CLIENT_ID =
 const GOOGLE_IOS_CLIENT_ID =
   '297265818886-fcm56mh33g7uubur983mgfhbav1jbtpc.apps.googleusercontent.com';
 
+// Hardcoded Google OIDC discovery — avoids a network round-trip on every tap.
+// These endpoints are effectively static.
+const GOOGLE_DISCOVERY = {
+  authorizationEndpoint: 'https://accounts.google.com/o/oauth2/v2/auth',
+  tokenEndpoint: 'https://oauth2.googleapis.com/token',
+  revocationEndpoint: 'https://oauth2.googleapis.com/revoke',
+};
+
 class SSOService {
   // ── Apple ──────────────────────────────────────────
 
   async isAppleSignInAvailable(): Promise<boolean> {
-    if (Platform.OS === 'ios' && AppleAuthentication) {
+    const apple = getAppleAuth();
+    if (Platform.OS === 'ios' && apple) {
       try {
-        return await AppleAuthentication.isAvailableAsync();
+        const result = await Promise.race([
+          apple.isAvailableAsync(),
+          new Promise<boolean>(resolve =>
+            setTimeout(() => resolve(false), 2000)
+          ),
+        ]);
+        return result;
       } catch {
         return false;
       }
@@ -48,12 +59,13 @@ class SSOService {
 
   async signInWithApple(): Promise<SSOUserData> {
     try {
-      if (!AppleAuthentication) throw new Error('Apple Sign In not available');
+      const apple = getAppleAuth();
+      if (!apple) throw new Error('Apple Sign In not available');
 
-      const credential = await AppleAuthentication.signInAsync({
+      const credential = await apple.signInAsync({
         requestedScopes: [
-          AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
-          AppleAuthentication.AppleAuthenticationScope.EMAIL,
+          apple.AppleAuthenticationScope.FULL_NAME,
+          apple.AppleAuthenticationScope.EMAIL,
         ],
       });
 
@@ -100,9 +112,7 @@ class SSOService {
         redirectUri = makeRedirectUri();
       }
 
-      const discovery = await fetchDiscoveryAsync(
-        'https://accounts.google.com'
-      );
+      const discovery = GOOGLE_DISCOVERY;
 
       // Request both access token and id token
       const request = new AuthRequest({

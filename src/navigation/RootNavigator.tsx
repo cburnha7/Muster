@@ -5,8 +5,12 @@ import { useNavigation } from '@react-navigation/native';
 import * as Linking from 'expo-linking';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { RootStackParamList } from './types';
-import { useSelector } from 'react-redux';
-import { selectUser, selectBootLoading } from '../store/slices/authSlice';
+import { useSelector, useDispatch } from 'react-redux';
+import {
+  selectUser,
+  selectBootLoading,
+  forceBootComplete,
+} from '../store/slices/authSlice';
 import { useAuthSync } from '../hooks/useAuthSync';
 import { useNetworkState } from '../services/network';
 
@@ -44,9 +48,22 @@ function extractInviteCode(url: string): string | null {
 export function RootNavigator() {
   const user = useSelector(selectUser);
   const authLoading = useSelector(selectBootLoading);
+  const dispatch = useDispatch();
   useAuthSync();
   useNetworkState();
   const pendingInviteHandled = useRef(false);
+
+  // ── Watchdog: if boot gate is still up after 4s, force it open ──
+  // This is defense-in-depth — the primary off-switch is loadCachedUser
+  // dispatched from Provider.tsx. The watchdog catches any future regression
+  // that could strand users on the loading screen.
+  useEffect(() => {
+    if (!authLoading) return;
+    const watchdog = setTimeout(() => {
+      dispatch(forceBootComplete());
+    }, 4000);
+    return () => clearTimeout(watchdog);
+  }, [authLoading, dispatch]);
 
   // ── Capture invite code from deep link when not authenticated ──
   useEffect(() => {
