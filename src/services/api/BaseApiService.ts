@@ -21,6 +21,31 @@ import { ApiError } from '../../types';
 import { store } from '../../store/store';
 import { setTokens, clearAuth } from '../../store/slices/authSlice';
 
+// Guard so concurrent 401s can't stack multiple "Session Expired" modals on
+// top of each other — which reads to the user as an alert that won't dismiss.
+// Reset when the single alert is acknowledged (or the app is foregrounded again
+// after a fresh login clears auth).
+let sessionExpiredAlertVisible = false;
+
+function notifySessionExpired(): void {
+  if (Platform.OS === 'web') {
+    if (typeof window?.dispatchEvent === 'function') {
+      window.dispatchEvent(new CustomEvent('auth:sessionExpired'));
+    }
+    return;
+  }
+  if (sessionExpiredAlertVisible) return;
+  sessionExpiredAlertVisible = true;
+  Alert.alert('Session Expired', 'Please sign in again to continue.', [
+    {
+      text: 'OK',
+      onPress: () => {
+        sessionExpiredAlertVisible = false;
+      },
+    },
+  ]);
+}
+
 export interface ApiServiceConfig {
   baseURL: string;
   timeout: number;
@@ -141,18 +166,11 @@ export class BaseApiService {
           }
           return this.request<T>(method, url, body, extraHeaders, 1);
         } catch {
-          // Refresh failed — clear session and signal the app
+          // Refresh failed — clear session and signal the app.
+          // Deduped so parallel 401s surface a single, dismissible prompt.
           await TokenStorage.clearAll();
           store.dispatch(clearAuth());
-          if (Platform.OS !== 'web') {
-            Alert.alert(
-              'Session Expired',
-              'Please sign in again to continue.',
-              [{ text: 'OK' }]
-            );
-          } else if (typeof window?.dispatchEvent === 'function') {
-            window.dispatchEvent(new CustomEvent('auth:sessionExpired'));
-          }
+          notifySessionExpired();
           // fall through to throw the 401 error
         }
       }

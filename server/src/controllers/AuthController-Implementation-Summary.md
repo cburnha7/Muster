@@ -37,14 +37,14 @@ The AuthController has been successfully implemented as part of Phase 2: Backend
 - **Success**: Returns 200 with user data and tokens
 - **Errors**: 400 (validation), 401 (invalid credentials), 500 (server error)
 
-### 4. POST /api/auth/login/sso
-- **Purpose**: Login with SSO (Apple/Google)
+### 4. POST /api/auth/sso
+- **Purpose**: Unified SSO — find existing account or create a new one, then return a session (Apple/Google)
 - **Rate Limit**: 5 requests per 15 minutes per IP
 - **Validations**:
   - Valid provider
   - Provider user ID present
 - **Success**: Returns 200 with user data and tokens
-- **Errors**: 400 (validation), 404 (no account found), 500 (server error)
+- **Errors**: 400 (validation), 500 (server error)
 
 ### 5. POST /api/auth/link-account
 - **Purpose**: Link SSO account to existing user account

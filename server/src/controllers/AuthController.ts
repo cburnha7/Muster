@@ -9,7 +9,6 @@ import {
   RegisterRequest,
   SSORegisterRequest,
   LoginRequest,
-  SSOLoginRequest,
   LinkAccountRequest,
   RefreshTokenRequest,
   ForgotPasswordRequest,
@@ -390,84 +389,6 @@ class AuthController {
       res.status(500).json({
         error: 'Internal Server Error',
         message: 'An error occurred during login',
-        statusCode: 500,
-      } as ErrorResponse);
-    }
-  }
-
-  /**
-   * Login with SSO (Apple or Google)
-   * POST /api/auth/login/sso
-   *
-   * Requirements: 23.6, 23.7, 23.8, 23.9
-   */
-  async loginWithSSO(req: Request, res: Response): Promise<void> {
-    try {
-      const body = req.body as SSOLoginRequest;
-
-      // Validate required fields
-      if (!body.provider || !body.providerUserId) {
-        res.status(400).json({
-          error: 'Validation Error',
-          message: 'Provider and provider user ID are required',
-          statusCode: 400,
-        } as ErrorResponse);
-        return;
-      }
-
-      // Validate provider
-      if (body.provider !== 'apple' && body.provider !== 'google') {
-        res.status(400).json({
-          error: 'Validation Error',
-          message: 'Invalid SSO provider',
-          statusCode: 400,
-        } as ErrorResponse);
-        return;
-      }
-
-      // Authenticate SSO user
-      const user = await AuthService.authenticateSSOUser(
-        body.provider,
-        body.providerUserId
-      );
-
-      if (!user) {
-        res.status(404).json({
-          error: 'Not Found',
-          message: 'No account found with this provider',
-          statusCode: 404,
-        } as ErrorResponse);
-        return;
-      }
-
-      // Generate tokens
-      const accessToken = TokenService.generateAccessToken(user.id);
-      const refreshToken = TokenService.generateRefreshToken(user.id, false);
-
-      // Store refresh token
-      const refreshTokenExpiration =
-        TokenService.getExpirationDate(refreshToken);
-      if (refreshTokenExpiration) {
-        await TokenService.storeRefreshToken(
-          user.id,
-          refreshToken,
-          refreshTokenExpiration
-        );
-      }
-
-      // Return success response
-      const response: AuthResponse = {
-        user: toUserResponse(user),
-        accessToken,
-        refreshToken,
-      };
-
-      res.status(200).json(response);
-    } catch (error) {
-      console.error('SSO login error:', error);
-      res.status(500).json({
-        error: 'Internal Server Error',
-        message: 'An error occurred during SSO login',
         statusCode: 500,
       } as ErrorResponse);
     }

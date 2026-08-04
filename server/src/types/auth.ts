@@ -77,16 +77,6 @@ export interface LoginRequest {
 }
 
 /**
- * Request body for SSO login endpoint
- * POST /api/auth/login/sso
- */
-export interface SSOLoginRequest {
-  provider: 'apple' | 'google';
-  providerToken: string;
-  providerUserId: string;
-}
-
-/**
  * Request body for account linking endpoint
  * POST /api/auth/link-account
  */
