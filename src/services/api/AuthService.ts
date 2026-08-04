@@ -11,9 +11,6 @@ import {
   User,
   RegisterData,
   SSORegisterData,
-  LoginCredentials,
-  SSOLoginData,
-  AccountLinkData,
   AuthResponse,
   TokenResponse,
 } from '../../types/auth';
@@ -262,34 +259,6 @@ class AuthService {
         body: JSON.stringify(data),
       }
     );
-    await this.storeAuthData(response);
-    return response;
-  }
-
-  /**
-   * Login with SSO
-   * Requirements 7.5, 7.6: SSO login
-   */
-  async loginWithSSO(
-    provider: 'apple' | 'google',
-    token: string,
-    userId: string
-  ): Promise<AuthResponse> {
-    const response = await this.makeRequest<AuthResponse>(
-      `${API_URL}/auth/login/sso`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          provider,
-          providerToken: token,
-          providerUserId: userId,
-        }),
-      }
-    );
-
     await this.storeAuthData(response);
     return response;
   }

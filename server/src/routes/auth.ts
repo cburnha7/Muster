@@ -64,17 +64,6 @@ router.post('/login', loginRateLimiter, validate(LoginSchema), (req, res) => {
 });
 
 /**
- * POST /api/auth/login/sso
- * Login with SSO (Apple or Google)
- *
- * Rate Limited: 5 requests per 15 minutes per IP
- * Requirements: 23.6
- */
-router.post('/login/sso', loginRateLimiter, (req, res) => {
-  AuthController.loginWithSSO(req, res);
-});
-
-/**
  * POST /api/auth/sso
  * Unified SSO — find or create account, return session
  */
