@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useDispatch } from 'react-redux';
+import { Ionicons } from '@expo/vector-icons';
 import { MusterIcon } from '../../theme/MusterIcon';
 import { FormInput } from '../../components/forms/FormInput';
 import { FormButton } from '../../components/forms/FormButton';
@@ -166,16 +167,12 @@ export function LoginScreen() {
           {/* SSO Buttons */}
           {Platform.OS !== 'web' && (
             <>
+              {/* Google sign-in is disabled until the OAuth flow is
+                  production-ready — Apple is the only supported provider. */}
               <SSOButton
                 provider="apple"
                 onPress={() => handleSSOLogin('apple')}
                 isLoading={ssoLoading === 'apple'}
-                disabled={isLoading || ssoLoading !== null}
-              />
-              <SSOButton
-                provider="google"
-                onPress={() => handleSSOLogin('google')}
-                isLoading={ssoLoading === 'google'}
                 disabled={isLoading || ssoLoading !== null}
               />
               <View
@@ -204,10 +201,12 @@ export function LoginScreen() {
             </>
           )}
 
-          {/* Error banner */}
+          {/* Error banner — dismissible */}
           {errors.general && (
             <View
               style={{
+                flexDirection: 'row',
+                alignItems: 'center',
                 backgroundColor: colors.heartTint,
                 borderRadius: radius.md,
                 paddingVertical: spacing.md,
@@ -219,11 +218,20 @@ export function LoginScreen() {
                 style={{
                   ...type.bodySm,
                   color: colors.heart,
-                  textAlign: 'center',
+                  flex: 1,
                 }}
               >
                 {errors.general}
               </Text>
+              <TouchableOpacity
+                onPress={() => updateError('general', undefined)}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                accessibilityRole="button"
+                accessibilityLabel="Dismiss error"
+                style={{ marginLeft: spacing.base }}
+              >
+                <Ionicons name="close" size={18} color={colors.heart} />
+              </TouchableOpacity>
             </View>
           )}
 

@@ -22,8 +22,10 @@ import { API_BASE_URL } from './config';
 
 const API_URL = API_BASE_URL;
 
-// Network timeout in milliseconds (30 seconds)
-const NETWORK_TIMEOUT = 30000;
+// Network timeout in milliseconds. Auth calls are small and interactive —
+// a short timeout surfaces an unreachable backend quickly instead of leaving
+// the user staring at a spinner for half a minute.
+const NETWORK_TIMEOUT = 15000;
 
 // Token refresh threshold (5 minutes before expiration)
 const TOKEN_REFRESH_THRESHOLD = 5 * 60 * 1000;
@@ -47,10 +49,12 @@ class AuthService {
     try {
       const token = await TokenStorage.getAccessToken();
       this.tokenCache = token;
-      console.log(
-        '🔐 AuthService initialized, token cache:',
-        token ? `${token.substring(0, 20)}...` : 'null'
-      );
+      if (__DEV__) {
+        console.log(
+          '🔐 AuthService initialized, token cache:',
+          token ? 'present' : 'null'
+        );
+      }
     } catch (error) {
       console.error('Failed to initialize token cache:', error);
     }
@@ -103,7 +107,7 @@ class AuthService {
           'No internet connection. Please check your network and try again'
         );
       }
-      if (error.message.includes('Failed to fetch')) {
+      if (typeof error.message === 'string' && error.message.includes('Failed to fetch')) {
         throw new Error(
           'Service temporarily unavailable. Please try again later'
         );
@@ -414,7 +418,7 @@ class AuthService {
    */
   async getStoredToken(): Promise<string | null> {
     try {
-      console.log('📥 getStoredToken() called');
+      if (__DEV__) console.log('📥 getStoredToken() called');
 
       // Check if token needs refresh
       if (this.shouldRefreshToken()) {
@@ -433,10 +437,9 @@ class AuthService {
       }
 
       const token = await TokenStorage.getAccessToken();
-      console.log(
-        '📥 Token from storage:',
-        token ? `${token.substring(0, 20)}...` : 'null'
-      );
+      if (__DEV__) {
+        console.log('📥 Token from storage:', token ? 'present' : 'null');
+      }
 
       // Update cache
       this.tokenCache = token;
@@ -444,7 +447,6 @@ class AuthService {
         this.tokenExpirationTime = this.parseTokenExpiration(token);
       }
 
-      console.log('📥 Token cache updated');
       return token;
     } catch (error) {
       console.error('Get token error:', error);

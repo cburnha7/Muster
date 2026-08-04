@@ -310,16 +310,12 @@ export const RegistrationScreen: React.FC = () => {
               {/* SSO option */}
               {!ssoProvider && Platform.OS !== 'web' && (
                 <>
+                  {/* Google sign-in is disabled until the OAuth flow is
+                      production-ready — Apple is the only supported provider. */}
                   <SSOButton
                     provider="apple"
                     onPress={() => handleSSO('apple')}
                     isLoading={ssoLoading === 'apple'}
-                    disabled={isLoading || ssoLoading !== null}
-                  />
-                  <SSOButton
-                    provider="google"
-                    onPress={() => handleSSO('google')}
-                    isLoading={ssoLoading === 'google'}
                     disabled={isLoading || ssoLoading !== null}
                   />
                   <View style={styles.divider}>

@@ -9,8 +9,14 @@
  *      fetch dependents, refresh profile
  *   2. Web: listen for 'auth:sessionExpired' window event
  *
- * Boot is handled entirely by redux-persist rehydration + the REHYDRATE
- * matcher in authSlice. No loadCachedUser thunk needed.
+ * Boot sequence (single source of truth — keep these in sync):
+ *   - authSlice.isBootLoading starts true and is re-forced true by the
+ *     persist/REHYDRATE matcher in authSlice.
+ *   - ReduxProvider dispatches loadCachedUser() once rehydration completes;
+ *     its fulfilled/rejected case clears isBootLoading, unblocking
+ *     RootNavigator from <LoadingScreen/>.
+ *   - RootNavigator runs a 4s watchdog (forceBootComplete) as a safety net.
+ * This hook does NOT gate boot — it only runs post-boot side effects.
  */
 
 import { useEffect, useRef } from 'react';

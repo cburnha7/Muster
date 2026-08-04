@@ -16,6 +16,10 @@ import { Middleware, isRejectedWithValue } from '@reduxjs/toolkit';
 import { Alert, Platform } from 'react-native';
 import { setActiveUser } from '../slices/contextSlice';
 
+// Guard so a burst of 403s (multiple in-flight queries under a stale dependent
+// context) can't stack identical "Context Reset" modals.
+let contextResetAlertVisible = false;
+
 /**
  * Checks whether an RTK Query rejected action carries a 403 status.
  */
@@ -56,10 +60,12 @@ export const contextRecoveryMiddleware: Middleware = (storeApi) => (next) => (ac
   // Show a brief notification to the user
   if (Platform.OS === 'web') {
     console.warn('Switched back to your account — the dependent context is no longer valid.');
-  } else {
+  } else if (!contextResetAlertVisible) {
+    contextResetAlertVisible = true;
     Alert.alert(
       'Context Reset',
-      'Switched back to your account — the dependent context is no longer valid.'
+      'Switched back to your account — the dependent context is no longer valid.',
+      [{ text: 'OK', onPress: () => { contextResetAlertVisible = false; } }]
     );
   }
 
